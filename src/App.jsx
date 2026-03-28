@@ -2890,20 +2890,20 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               setStep(3);
               // slight delay so component mounts, then trigger export
               setTimeout(() => {
-                exportPDF(p.project, p.rooms, () => {});
+                exportPDFInternal(p.project, p.rooms, () => {});
               }, 400);
             }}
             onEmail={(i) => {
               const p = projects[i];
-              const subject = encodeURIComponent("Estimate: " + p.project.name);
+              const subject = encodeURIComponent("Quote: " + p.project.name);
               const lines = [
                 "Hi " + (p.project.contactName || "") + ",",
                 "",
-                "Please find attached your estimate for " + p.project.name + ".",
+                "Please find attached your quote for " + p.project.name + ".",
                 "",
                 "Project Address: " + p.project.address,
                 "Bid Date: " + fmtDate(p.project.bidDate || ""),
-                "Estimate ID: " + p.project.id,
+                "Quote ID: " + p.project.id,
                 "",
                 "Please don't hesitate to reach out with any questions.",
                 "",
