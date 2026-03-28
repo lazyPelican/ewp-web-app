@@ -108,24 +108,63 @@ const blankRoom = (n, masterAdj) => ({
 
 // ── STYLES ─────────────────────────────────────────────────────
 const styles = `
-  /* App-specific styles. Global tokens/fonts live in src/global.css */
+  /* ── CSS VARIABLE OVERRIDES — Warm Craftsman Light Theme ── */
+  :root {
+    --ewp-slate:   rgb(73, 77, 77);
+    --ewp-slate2:  rgb(55, 58, 58);
+
+    --header-bg:      #FDFAF5;
+    --header-border:  #E4D9C8;
+    --header-text:    rgb(73, 77, 77);
+    --header-subtext: rgb(140, 145, 145);
+
+    --gold:        #8A6A38;
+    --gold-light:  #B8924F;
+    --gold-bg:     #FAF3E6;
+
+    --ivory2:  #F6F1E8;
+    --ivory3:  #EDE4D4;
+    --rule:    #D8CEBA;
+
+    --char:   rgb(73, 77, 77);
+    --char2:  rgb(55, 58, 58);
+    --mid:    rgb(120, 125, 125);
+    --muted:  rgb(160, 163, 163);
+
+    --card-bg:         #FFFFFF;
+    --input-bg:        #FDFBF7;
+    --input-focus-bg:  #FFFDF8;
+
+    --green: #2A6B40;
+    --red:   #B83B2E;
+  }
 
   /* ── LAYOUT ── */
-  .app { min-height: 100vh; display: flex; flex-direction: column; }
+  .app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--ivory2);
+  }
 
   /* ── TOPBAR ── */
   .topbar {
     background: var(--header-bg);
-    padding: 0 32px;
-    height: 84px;
+    padding: 0 40px;
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 2px solid var(--header-border);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    border-bottom: 1px solid var(--header-border);
+    box-shadow: 0 2px 20px rgba(20,15,5,0.07);
+    transition: height 0.35s ease, box-shadow 0.35s ease;
+  }
+  .topbar.scrolled {
+    height: 62px;
+    box-shadow: 0 2px 16px rgba(20,15,5,0.11);
   }
   .topbar-logo {
     display: flex;
@@ -133,24 +172,45 @@ const styles = `
     gap: 18px;
   }
   .header-logo {
-    height: 70px;
+    height: 75px;
     width: auto;
     flex-shrink: 0;
+    transition: height 0.35s ease;
+  }
+  .topbar.scrolled .header-logo {
+    height: 50px;
   }
   .topbar-name {
-    font-family: var(--font-serif);
-    font-size: 26px; font-weight: 600;
-    color: var(--header-text); letter-spacing: 0.05em;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px; font-weight: 600;
+    color: var(--ewp-slate); letter-spacing: 0.04em;
+    line-height: 1;
+    transition: font-size 0.35s ease;
   }
-  .dark .topbar-name { color: var(--header-text); }
-  .topbar-sub { font-size: 12px; color: var(--header-subtext); letter-spacing: 0.12em; text-transform: uppercase; }
-  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .topbar.scrolled .topbar-name {
+    font-size: 21px;
+  }
+  .topbar-sub {
+    font-size: 10px; color: rgb(140, 145, 145);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-top: 5px; font-weight: 600;
+    opacity: 1;
+    transition: opacity 0.2s ease, max-height 0.35s ease, margin-top 0.35s ease;
+    max-height: 20px;
+    overflow: hidden;
+  }
+  .topbar.scrolled .topbar-sub {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
 
   /* ── STEPPER ── */
   .stepper {
-    background: var(--ivory2);
-    border-bottom: 1px solid var(--ivory3);
-    padding: 0 32px;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    padding: 0 40px;
     display: flex;
     align-items: center;
     gap: 0;
@@ -158,29 +218,30 @@ const styles = `
   }
   .step {
     display: flex; align-items: center;
-    padding: 16px 20px;
-    gap: 10px;
+    padding: 14px 22px;
+    gap: 9px;
     cursor: pointer;
-    border-bottom: 3px solid transparent;
+    border-bottom: 2px solid transparent;
     transition: all 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .step:hover { background: var(--ivory3); }
+  .step:hover { background: var(--ivory2); }
   .step.active { border-bottom-color: var(--gold); }
   .step-num {
-    width: 24px; height: 24px;
+    width: 22px; height: 22px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 600;
+    font-size: 10px; font-weight: 700;
     background: var(--ivory3);
-    color: var(--muted);
+    color: var(--mid);
     flex-shrink: 0;
+    border: 1.5px solid var(--rule);
   }
-  .step.active .step-num { background: var(--gold); color: #fff; }
-  .step.done .step-num { background: var(--green); color: #fff; }
-  .step-label { font-size: 13px; font-weight: 500; color: var(--mid); }
-  .step.active .step-label { color: var(--char); font-weight: 600; }
+  .step.active .step-num { background: var(--gold); color: #fff; border-color: var(--gold); }
+  .step.done .step-num { background: var(--green); color: #fff; border-color: var(--green); }
+  .step-label { font-size: 12px; font-weight: 500; color: var(--mid); letter-spacing: 0.02em; }
+  .step.active .step-label { color: var(--char); font-weight: 700; }
 
   /* ── MAIN CONTENT ── */
   .main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 40px 32px; }
@@ -189,30 +250,39 @@ const styles = `
   .page-header { margin-bottom: 32px; }
   .page-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 32px; font-weight: 600;
-    color: var(--char); line-height: 1.1;
+    font-size: 30px; font-weight: 600;
+    color: var(--ewp-slate); line-height: 1.1;
+    letter-spacing: 0.01em;
   }
-  .page-subtitle { font-size: 14px; color: var(--mid); margin-top: 4px; }
-  .gold-rule { height: 2px; background: var(--gold); width: 48px; margin: 12px 0; }
+  .page-subtitle { font-size: 13px; color: var(--mid); margin-top: 4px; }
+  .gold-rule {
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold) 0%, rgba(138,106,56,0.2) 60%, transparent 100%);
+    width: 100px;
+    margin: 12px 0;
+  }
 
   /* ── CARDS ── */
   .card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-radius: 8px;
+    border-radius: 4px;
     overflow: hidden;
     margin-bottom: 20px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 8px rgba(20,15,5,0.05);
   }
   .card-header {
-    background: var(--char);
-    padding: 14px 20px;
+    background: var(--ivory2);
+    padding: 12px 20px;
     display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--ivory3);
+    border-left: 3px solid var(--ewp-slate);
   }
   .card-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px; font-weight: 600;
-    color: var(--gold-light); letter-spacing: 0.06em;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 700;
+    color: var(--ewp-slate); letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
   .card-body { padding: 20px; }
 
@@ -222,16 +292,20 @@ const styles = `
   .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
   .form-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
 
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  .field-label { font-size: 10px; font-weight: 600; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-label {
+    font-size: 9px; font-weight: 700;
+    color: var(--gold); text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
 
   input, select, textarea {
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     color: var(--char);
     background: var(--input-bg);
-    border: 1px solid var(--ivory3);
-    border-radius: 4px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
     padding: 9px 12px;
     width: 100%;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -240,13 +314,14 @@ const styles = `
   }
   input:focus, select:focus, textarea:focus {
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(160,122,58,0.1);
+    box-shadow: 0 0 0 3px rgba(138,106,56,0.1);
     background: var(--input-focus-bg);
   }
   input.error, select.error { border-color: var(--red); }
   .field-error { font-size: 11px; color: var(--red); }
 
-  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B6B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%238C7B6A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     padding-right: 32px;
@@ -255,61 +330,62 @@ const styles = `
   /* ── BUTTONS ── */
   .btn {
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px; font-weight: 600;
+    font-size: 12px; font-weight: 700;
     padding: 10px 20px;
-    border-radius: 4px;
+    border-radius: 3px;
     border: none;
     cursor: pointer;
-    display: inline-flex; align-items: center; gap: 7px;
+    display: inline-flex; align-items: center; gap: 6px;
     transition: all 0.15s;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
-  .btn-primary { background: var(--char); color: #fff; }
-  .btn-primary:hover { background: var(--char2); }
+  .btn-primary { background: var(--ewp-slate); color: #fff; }
+  .btn-primary:hover { background: var(--ewp-slate2); }
   .btn-gold { background: var(--gold); color: #fff; }
-  .btn-gold:hover { background: #8a6830; }
+  .btn-gold:hover { background: #7A5C2C; box-shadow: 0 2px 8px rgba(138,106,56,0.3); }
   .btn-outline { background: transparent; color: var(--char); border: 1px solid var(--rule); }
-  .btn-outline:hover { border-color: var(--char); background: var(--ivory2); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
   .btn-ghost { background: transparent; color: var(--mid); border: none; padding: 6px 10px; }
   .btn-ghost:hover { color: var(--char); }
-  .btn-danger { background: transparent; color: var(--red); border: 1px solid #e8c8c5; }
-  .btn-danger:hover { background: #fdf0ef; }
-  .btn-sm { padding: 6px 12px; font-size: 12px; }
-  .btn-lg { padding: 13px 28px; font-size: 14px; }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(184,59,46,0.3); }
+  .btn-danger:hover { background: rgba(184,59,46,0.05); border-color: var(--red); }
+  .btn-sm { padding: 5px 12px; font-size: 10px; }
+  .btn-lg { padding: 13px 32px; font-size: 12px; letter-spacing: 0.1em; }
 
   /* ── ROOM TABS ── */
-  .room-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .room-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
   .room-tab {
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 7px 15px;
+    border-radius: 3px;
     border: 1px solid var(--ivory3);
     background: var(--card-bg);
     cursor: pointer;
-    font-size: 13px; font-weight: 500;
+    font-size: 12px; font-weight: 500;
     color: var(--mid);
     transition: all 0.15s;
     display: flex; align-items: center; gap: 6px;
   }
-  .room-tab:hover { border-color: var(--gold-light); color: var(--char); }
+  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); }
   .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); }
   .room-tab-add {
     border-style: dashed;
     color: var(--gold);
-    border-color: var(--gold-light);
+    border-color: rgba(138,106,56,0.4);
   }
-  .room-tab-add:hover { background: var(--gold-bg); }
+  .room-tab-add:hover { background: var(--gold-bg); border-style: solid; }
 
   /* ── DATA TABLE ── */
   .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .data-table th {
-    background: var(--ivory3);
-    color: var(--char2);
-    font-size: 10px; font-weight: 700;
+    background: var(--ivory2);
+    color: var(--mid);
+    font-size: 9px; font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     padding: 10px 10px;
     text-align: left;
-    border-bottom: 2px solid var(--char);
+    border-bottom: 1px solid var(--ivory3);
     white-space: nowrap;
   }
   .data-table td {
@@ -325,6 +401,7 @@ const styles = `
     font-size: 12px;
     background: transparent;
     border: 1px solid transparent;
+    border-radius: 2px;
   }
   .data-table input:focus, .data-table select:focus {
     background: var(--input-focus-bg);
@@ -334,7 +411,7 @@ const styles = `
   .data-table .total-row td {
     background: var(--ivory3) !important;
     font-weight: 600;
-    border-top: 2px solid var(--char);
+    border-top: 1px solid var(--gold);
     color: var(--gold);
     font-family: 'Cormorant Garamond', serif;
     font-size: 15px;
@@ -343,39 +420,43 @@ const styles = `
 
   /* ── SECTION LABEL ── */
   .section-banner {
-    background: var(--char);
-    color: var(--gold-light);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px; font-weight: 600;
-    letter-spacing: 0.08em;
+    background: var(--ivory2);
+    color: var(--ewp-slate);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     padding: 10px 16px;
-    border-radius: 4px 4px 0 0;
+    border-bottom: 1px solid var(--ivory3);
+    border-left: 3px solid var(--ewp-slate);
+    display: flex; align-items: center; justify-content: space-between;
   }
 
   /* ── SUMMARY CARDS ── */
-  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
   .summary-card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-radius: 6px;
-    padding: 16px;
-    border-left: 3px solid var(--gold);
+    border-radius: 4px;
+    padding: 14px 16px;
+    border-top: 2px solid var(--gold);
   }
-  .summary-card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; text-align: center; }
-  .summary-card-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--gold); text-align: center; }
+  .summary-card-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 6px; text-align: center; }
+  .summary-card-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--char); text-align: center; }
 
   /* ── GRAND TOTAL ── */
   .grand-total {
-    background: var(--char);
-    border-radius: 6px;
+    background: var(--ewp-slate);
+    border-radius: 4px;
     padding: 24px 32px;
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 8px;
   }
   .grand-total-label {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 24px; font-weight: 600;
-    color: #fff;
+    font-size: 22px; font-weight: 600;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 0.06em;
   }
   .grand-total-value {
     font-family: 'Cormorant Garamond', serif;
@@ -388,21 +469,22 @@ const styles = `
   .project-row {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-radius: 6px;
+    border-left: 3px solid transparent;
+    border-radius: 4px;
     padding: 16px 20px;
     display: flex; align-items: center; justify-content: space-between;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .project-row:hover { border-color: var(--gold-light); box-shadow: 0 2px 8px rgba(160,122,58,0.1); }
-  .project-row-name { font-weight: 600; font-size: 15px; }
+  .project-row:hover { border-left-color: var(--gold); box-shadow: 0 2px 12px rgba(20,15,5,0.07); }
+  .project-row-name { font-weight: 600; font-size: 15px; color: var(--ewp-slate); }
   .project-row-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
-  .project-row-total { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--gold); }
+  .project-row-total { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--ewp-slate); }
   .badge {
-    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-    padding: 3px 8px; border-radius: 20px;
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+    padding: 3px 8px; border-radius: 2px;
   }
-  .badge-new { background: #e8f4ed; color: var(--green); }
+  .badge-new { background: rgba(42,107,64,0.12); color: var(--green); }
   .badge-draft { background: var(--gold-bg); color: var(--gold); }
 
   /* ── HELPERS ── */
@@ -423,52 +505,55 @@ const styles = `
 
   /* ── EMPTY STATE ── */
   .empty-state {
-    text-align: center; padding: 60px 20px;
+    text-align: center; padding: 80px 20px;
     color: var(--muted);
   }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
-  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--char); margin-bottom: 6px; }
+  .empty-icon { font-size: 36px; margin-bottom: 16px; opacity: 0.35; }
+  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--char); margin-bottom: 8px; font-weight: 600; }
 
   /* ── TOAST ── */
   .toast {
     position: fixed; bottom: 24px; right: 24px;
     background: var(--char); color: #fff;
-    padding: 12px 20px; border-radius: 6px;
+    padding: 12px 20px; border-radius: 3px;
     font-size: 13px; border-left: 3px solid var(--gold);
     z-index: 999; animation: slideUp 0.3s ease;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 24px rgba(20,15,5,0.2);
   }
   @keyframes slideUp { from { transform: translateY(12px); opacity:0; } to { transform:translateY(0); opacity:1; } }
 
   /* ── MODAL ── */
   .modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(20,15,5,0.45);
     display: flex; align-items: center; justify-content: center;
     z-index: 200; padding: 20px;
+    backdrop-filter: blur(2px);
   }
   .modal {
-    background: var(--card-bg); border-radius: 8px;
-    width: 100%; max-width: 520px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    background: var(--card-bg); border-radius: 4px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 20px 60px rgba(20,15,5,0.18);
     overflow: hidden;
+    border: 1px solid var(--ivory3);
   }
   .modal-header {
-    background: var(--char); padding: 18px 24px;
+    background: var(--ivory2); padding: 16px 24px;
     display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--ivory3);
+    border-left: 3px solid var(--gold);
   }
-  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--gold-light); font-weight: 600; }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--char); font-weight: 600; }
   .modal-body { padding: 24px; }
   .modal-footer { padding: 16px 24px; border-top: 1px solid var(--ivory3); display: flex; justify-content: flex-end; gap: 10px; }
 
   /* ── REPORT VIEW ── */
-  .report-room { margin-bottom: 32px; }
-  .report-section { margin-bottom: 16px; }
+  .report-room { margin-bottom: 24px; }
+  .report-section { margin-bottom: 14px; }
   .report-section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px; font-weight: 700;
+    font-size: 9px; font-weight: 700;
     color: var(--gold); text-transform: uppercase;
-    letter-spacing: 0.1em; margin-bottom: 8px;
+    letter-spacing: 0.14em; margin-bottom: 8px;
     padding-bottom: 4px;
     border-bottom: 1px solid var(--ivory3);
   }
@@ -476,67 +561,96 @@ const styles = `
     display: flex; justify-content: space-between;
     padding: 4px 0; font-size: 13px;
     border-bottom: 1px solid var(--ivory3);
+    color: var(--char);
   }
   .report-line-total {
     font-weight: 600; color: var(--gold);
-    border-bottom: 2px solid var(--char);
+    border-bottom: 1px solid var(--gold);
   }
 
-
   /* ── DARK MODE OVERRIDES ── */
-  .dark body { background: #141414; }
-  .dark .app { background: #141414; }
-  .dark .stepper { background: #1C1C1C; border-bottom-color: #2A2A2A; }
-  .dark .step:hover { background: #2A2A2A; }
-  .dark .step-num { background: #2A2A2A; }
+  .dark {
+    --ewp-slate:   rgb(195, 200, 200);
+    --ewp-slate2:  rgb(220, 223, 223);
+
+    --header-bg:      #2A2820;
+    --header-border:  #3A3628;
+    --header-text:    rgb(210, 213, 210);
+    --header-subtext: #A09580;
+    --gold:        #B8904A;
+    --gold-light:  #D4AA72;
+    --gold-bg:     #2E2A1A;
+    --ivory2:  #272420;
+    --ivory3:  #323028;
+    --rule:    #484030;
+    --char:    rgb(210, 213, 210);
+    --char2:   rgb(230, 232, 230);
+    --mid:     #B0A090;
+    --muted:   #887870;
+    --card-bg:         #222018;
+    --input-bg:        #2A2820;
+    --input-focus-bg:  #2E2C22;
+    --green: #4A9B65;
+    --red:   #D05050;
+  }
+  .dark body { background: #201E18; }
+  .dark .app { background: #201E18; }
+  .dark .stepper { background: var(--header-bg); border-bottom-color: var(--header-border); }
+  .dark .step:hover { background: #323028; }
+  .dark .step-num { background: #323028; border-color: #484030; }
   .dark .step.active .step-label { color: var(--gold-light); }
-  .dark .card-header { background: #111111; }
-  .dark .section-banner { background: #111111; }
-  .dark .grand-total { background: #111111; }
-  .dark .data-table th { background: #2A2A2A; border-bottom-color: #3A3A3A; color: var(--char2); }
-  .dark .data-table td { border-bottom-color: #2A2A2A; }
-  .dark .data-table tr:nth-child(even) td { background: #1C1C1C; }
-  .dark .data-table tr:hover td { background: #1F1A10; }
-  .dark .data-table .total-row td { background: #2A2A2A !important; border-top-color: #3A3A3A; }
-  .dark .modal-footer { border-top-color: #2A2A2A; }
-  .dark .modal-header { background: #111111; }
+  .dark .card-header { background: #2A2820; border-left-color: var(--ewp-slate); border-bottom-color: var(--ivory3); }
+  .dark .card-title { color: var(--ewp-slate); }
+  .dark .section-banner { background: #2A2820; color: var(--ewp-slate); border-left-color: var(--ewp-slate); }
+  .dark .grand-total { background: #181610; }
+  .dark .data-table th { background: #2A2820; color: var(--mid); border-bottom-color: var(--ivory3); }
+  .dark .data-table td { border-bottom-color: var(--ivory3); }
+  .dark .data-table tr:nth-child(even) td { background: #272420; }
+  .dark .data-table tr:hover td { background: #2E2A1A; }
+  .dark .data-table .total-row td { background: #323028 !important; border-top-color: var(--gold); }
+  .dark .modal-footer { border-top-color: var(--ivory3); }
+  .dark .modal-header { background: #2A2820; }
+  .dark .modal { background: var(--card-bg); border-color: var(--ivory3); }
   /* Buttons in dark mode */
-  .dark .btn-primary { background: #E8E2D9; color: #1A1A1A; }
-  .dark .btn-primary:hover { background: #CFC9BF; }
-  .dark .btn-gold { background: #C9A96E; color: #1A1A1A; }
-  .dark .btn-gold:hover { background: #E0C48A; }
-  .dark .btn-outline { color: #E8E2D9; border-color: #444; background: transparent; }
-  .dark .btn-outline:hover { background: #2A2A2A; border-color: #888; }
-  .dark .btn-ghost { color: #9A9A9A; }
-  .dark .btn-ghost:hover { color: #E8E2D9; }
-  .dark .btn-danger { border-color: #5A2A28; color: #E05C50; }
-  .dark .btn-danger:hover { background: #2A1210; }
-  /* Delete confirm button */
-  .dark .btn[style*="var(--red)"] { color: #1A1A1A !important; }
-  .dark .toast { background: #1C1C1C; }
-  .dark .badge-new { background: #0D2A1A; color: var(--green); }
-  .dark .badge-draft { background: #1F1A10; color: var(--gold); }
-  .dark .modal-overlay { background: rgba(0,0,0,0.75); }
-  .dark .divider { background: #2A2A2A; }
-  .dark .project-row:hover { box-shadow: 0 2px 8px rgba(201,169,110,0.08); }
+  .dark .btn-primary { background: var(--ewp-slate); color: #201E18; }
+  .dark .btn-primary:hover { background: var(--ewp-slate2); }
+  .dark .btn-gold { background: #B8904A; color: #201E18; }
+  .dark .btn-gold:hover { background: #D4AA72; }
+  .dark .btn-outline { color: #D5D0C8; border-color: #484030; background: transparent; }
+  .dark .btn-outline:hover { background: #2E2A1A; border-color: var(--gold); color: var(--gold-light); }
+  .dark .btn-ghost { color: #A09080; }
+  .dark .btn-ghost:hover { color: #D5D0C8; }
+  .dark .btn-danger { border-color: #5A3030; color: #D05050; }
+  .dark .btn-danger:hover { background: #2E2020; }
+  .dark .toast { background: #2A2820; }
+  .dark .badge-new { background: #1A3028; color: var(--green); }
+  .dark .badge-draft { background: #2E2A1A; color: var(--gold); }
+  .dark .modal-overlay { background: rgba(0,0,0,0.55); }
+  .dark .divider { background: var(--ivory3); }
+  .dark .project-row { background: var(--card-bg); border-color: var(--ivory3); }
+  .dark .project-row:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.25); border-left-color: var(--gold); }
+  .dark .project-row-name { color: var(--char); }
+  .dark .project-row-total { color: var(--gold-light); }
+  .dark .summary-card { background: var(--card-bg); border-color: var(--ivory3); }
+  .dark .summary-card-value { color: var(--gold-light); }
   /* Room tabs in dark mode */
-  .dark .room-tab { background: #1C1C1C; border-color: #2A2A2A; color: #9A9A9A; }
-  .dark .room-tab:hover { border-color: var(--gold-light); color: #E8E2D9; }
-  .dark .room-tab.active { background: #C9A96E; color: #1A1A1A; border-color: #C9A96E; }
+  .dark .room-tab { background: var(--card-bg); border-color: var(--ivory3); color: var(--mid); }
+  .dark .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); }
+  .dark .room-tab.active { background: var(--gold); color: #201E18; border-color: var(--gold); }
 
   @media (max-width: 768px) {
     .main { padding: 20px 16px; }
-    .topbar { padding: 0 16px; }
+    .topbar { padding: 0 16px; height: 76px; }
     .stepper { padding: 0 16px; }
     .summary-grid { grid-template-columns: 1fr 1fr; }
     .form-grid-3, .form-grid-4 { grid-template-columns: 1fr 1fr; }
-    .grand-total { flex-direction: column; gap: 8px; text-align: center; }
+    .grand-total { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
   }
 `;
 
 
-// ── PDF EXPORT ────────────────────────────────────────────────
-function exportPDF(project, rooms, onStatus) {
+// ── PDF EXPORT (INTERNAL) ─────────────────────────────────────────
+function exportPDFInternal(project, rooms, onStatus) {
   onStatus("generating");
 
   const fmtN = (n) => n == null ? "$0.00" : new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(n);
@@ -776,7 +890,7 @@ function exportPDF(project, rooms, onStatus) {
       </div>
     </div>
     <div class="hdr-right">
-      <div class="doc-type">ESTIMATE SUMMARY</div>
+      <div class="doc-type">QUOTE — INTERNAL USE</div>
       <div class="doc-id">${project.id}</div>
     </div>
   </div>
@@ -963,7 +1077,7 @@ function exportPDF(project, rooms, onStatus) {
       </div>
     </div>
     <div class="hdr-right">
-      <div class="doc-type">ESTIMATE — ${room.name || "Room "+(ri+1)}</div>
+      <div class="doc-type">QUOTE — ${room.name || "Room "+(ri+1)}</div>
       <div class="doc-id">${project.id} &nbsp;·&nbsp; ${project.name} &nbsp;·&nbsp; ${fmtD(project.bidDate)}</div>
     </div>
   </div>
@@ -1061,6 +1175,553 @@ function exportPDF(project, rooms, onStatus) {
   if (!win) { onStatus("error", "Pop-ups blocked — please allow pop-ups for this site."); return; }
 
   const safeName = (project.name||"Estimate").replace(/[^a-zA-Z0-9_\- ]/g,"");
+  win.document.open();
+  win.document.write("<!DOCTYPE html><html><head>");
+  win.document.write("<meta charset='utf-8'>");
+  win.document.write("<title>EWP — " + safeName + "</title>");
+  win.document.write("<style>" + css + "</style>");
+  win.document.write("</head><body>");
+  win.document.write(html);
+  win.document.write("</body></html>");
+  win.document.close();
+
+  win.onload = function() {
+    setTimeout(function() { win.focus(); win.print(); onStatus("done"); }, 900);
+  };
+  if (win.document.readyState === "complete") {
+    setTimeout(function() { win.focus(); win.print(); onStatus("done"); }, 900);
+  }
+}
+
+function exportPDFCustomer(project, rooms, onStatus) {
+  onStatus("generating");
+
+  const fmtN = (n) => n == null ? "$0.00" : new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(n);
+  const fmtD = (d) => { if (!d) return ""; const [y,m,day] = d.split("-"); return new Date(+y,+m-1,+day).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); };
+
+  const roomTotals = rooms.map(r => {
+    const cab  = calcCabinetry(r.cabinetry);
+    const upg  = calcUpgrades(r.upgrades);
+    const fin  = calcFinishing(r.finishing);
+    const inst = calcInstall(r.install, cab);
+    return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst };
+  });
+  const grandSubtotal = roomTotals.reduce((s,r) => s + r.total, 0);
+  const delivery   = parseFloat(project.deliveryAmount) || 0;
+  const pdfTaxRate = parseFloat(project.taxRate) || 8;
+  const pdfSubtotal = grandSubtotal + delivery;
+  const pdfTaxAmt  = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0;
+  const grandTotal = pdfSubtotal + pdfTaxAmt;
+
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+    @page { size: 11in 8.5in landscape; margin: 0.4in 0.48in; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', Arial, sans-serif; font-size: 10pt; color: #333; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: avoid; }
+
+    /* ─── PALETTE
+       Page bg:      #FFFFFF
+       Ivory light:  #FAF7F2   (table alt row, info strip bg)
+       Ivory mid:    #F2EDE4   (table header, section header bg)
+       Ivory border: #DDD5C8   (all dividers)
+       Warm stone:   #8C7355   (accent, labels, borders)
+       Deep ink:     #2A2118   (headings, strong text)
+       Text body:    #3D3228
+       Muted text:   #9B8E82
+    ─── */
+
+    /* ── HEADER ── */
+    .hdr {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 13px 20px 11px;
+      background: #FAF7F2;
+      border-bottom: 2px solid #8C7355;
+      margin-bottom: 12px;
+    }
+    .co-brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .co-logo { height: 70px; width: auto; display: block; }
+    .co-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 27pt; font-weight: 700;
+      color: #2A2118; letter-spacing: 0.02em; line-height: 1;
+      white-space: nowrap;
+    }
+    .co-tag { font-size: 9.5pt; color: #9B8E82; margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+    .hdr-right { text-align: left; }
+    .doc-type {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14pt; font-weight: 600;
+      color: #8C7355; letter-spacing: 0.1em; line-height: 1;
+    }
+    .doc-id { font-size: 7.5pt; color: #9B8E82; margin-top: 4px; letter-spacing: 0.05em; }
+
+    /* ── INFO STRIP ── */
+    .info-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid #DDD5C8;
+      border-left: 3px solid #8C7355;
+      border-radius: 2px;
+      margin-bottom: 12px;
+      background: #FAF7F2;
+      overflow: hidden;
+    }
+    .ic { padding: 7px 12px 8px; border-right: 1px solid #DDD5C8; border-bottom: 1px solid #DDD5C8; }
+    .ic:nth-child(even) { border-right: none; }
+    .ic:nth-last-child(-n+2) { border-bottom: none; }
+    .ic-lbl { font-size: 7pt; font-weight: 600; color: #8C7355; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+    .ic-val { font-size: 10.5pt; font-weight: 500; color: #2A2118; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── SECTION LABEL ── */
+    .sec {
+      background: #F2EDE4;
+      color: #2A2118;
+      font-family: 'DM Sans', Arial, sans-serif;
+      font-size: 8pt; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 5px 10px;
+      border-top: 1.5px solid #8C7355;
+      border-left: 1px solid #DDD5C8;
+      border-right: 1px solid #DDD5C8;
+    }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    thead th {
+      background: #F2EDE4;
+      font-size: 6.5pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: #5A4E42; padding: 4px 5px;
+      text-align: left;
+      border-bottom: 1px solid #DDD5C8;
+      border-left: 1px solid #DDD5C8;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    thead th:first-child { border-left: none; }
+    thead th.r { text-align: right; }
+    tbody tr { border-bottom: 1px solid #EDE6DC; }
+    tbody tr:nth-child(even) td { background: #FAF7F2; }
+    tbody td { padding: 4px 5px; vertical-align: middle; color: #3D3228; border-left: 1px solid #EDE6DC; word-break: break-word; overflow: hidden; }
+    tbody td:first-child { border-left: none; }
+    tbody td.r { text-align: right; }
+    tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody td.amt { text-align: right; font-weight: 600; color: #5A3E1A; font-variant-numeric: tabular-nums; }
+    table { border: 1px solid #DDD5C8; border-top: none; table-layout: fixed; }
+    .col-fill { width: auto; }
+
+    /* ── GRAND TOTAL ── */
+    .grand-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #E8E0D4;
+      border: 1px solid #C8B89A;
+      border-top: none;
+      border-left: 5px solid #6B5030;
+      padding: 14px 20px;
+    }
+    .grand-bar .gl {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16pt; font-weight: 700; color: #1A120A;
+      letter-spacing: 0.06em;
+    }
+    .grand-bar .gs { font-size: 7.5pt; color: #9B8E82; margin-top: 3px; }
+    .grand-bar .gv {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28pt; font-weight: 700; color: #3D2408;
+      letter-spacing: -0.01em;
+    }
+    .grand-bar.standalone {
+      border-top: 2px solid #6B5030;
+      margin-top: 12px; padding: 18px 24px;
+    }
+    .grand-bar.standalone .gl { font-size: 18pt; }
+    .grand-bar.standalone .gv { font-size: 34pt; }
+
+    /* ── FOOTER ── */
+    .footer {
+      font-size: 7.5pt; color: #9B8E82;
+      text-align: center; margin-top: 10px;
+      padding-top: 6px; border-top: 1px solid #DDD5C8;
+      letter-spacing: 0.03em;
+    }
+    .thank-you {
+      background: #FAF7F2;
+      border: 1px solid #DDD5C8;
+      border-left: 3px solid #8C7355;
+      border-radius: 2px;
+      padding: 16px 20px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    .thank-you h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14pt; font-weight: 600; color: #2A2118;
+      margin-bottom: 6px;
+    }
+    .thank-you p {
+      font-size: 9pt; color: #9B8E82; line-height: 1.5;
+    }
+
+    /* ── SECTION LABEL ── */
+    .sec {
+      background: #F2EDE4;
+      color: #2A2118;
+      font-family: 'DM Sans', Arial, sans-serif;
+      font-size: 8pt; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 5px 10px;
+      border-top: 1.5px solid #8C7355;
+      border-left: 1px solid #DDD5C8;
+      border-right: 1px solid #DDD5C8;
+    }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    thead th {
+      background: #F2EDE4;
+      font-size: 6.5pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: #5A4E42; padding: 4px 5px;
+      text-align: left;
+      border-bottom: 1px solid #DDD5C8;
+      border-left: 1px solid #DDD5C8;
+      white-space: nowrap;
+    }
+    thead th:first-child { border-left: none; }
+    thead th.r { text-align: right; }
+    tbody tr { border-bottom: 1px solid #EDE6DC; }
+    tbody tr:nth-child(even) td { background: #FAF7F2; }
+    tbody td { padding: 4px 5px; vertical-align: middle; color: #3D3228; border-left: 1px solid #EDE6DC; }
+    tbody td:first-child { border-left: none; }
+    tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody td.amt { text-align: right; font-weight: 600; color: #5A3E1A; font-variant-numeric: tabular-nums; }
+    table { border: 1px solid #DDD5C8; border-top: none; table-layout: fixed; }
+
+    /* ── SUBTOTAL BAR ── */
+    .sub-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #F2EDE4;
+      border: 1px solid #DDD5C8; border-top: 1.5px solid #8C7355;
+      padding: 5px 10px;
+      margin-bottom: 0;
+    }
+    .sub-bar-lbl { font-size: 7.5pt; font-weight: 700; color: #8C7355; letter-spacing: 0.09em; text-transform: uppercase; }
+    .sub-bar-val { font-size: 12pt; font-weight: 700; color: #2A2118; font-family: 'Cormorant Garamond', serif; }
+
+    .block { margin-bottom: 10px; }
+
+    /* ── TOTALS STRIP ── */
+    .totals-strip {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      background: #F2EDE4;
+      border: 1px solid #DDD5C8;
+      border-top: 2px solid #8C7355;
+      margin-top: 10px;
+    }
+    .ts { padding: 8px 12px; border-right: 1px solid #DDD5C8; text-align: center; }
+    .ts:last-child { border-right: none; }
+    .ts-lbl { font-size: 7pt; color: #9B8E82; text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 3px; font-weight: 600; }
+    .ts-val { font-size: 13pt; font-weight: 700; color: #2A2118; font-family: 'Cormorant Garamond', serif; }
+
+    /* ── GRAND TOTAL ── */
+    .grand-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #E8E0D4;
+      border: 1px solid #C8B89A;
+      border-top: none;
+      border-left: 5px solid #6B5030;
+      padding: 14px 20px;
+    }
+    .grand-bar .gl {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16pt; font-weight: 700; color: #1A120A;
+      letter-spacing: 0.06em;
+    }
+    .grand-bar .gs { font-size: 7.5pt; color: #9B8E82; margin-top: 3px; }
+    .grand-bar .gv {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28pt; font-weight: 700; color: #3D2408;
+      letter-spacing: -0.01em;
+    }
+    .grand-bar.standalone {
+      border-top: 2px solid #6B5030;
+      margin-top: 12px; padding: 18px 24px;
+    }
+    .grand-bar.standalone .gl { font-size: 18pt; }
+    .grand-bar.standalone .gv { font-size: 34pt; }
+  `;
+
+  // helpers
+  const ic = (l, v) => `<div class="ic"><div class="ic-lbl">${l}</div><div class="ic-val">${v || "—"}</div></div>`;
+  const sub = (l, v) => `<div class="sub-bar"><span class="sub-bar-lbl">${l}</span><span class="sub-bar-val">${fmtN(v)}</span></div>`;
+
+  // grand totals
+  const grandCab  = roomTotals.reduce((s,r) => s + r.cab,  0);
+  const grandUpg  = roomTotals.reduce((s,r) => s + r.upg,  0);
+  const grandFin  = roomTotals.reduce((s,r) => s + r.fin,  0);
+  const grandInst = roomTotals.reduce((s,r) => s + r.inst, 0);
+
+  // ── CUSTOMER QUOTE PAGE ──────────────────────────────────────
+  let html = `<div class="page">
+  <style>
+    .room-summary-table { width: 100%; border-collapse: collapse; margin-top: 0; }
+    .room-summary-table th {
+      background: #F2EDE4; font-size: 7pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: #5A4E42;
+      padding: 7px 12px; text-align: left; border-bottom: 1.5px solid #8C7355;
+    }
+    .room-summary-table th.r { text-align: right; }
+    .room-summary-table td { padding: 8px 12px; border-bottom: 1px solid #EDE6DC; font-size: 10pt; color: #3D3228; }
+    .room-summary-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+    .room-summary-table td.amt { text-align: right; font-weight: 600; color: #5A3E1A; font-variant-numeric: tabular-nums; font-size: 11pt; }
+    .room-summary-table tr:nth-child(even) td { background: #FAF7F2; }
+    .room-summary-table .total-row td { background: #F2EDE4 !important; font-weight: 700; border-top: 1.5px solid #8C7355; }
+    .room-block { margin-bottom: 0; border: 1px solid #DDD5C8; border-top: none; }
+  </style>
+  <div class="hdr">
+    <div>
+      <div class="co-brand">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAAwzklEQVR4nO19eXxURbb/91Td293pLARkFVEBHRWXcQgjJJB09oQkELYGFBRFJzyd5zgMw+D4ZqbNmxlnePNDBx11QBGRRaSRPewC7TKOCy6oKKKI7IQta2/3VtXvj+4bAoImmM33+H4+N598bt9bt6pOnVOnTp1zCriIi7iIi7iIi7iIi7iIi7iIi7iIeqDWrkATgzweD+3cuZPKy8sb1bbOnTurPn36qNLSUgVANVP9Whw/ZAKTx+Ohbdu2MQDw+XwCTUcYcrlcHADS09PlD5noPzQCk9vtZuXl5eTz+cyzf/R4PHEfff55t7Dff3nIMLqFQ6FuXNM6K0WJwjT1UDgMANBtGuw2m6GUqDAljtl0/bBd0w7bY2O/7n/zzUcenDat+mxqulwurXPnzsrr9Ur8gIj9gyCwx+Nh27ZtY/WJyjnHiBEjrqmorf2oYRi3CCFuMoXoJYXsDIIdFGka4TQ1iAgEQCp1xm+kAAUFKBViTDvGNb5H1/hHOtffjktMePvlRYt2EVEdUd1uNwcAr9crWqQDvgfaMoHJ7Xaz+hzj8Xic2z/8cFCt318QNgyXaZjXgshRvxUEQCkVIRwQBlBLQC3jmimEGVQKSuPcIaXQpYKTCHEAbJGXowUpFflfAVAqxDX+md1m89ltzrIs18A3pk6dWnu+OrY1tEUCW50mAIARYeioUcmVlZVjQ+FwgRDiKiDKeafZs5Jr2heM8JnNZv9cSfmFMyZmf5zDcTysaRXt7faa1NRU48477ww//PDD6NChg75r1y798OHD8ZqmtQ8J0dEfCFwmpOxlGMa1UqlrhWn2BpAYIfRp2nHO99jt9rWxMTGL1q5c+aYlDVwul9bEekCToE0R2O12c4uwM2bMiFn3yiujQqHQz8Lh8CBEJCmICJAyqOn6h3ZNe43b+auJ7Tt9uHTBgn1KfXvfUpRDG/Lc6NGje1TW1t4cCocHhcPhVNM0fwLGHEpKICLqla7pb8TYY57NzUpfanF1/Ta0BbQJAtfvlClTpsR+9MknE2sDwZ+bSl4jpYwQRilh0/U3dbt9ZWJMzPoVK1Z8XJ9QSimWX1x8tZLyOiMUupoY62kYxiWMKJFx7gSRTZhCAQDXNIKSYSGEnxQquK6dEFJ+Zde03aTrn949fvwXo0ePriMSARg2evQN1dXVecFQaFg4HB5ARJpUCowxaIzvdjjsT9x8/fXPzZgxo00RurUJXCeOlVI0uLj4rqqqqmlCyB9JKcCIgXN21GazLUmIiVm4evXqtyyiEhEy8/J+SkCWKeUtSqnLlFSSCCcB7OOc75Om+bXd4TiuO51VoYqKapMxAwA0KXV7YmK84fcnhIJGR6bRFUKpyyFxuYK6hBEYiPYT0Tt2m23rhjVr/l3/uwXFxbfU1NSMC5vmaClEVyklGGPgnH8eHxf3t/WrV88hIhUlcqvOz61G4PojfOiIEWmnKioeMUxzoCkEOGPQNH2vw2af3aFLpxe8L7xw0Hovq7AwXZrmSCnETwGAiHZwTXudc/72PXfcsbs+510IlixZwp994YWrDUP+VEkjVSm6iUgxInpb4/Zlm9at3mI9O3bixEtPHjlyR20gUGKaZk8hJTjn0Ln2ZkJ83INrV6169ey2tjRahcBRhcScOnVq/LsffvSnQND/n6YQjBGBa9oRZ0zM47179Hhm9uzZxwFgyNixXWorT00wTTmEFBgx2qJxvvKV9evfPcd8yl0uFwER6xQA9OnTRwFAaWkpAMDj8QAAdu7cSQBgWb18Pp8CcAYhiAg5BQVJphDDlJBZCkpxTVuT4HA8v3z58sMAcPfkyR2+2vnZPcFwcLJpml1VhKNljMPxZP++fX8/ffr0SqvNzdKh34KWJjBFL1kwdGhaZXX1P00zvE4IAc656YyJmd350vZ/fen5x8cL6h1BKsZ7s9OnT4z/88MOJtbW1o6SUw6SUw6SUg5RSQinFHUpJMMYgpUR1dTWCwSA0TUPTpk0BAJqmsY6ODgBAY2MjgsEgGGNwu91gjIFzjjlz5gAAbDYbGGPQNA1+vx+lpaUQQoAxhuzsbAiF4gpdLhc8Hk9eH0dEQNM0MMbAOYfT6YTT6QRTSoExhlAohJqaGgQCAWiahqamJrjdbjDGoGkaDMNAIBDAkiVLIISAz+eDy+WCUgrz5s0DAKiq6qJQKISqqiokEglUVVXB6XTCNE34/X44HA4kEgn4fD643W4wxqBpGhwOB1RVhdvtxsyZM8E5h2mamDlzJgDglVdeybsvpRT4fD5UV1cjEokgPz8f+fn5YIyBMYbS0lKUl5fD7/dD0zQ0adIETqcTpmni5ptvxtKlS5GamgpVVXHppZeiY8eO8Pl8aNKkCVJSUqBpGkpKSlBYWAhVVZGSkgJVVZFfR8f8A3Kc3bX6dQe1AAAAAElFTkSuQmCC" class="co-logo" />
+        <div>
+          <div class="co-name">Engstrom Wood Products</div>
+          <div class="co-tag">CUSTOM CABINETRY &nbsp;·&nbsp; FINE WOODWORKING &nbsp;·&nbsp; PRECISION INSTALLATION</div>
+        </div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="doc-type">QUOTE — FOR CUSTOMER</div>
+      <div class="doc-id">${project.id}</div>
+    </div>
+  </div>
+
+  <div class="info-strip">
+    ${ic("Project Name", project.name)}
+    ${ic("Address", project.address)}
+    ${ic("Bid Date", fmtD(project.bidDate))}
+    ${ic("Contact", project.contactName)}
+    ${ic("Phone", project.contactPhone)}
+    ${ic("Email", project.email)}
+  </div>
+
+  <div class="sec">PROJECT SUMMARY</div>
+  <table>
+    <colgroup>
+      <col style="width:28%"><col style="width:14%"><col style="width:14%">
+      <col style="width:14%"><col style="width:15%"><col style="width:15%">
+    </colgroup>
+    <thead><tr>
+      <th>Room</th>
+      <th class="r">Cabinetry</th>
+      <th class="r">Upgrades</th>
+      <th class="r">Finishing</th>
+      <th class="r">Installation</th>
+      <th class="r">Room Total</th>
+    </tr></thead>
+    <tbody>
+      ${roomTotals.map((r,i) => `<tr>
+        <td><strong>${r.name || "Room "+(i+1)}</strong></td>
+        <td class="num">${fmtN(r.cab)}</td>
+        <td class="num">${fmtN(r.upg)}</td>
+        <td class="num">${fmtN(r.fin)}</td>
+        <td class="num">${fmtN(r.inst)}</td>
+        <td class="amt">${fmtN(r.total)}</td>
+      </tr>`).join("")}
+      <tr style="background:#F2EDE4; border-top:1.5px solid #8C7355;">
+        <td style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8C7355;">Totals</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandCab)}</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandUpg)}</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandFin)}</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandInst)}</td>
+        <td class="amt" style="font-size:11pt;">${fmtN(grandCab+grandUpg+grandFin+grandInst)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  ${delivery > 0 ? `
+  <div class="grand-bar standalone" style="margin-top:8px; background:#FAF7F2; border-color:#DDD5C8;">
+    <div>
+      <div class="gl" style="font-size:11pt; color:#8C7355;">DELIVERY</div>
+      ${project.deliveryNotes ? `<div class="gs">${project.deliveryNotes}</div>` : ""}
+    </div>
+    <div class="gv" style="font-size:15pt; color:#8C7355;">${fmtN(delivery)}</div>
+  </div>` : ""}
+
+  ${project.taxEnabled ? `
+  <div class="grand-bar standalone" style="margin-top:4px; background:#FAF7F2; border-color:#DDD5C8;">
+    <div>
+      <div class="gl" style="font-size:11pt; color:#8C7355;">ESTIMATED TAX (${pdfTaxRate}%)</div>
+      <div class="gs">Applied to project subtotal${delivery > 0 ? " including delivery" : ""}</div>
+    </div>
+    <div class="gv" style="font-size:15pt; color:#8C7355;">${fmtN(pdfTaxAmt)}</div>
+  </div>` : ""}
+
+  <div class="grand-bar standalone">
+    <div>
+      <div class="gl">GRAND TOTAL</div>
+      <div class="gs">${rooms.length} room${rooms.length!==1?"s":""} &nbsp;·&nbsp; ${fmtD(project.bidDate)}${delivery > 0 ? " &nbsp;·&nbsp; incl. delivery" : ""}${project.taxEnabled ? ` &nbsp;·&nbsp; incl. ${pdfTaxRate}% tax` : ""}</div>
+    </div>
+    <div class="gv">${fmtN(grandTotal)}</div>
+  </div>
+
+  <div class="thank-you">
+    <h3>Thank You for Considering Engstrom Wood Products</h3>
+    <p>We look forward to working with you on this project. Please contact us if you have any questions.</p>
+  </div>
+
+  <div style="margin-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:32px;">
+    <div>
+      <div style="font-size:8pt; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:#9B8E82; margin-bottom:6px;">Client Acceptance</div>
+      <div style="border-bottom:1px solid #2A2118; height:36px; margin-bottom:6px;"></div>
+      <div style="margin-bottom:4px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Printed Name</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Date</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:8pt; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:#9B8E82; margin-bottom:6px;">Authorized by Engstrom Wood Products</div>
+      <div style="border-bottom:1px solid #2A2118; height:36px; margin-bottom:6px;"></div>
+      <div style="margin-bottom:4px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Printed Name</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Date</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+</div>`;
+
+  // ── PER-ROOM PAGES ───────────────────────────────────────────
+  rooms.forEach((room, ri) => {
+    const rt = roomTotals[ri];
+    html += `<div class="page">
+  <div class="hdr">
+    <div>
+      <div class="co-brand">
+        <div>
+          <div class="co-name">Engstrom Wood Products</div>
+          <div class="co-tag">CUSTOM CABINETRY &nbsp;·&nbsp; FINE WOODWORKING &nbsp;·&nbsp; PRECISION INSTALLATION</div>
+        </div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="doc-type">${room.name || "Room "+(ri+1)} &nbsp;·&nbsp; Room ${ri+1} of ${rooms.length}</div>
+      <div class="doc-id">${project.id} &nbsp;·&nbsp; ${project.name}</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="sec">CABINETRY</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0).length === 0
+          ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No cabinetry items</td></tr>`
+          : room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0).map(item => {
+              const prod = PRICING.woodwork.find(w => w.name === item.product);
+              const con  = PRICING.construction.find(c => c.name === item.construction);
+              const wood = PRICING.wood.find(w => w.name === item.wood);
+              const sp   = prod ? prod.price * (1+(con?.premium||0)) * (1+(wood?.premium||0)) : 0;
+              const qty  = parseFloat(item.qty) || 0;
+              const adj  = parseFloat(item.adjPct) || 0;
+              const lineTotal = sp * qty * (1 + adj/100);
+              const desc = [item.product, item.construction !== "Not Applicable" ? item.construction : null, item.wood !== "Not Applicable" ? item.wood : null].filter(Boolean).join(" — ");
+              return `<tr><td>${desc} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN(lineTotal)}</td></tr>`;
+            }).join("")
+        }
+      </tbody>
+    </table>
+    ${sub("Cabinetry Total", rt.cab)}
+  </div>
+
+  <div class="block">
+    <div class="sec">UPGRADES</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0).length === 0
+          ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No upgrade items</td></tr>`
+          : room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0).map(item => {
+              const upg = PRICING.upgrades.find(u => u.name === item.upgrade);
+              const qty = parseFloat(item.qty) || 0;
+              const adj = parseFloat(item.adjPct) || 0;
+              return `<tr><td>${item.upgrade} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN((upg?.price||0)*qty*(1+adj/100))}</td></tr>`;
+            }).join("")
+        }
+      </tbody>
+    </table>
+    ${sub("Upgrades Total", rt.upg)}
+  </div>
+
+  <div class="block">
+    <div class="sec">FINISHING</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.finishing.filter(i => i.type && parseFloat(i.lf) > 0).length === 0
+          ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No finishing items</td></tr>`
+          : room.finishing.filter(i => i.type && parseFloat(i.lf) > 0).map(item => {
+              const fin = PRICING.finishing.find(f => f.name === item.type);
+              const lf  = parseFloat(item.lf) || 0;
+              const adj = parseFloat(item.adjPct) || 0;
+              return `<tr><td>${item.type} — ${lf} LF${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN((fin?.pricePerLF||0)*lf*(1+adj/100))}</td></tr>`;
+            }).join("")
+        }
+      </tbody>
+    </table>
+    ${sub("Finishing Total", rt.fin)}
+  </div>
+
+  <div class="block">
+    <div class="sec">INSTALLATION</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.install.type
+          ? `<tr><td>${room.install.type}${room.install.metric ? ` × ${room.install.metric} hrs` : ""}${room.install.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${room.install.notes}</span>` : ""}</td><td class="amt">${fmtN(rt.inst)}</td></tr>`
+          : `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No installation</td></tr>`
+        }
+      </tbody>
+    </table>
+    ${sub("Installation Total", rt.inst)}
+  </div>
+
+  <div class="totals-strip">
+    <div class="ts"><div class="ts-lbl">Cabinetry</div><div class="ts-val">${fmtN(rt.cab)}</div></div>
+    <div class="ts"><div class="ts-lbl">Upgrades</div><div class="ts-val">${fmtN(rt.upg)}</div></div>
+    <div class="ts"><div class="ts-lbl">Finishing</div><div class="ts-val">${fmtN(rt.fin)}</div></div>
+    <div class="ts"><div class="ts-lbl">Installation</div><div class="ts-val">${fmtN(rt.inst)}</div></div>
+  </div>
+  <div class="grand-bar">
+    <div>
+      <div class="gl">ROOM TOTAL</div>
+      <div class="gs">${room.name || "Room "+(ri+1)} &nbsp;·&nbsp; Room ${ri+1} of ${rooms.length}</div>
+    </div>
+    <div class="gv">${fmtN(rt.total)}</div>
+  </div>
+
+  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+</div>`;
+  });
+
+  // ── open print window ─────────────────────────────────────────
+  const win = window.open("about:blank", "_blank");
+  if (!win) { onStatus("error", "Pop-ups blocked — please allow pop-ups for this site."); return; }
+
+  const safeName = (project.name||"Quote").replace(/[^a-zA-Z0-9_\- ]/g,"");
   win.document.open();
   win.document.write("<!DOCTYPE html><html><head>");
   win.document.write("<meta charset='utf-8'>");
@@ -1242,7 +1903,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
     <div className="card" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>CABINETRY</span>
-        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.1)", color: "var(--gold-light)", border: "1px solid rgba(201,169,110,0.4)" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
         <table className="data-table">
@@ -1324,7 +1985,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
     <div className="card" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>UPGRADES / OVERRIDES</span>
-        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.1)", color: "var(--gold-light)", border: "1px solid rgba(201,169,110,0.4)" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
         <table className="data-table">
@@ -1390,7 +2051,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
     <div className="card" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>FINISHING</span>
-        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.1)", color: "var(--gold-light)", border: "1px solid rgba(201,169,110,0.4)" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
 
       {/* Estimated LF hint from cabinetry */}
@@ -1745,9 +2406,16 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
                   placeholder="8"
                   onChange={e => {
                     const raw = e.target.value
-                    if (raw === "") { onChange({ taxRate: "" }); return }
+                    if (raw === "" || raw === "." || raw === "0" || raw === "0.") {
+                      onChange({ taxRate: raw })
+                      return
+                    }
                     const n = parseFloat(raw)
-                    onChange({ taxRate: Number.isFinite(n) ? String(Math.max(0.1, n)) : "" })
+                    onChange({ taxRate: Number.isFinite(n) ? raw : "" })
+                  }}
+                  onBlur={e => {
+                    const n = parseFloat(project.taxRate)
+                    if (!Number.isFinite(n) || n < 0.1) onChange({ taxRate: "8" })
                   }}
                 />
               </Field>
@@ -1825,16 +2493,29 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
   const [pdfStatus, setPdfStatus] = useState("idle");
   const [pdfError, setPdfError]   = useState(null);
 
-  const handleExport = () => {
+  const [pdfStatus2, setPdfStatus2] = useState("idle");
+  const [pdfError2, setPdfError2] = useState(null);
+
+  const handleExportInternal = () => {
     setPdfError(null);
-    exportPDF(project, rooms, (status, errMsg) => {
+    exportPDFInternal(project, rooms, (status, errMsg) => {
       setPdfStatus(status);
       if (errMsg) setPdfError(errMsg);
     });
   };
 
-  const pdfBtnLabel = { idle:"📥 Export PDF", generating:"⏳ Preparing…", done:"📥 Export Again", error:"⚠ Try Again" }[pdfStatus] || "📥 Export PDF";
+  const handleExportCustomer = () => {
+    setPdfError2(null);
+    exportPDFCustomer(project, rooms, (status, errMsg) => {
+      setPdfStatus2(status);
+      if (errMsg) setPdfError2(errMsg);
+    });
+  };
+
+  const pdfBtnLabel = { idle:"📥 Quote (Internal)", generating:"⏳ Preparing…", done:"📥 Quote (Internal)", error:"⚠ Try Again" }[pdfStatus] || "📥 Quote (Internal)";
+  const pdfBtnLabel2 = { idle:"📥 Quote (Customer)", generating:"⏳ Preparing…", done:"📥 Quote (Customer)", error:"⚠ Try Again" }[pdfStatus2] || "📥 Quote (Customer)";
   const pdfBusy = pdfStatus === "generating";
+  const pdfBusy2 = pdfStatus2 === "generating";
   const roomTotals = rooms.map(r => {
     const cab = calcCabinetry(r.cabinetry);
     const upg = calcUpgrades(r.upgrades);
@@ -1863,7 +2544,8 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
             <div className="page-subtitle">{project.name} · {fmtDate(project.bidDate)} · ID: {project.id}</div>
           </div>
           <div className="flex gap-8">
-            <button className="btn btn-outline" onClick={handleExport} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
+            <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
+            <button className="btn btn-outline" onClick={handleExportCustomer} disabled={pdfBusy2} style={{opacity:pdfBusy2?0.6:1}}>{pdfBtnLabel2}</button>
             
             <button className="btn btn-gold" onClick={onSave}>💾 Save Estimate</button>
           </div>
@@ -1954,7 +2636,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
             <div className="card">
               <div className="card-header" style={{ justifyContent: "space-between" }}>
                 <span className="card-title">{room.name || `ROOM ${ri + 1}`}</span>
-                <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "var(--gold-light)", fontWeight: 600 }}>{fmt(rt.total)}</span>
+                <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "var(--gold)", fontWeight: 700 }}>{fmt(rt.total)}</span>
               </div>
               <div className="card-body">
                 {cabItems.length > 0 && (
@@ -2046,7 +2728,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
       <div className="flex justify-between items-center mt-24">
         <button className="btn btn-outline" onClick={onBack}>← Back to Final Details</button>
         <div className="flex gap-8">
-          <button className="btn btn-outline" onClick={handleExport} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
+          <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
             
           <button className="btn btn-gold btn-lg" onClick={onSave}>💾 Save Estimate</button>
         </div>
@@ -2056,7 +2738,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
-function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onEmail }) {
+function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail }) {
   const [search, setSearch] = useState("");
   const filtered = projects
     .filter(p =>
@@ -2092,16 +2774,21 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 28 }}>
         {[
           ["Total Projects", projects.length, "📋"],
           ["Active Estimates", projects.length, "📝"],
           ["Total Est. Value", fmt(totalRevenue), "💰"],
         ].map(([lbl, val, icon]) => (
-          <div key={lbl} style={{ background: "var(--card-bg)", border: "1px solid var(--ivory3)", borderRadius: 6, padding: "20px 24px", borderLeft: "3px solid var(--gold)" }}>
-            <div style={{ fontSize: 24, marginBottom: 6 }}>{icon}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", marginBottom: 4 }}>{lbl}</div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 700, color: "var(--char)" }}>{val}</div>
+          <div key={lbl} style={{
+            background: "var(--card-bg)", border: "1px solid var(--ivory3)",
+            borderRadius: 4, padding: "20px 24px",
+            borderTop: "2px solid var(--gold)",
+            boxShadow: "0 1px 6px rgba(20,15,5,0.04)",
+          }}>
+            <div style={{ fontSize: 20, marginBottom: 8, opacity: 0.5 }}>{icon}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--muted)", marginBottom: 4 }}>{lbl}</div>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "var(--char)" }}>{val}</div>
           </div>
         ))}
       </div>
@@ -2138,19 +2825,27 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                   <div className="project-row-meta">{p.project.address} · {p.rooms.length} room{p.rooms.length !== 1 ? "s" : ""} · {fmtDate(p.project.bidDate)}</div>
                 </div>
                 <div className="flex items-center gap-8" onClick={e => e.stopPropagation()}>
-                  <div className="project-row-total" style={{ marginRight: 8 }}>{fmt(gt)}</div>
-                  {/* Generate Quote */}
+                  <div className="project-row-total" style={{ marginRight: 8, color: "var(--gold)" }}>{fmt(gt)}</div>
+                  {/* Quote — Internal */}
+                  <button
+                    className={`btn ${allComplete ? "btn-primary" : "btn-outline"}`}
+                    style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
+                    title={allComplete ? "Generate internal PDF quote" : "Complete all rooms to generate quote"}
+                    onClick={() => allComplete && onGenerateQuote(realIdx)}>
+                    📄 Internal
+                  </button>
+                  {/* Quote — Customer */}
                   <button
                     className={`btn ${allComplete ? "btn-gold" : "btn-outline"}`}
-                    style={{ fontSize: 11, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
-                    title={allComplete ? "Generate PDF quote" : "Complete all rooms to generate quote"}
-                    onClick={() => allComplete && onGenerateQuote(realIdx)}>
-                    📄 Quote
+                    style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
+                    title={allComplete ? "Generate customer PDF quote" : "Complete all rooms to generate quote"}
+                    onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
+                    📄 Client
                   </button>
                   {/* Email */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 11, padding: "4px 10px" }}
+                    style={{ fontSize: 10, padding: "4px 10px" }}
                     title="Email this estimate"
                     onClick={() => onEmail(realIdx)}>
                     ✉ Email
@@ -2158,7 +2853,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                   {/* Duplicate */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 11, padding: "4px 10px" }}
+                    style={{ fontSize: 10, padding: "4px 10px" }}
                     title="Duplicate project"
                     onClick={() => onDuplicate(realIdx)}>
                     ⧉ Duplicate
@@ -2166,7 +2861,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                   {/* Delete */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 11, padding: "4px 10px", color: "var(--red, #c0392b)", borderColor: "var(--red, #c0392b)" }}
+                    style={{ fontSize: 10, padding: "4px 10px", color: "var(--red)", borderColor: "rgba(184,59,46,0.3)" }}
                     title="Delete project"
                     onClick={() => onDelete(realIdx)}>
                     🗑
@@ -2193,12 +2888,19 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const [deletePendingIdx, setDeletePendingIdx] = useState(null);
 
   const [dark, setDark] = useState(() => localStorage.getItem('ewp-theme') === 'dark');
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
     localStorage.setItem('ewp-theme', dark ? 'dark' : 'light');
     window.dispatchEvent(new Event("ewp-theme-change"))
   }, [dark]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const [project, setProject] = useState({
     id: genId(), name: "", address: "", contactName: "", contactPhone: "",
@@ -2312,7 +3014,14 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
-      background:"#FDFAF5", fontFamily:"'DM Sans',sans-serif", color:"#9E9E9E", fontSize:14 }}>
+      background:"#F6F1E8", fontFamily:"'DM Sans',sans-serif", color:"rgb(140,145,145)", fontSize:11,
+      letterSpacing: "0.14em", textTransform: "uppercase", flexDirection: "column", gap: 14 }}>
+      <div style={{ width: 52, height: 52, border: "2px solid rgb(73,77,77)", borderRadius: "50%",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "rgb(73,77,77)", fontWeight: 700,
+        background: "rgba(73,77,77,0.06)" }}>
+        EWP
+      </div>
       Loading estimates…
     </div>
   );
@@ -2322,7 +3031,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
       <style>{styles}</style>
       <div className={`app${dark ? " dark" : ""}`}>
         {/* TOPBAR */}
-        <div className="topbar">
+        <div className={`topbar${scrolled ? " scrolled" : ""}`}>
           <div className="topbar-logo">
             <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" />
             <div>
@@ -2334,11 +3043,12 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             {isAdmin && (
               <button onClick={onOpenAdmin} style={{
                 background: "transparent",
-                border: "1px solid rgba(201,169,110,0.35)",
-                borderRadius: 20, padding: "6px 14px", cursor: "pointer",
-                color: "var(--gold-light)", fontSize: 13,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                border: "1px solid rgba(73,77,77,0.25)",
+                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
+                color: "var(--ewp-slate)", fontSize: 11,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 display: "flex", alignItems: "center", gap: 6,
+                letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
                 👥 Admin
               </button>
@@ -2347,17 +3057,18 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               onClick={() => setDark(d => !d)}
               title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               style={{
-                background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
-                border: "1px solid rgba(201,169,110,0.35)",
-                borderRadius: 20,
+                background: "transparent",
+                border: "1px solid rgba(73,77,77,0.25)",
+                borderRadius: 3,
                 padding: "6px 14px",
                 cursor: "pointer",
-                color: "var(--gold-light)",
-                fontSize: 13,
+                color: "var(--ewp-slate)",
+                fontSize: 11,
                 fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 500,
+                fontWeight: 700,
                 display: "flex", alignItems: "center", gap: 6,
                 transition: "all 0.15s",
+                letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
               {dark ? "☀ Light" : "☾ Dark"}
             </button>
@@ -2365,11 +3076,12 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               onClick={() => import("./supabase.js").then(m => m.supabase.auth.signOut())}
               style={{
                 background: "transparent",
-                border: "1px solid rgba(201,169,110,0.35)",
-                borderRadius: 20, padding: "6px 14px", cursor: "pointer",
-                color: "var(--gold-light)", fontSize: 13,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                border: "1px solid rgba(73,77,77,0.25)",
+                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
+                color: "var(--ewp-slate)", fontSize: 11,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 display: "flex", alignItems: "center", gap: 6,
+                letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
               Sign Out
             </button>
@@ -2430,20 +3142,24 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               setStep(3);
               // slight delay so component mounts, then trigger export
               setTimeout(() => {
-                exportPDF(p.project, p.rooms, () => {});
+                exportPDFInternal(p.project, p.rooms, () => {});
               }, 400);
+            }}
+            onGenerateQuoteCustomer={(i) => {
+              const p = projects[i];
+              exportPDFCustomer(p.project, p.rooms, () => {});
             }}
             onEmail={(i) => {
               const p = projects[i];
-              const subject = encodeURIComponent("Estimate: " + p.project.name);
+              const subject = encodeURIComponent("Quote: " + p.project.name);
               const lines = [
                 "Hi " + (p.project.contactName || "") + ",",
                 "",
-                "Please find attached your estimate for " + p.project.name + ".",
+                "Please find attached your quote for " + p.project.name + ".",
                 "",
                 "Project Address: " + p.project.address,
                 "Bid Date: " + fmtDate(p.project.bidDate || ""),
-                "Estimate ID: " + p.project.id,
+                "Quote ID: " + p.project.id,
                 "",
                 "Please don't hesitate to reach out with any questions.",
                 "",

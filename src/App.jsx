@@ -206,7 +206,7 @@ const styles = `
   }
   .topbar-right { display: flex; align-items: center; gap: 8px; }
 
-  /* ── STEPPER ── */
+  /* ── STEPPER (see animation block below) ── */
   .stepper {
     background: var(--header-bg);
     border-bottom: 1px solid var(--header-border);
@@ -216,30 +216,6 @@ const styles = `
     gap: 0;
     overflow-x: auto;
   }
-  .step {
-    display: flex; align-items: center;
-    padding: 14px 22px;
-    gap: 9px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .step:hover { background: var(--ivory2); }
-  .step.active { border-bottom-color: var(--gold); }
-  .step-num {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 700;
-    background: var(--ivory3);
-    color: var(--mid);
-    flex-shrink: 0;
-    border: 1.5px solid var(--rule);
-  }
-  .step.active .step-num { background: var(--gold); color: #fff; border-color: var(--gold); }
-  .step.done .step-num { background: var(--green); color: #fff; border-color: var(--green); }
   .step-label { font-size: 12px; font-weight: 500; color: var(--mid); letter-spacing: 0.02em; }
   .step.active .step-label { color: var(--char); font-weight: 700; }
 
@@ -262,15 +238,7 @@ const styles = `
     margin: 12px 0;
   }
 
-  /* ── CARDS ── */
-  .card {
-    background: var(--card-bg);
-    border: 1px solid var(--ivory3);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 8px rgba(20,15,5,0.05);
-  }
+  /* ── CARD (see animation block below) ── */
   .card-header {
     background: var(--ivory2);
     padding: 12px 20px;
@@ -299,26 +267,15 @@ const styles = `
     letter-spacing: 0.14em;
   }
 
-  input, select, textarea {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: var(--char);
-    background: var(--input-bg);
-    border: 1px solid var(--rule);
-    border-radius: 3px;
-    padding: 9px 12px;
-    width: 100%;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    outline: none;
-    appearance: none;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(138,106,56,0.1);
-    background: var(--input-focus-bg);
-  }
+  /* ── FORM ELEMENTS (inputs see animation block below) ── */
   input.error, select.error { border-color: var(--red); }
   .field-error { font-size: 11px; color: var(--red); }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%238C7B6A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
 
   select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%238C7B6A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -327,47 +284,10 @@ const styles = `
     padding-right: 32px;
   }
 
-  /* ── BUTTONS ── */
-  .btn {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px; font-weight: 700;
-    padding: 10px 20px;
-    border-radius: 3px;
-    border: none;
-    cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px;
-    transition: all 0.15s;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .btn-primary { background: var(--ewp-slate); color: #fff; }
-  .btn-primary:hover { background: var(--ewp-slate2); }
-  .btn-gold { background: var(--gold); color: #fff; }
-  .btn-gold:hover { background: #7A5C2C; box-shadow: 0 2px 8px rgba(138,106,56,0.3); }
-  .btn-outline { background: transparent; color: var(--char); border: 1px solid var(--rule); }
-  .btn-outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
-  .btn-ghost { background: transparent; color: var(--mid); border: none; padding: 6px 10px; }
-  .btn-ghost:hover { color: var(--char); }
-  .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(184,59,46,0.3); }
-  .btn-danger:hover { background: rgba(184,59,46,0.05); border-color: var(--red); }
-  .btn-sm { padding: 5px 12px; font-size: 10px; }
-  .btn-lg { padding: 13px 32px; font-size: 12px; letter-spacing: 0.1em; }
+  /* ── BUTTONS (see animation block below) ── */
 
-  /* ── ROOM TABS ── */
+  /* ── ROOM TABS (see animation block below) ── */
   .room-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
-  .room-tab {
-    padding: 7px 15px;
-    border-radius: 3px;
-    border: 1px solid var(--ivory3);
-    background: var(--card-bg);
-    cursor: pointer;
-    font-size: 12px; font-weight: 500;
-    color: var(--mid);
-    transition: all 0.15s;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); }
-  .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); }
   .room-tab-add {
     border-style: dashed;
     color: var(--gold);
@@ -432,51 +352,18 @@ const styles = `
     display: flex; align-items: center; justify-content: space-between;
   }
 
-  /* ── SUMMARY CARDS ── */
-  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
-  .summary-card {
-    background: var(--card-bg);
-    border: 1px solid var(--ivory3);
-    border-radius: 4px;
-    padding: 14px 16px;
-    border-top: 2px solid var(--gold);
-  }
+  /* ── SUMMARY CARDS (see animation block below) ── */
   .summary-card-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 6px; text-align: center; }
-  .summary-card-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--char); text-align: center; }
 
-  /* ── GRAND TOTAL ── */
-  .grand-total {
-    background: var(--ewp-slate);
-    border-radius: 4px;
-    padding: 24px 32px;
-    display: flex; align-items: center; justify-content: space-between;
-    margin-top: 8px;
-  }
+  /* ── GRAND TOTAL (see animation block below) ── */
   .grand-total-label {
     font-family: 'Cormorant Garamond', serif;
     font-size: 22px; font-weight: 600;
     color: rgba(255,255,255,0.9);
     letter-spacing: 0.06em;
   }
-  .grand-total-value {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 30px; font-weight: 700;
-    color: var(--gold-light);
-  }
 
-  /* ── PROJECT LIST ── */
-  .project-list { display: flex; flex-direction: column; gap: 8px; }
-  .project-row {
-    background: var(--card-bg);
-    border: 1px solid var(--ivory3);
-    border-left: 3px solid transparent;
-    border-radius: 4px;
-    padding: 16px 20px;
-    display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .project-row:hover { border-left-color: var(--gold); box-shadow: 0 2px 12px rgba(20,15,5,0.07); }
+  /* ── PROJECT LIST (see animation block below) ── */
   .project-row-name { font-weight: 600; font-size: 15px; color: var(--ewp-slate); }
   .project-row-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
   .project-row-total { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--ewp-slate); }
@@ -503,40 +390,11 @@ const styles = `
   .divider { height: 1px; background: var(--ivory3); margin: 20px 0; }
   .scrollable { overflow-x: auto; }
 
-  /* ── EMPTY STATE ── */
-  .empty-state {
-    text-align: center; padding: 80px 20px;
-    color: var(--muted);
-  }
-  .empty-icon { font-size: 36px; margin-bottom: 16px; opacity: 0.35; }
-  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--char); margin-bottom: 8px; font-weight: 600; }
+  /* ── EMPTY STATE (see animation block below) ── */
 
-  /* ── TOAST ── */
-  .toast {
-    position: fixed; bottom: 24px; right: 24px;
-    background: var(--char); color: #fff;
-    padding: 12px 20px; border-radius: 3px;
-    font-size: 13px; border-left: 3px solid var(--gold);
-    z-index: 999; animation: slideUp 0.3s ease;
-    box-shadow: 0 8px 24px rgba(20,15,5,0.2);
-  }
-  @keyframes slideUp { from { transform: translateY(12px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  /* ── TOAST (see animation block below) ── */
 
-  /* ── MODAL ── */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(20,15,5,0.45);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 200; padding: 20px;
-    backdrop-filter: blur(2px);
-  }
-  .modal {
-    background: var(--card-bg); border-radius: 4px;
-    width: 100%; max-width: 480px;
-    box-shadow: 0 20px 60px rgba(20,15,5,0.18);
-    overflow: hidden;
-    border: 1px solid var(--ivory3);
-  }
+  /* ── MODAL (see animation block below) ── */
   .modal-header {
     background: var(--ivory2); padding: 16px 24px;
     display: flex; align-items: center; justify-content: space-between;
@@ -637,6 +495,342 @@ const styles = `
   .dark .room-tab { background: var(--card-bg); border-color: var(--ivory3); color: var(--mid); }
   .dark .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); }
   .dark .room-tab.active { background: var(--gold); color: #201E18; border-color: var(--gold); }
+
+  @media (max-width: 768px) {
+    .main { padding: 20px 16px; }
+    .topbar { padding: 0 16px; height: 76px; }
+    .stepper { padding: 0 16px; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid-3, .form-grid-4 { grid-template-columns: 1fr 1fr; }
+    .grand-total { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
+  }
+
+  /* ── KEYFRAMES ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  @keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(138,106,56,0.4); }
+    50%       { box-shadow: 0 0 0 6px rgba(138,106,56,0); }
+  }
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spinIn {
+    from { opacity: 0; transform: rotate(-8deg) scale(0.92); }
+    to   { opacity: 1; transform: rotate(0deg)  scale(1); }
+  }
+  @keyframes goldRule {
+    from { width: 0; opacity: 0; }
+    to   { width: 100px; opacity: 1; }
+  }
+  @keyframes stepDone {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+
+  /* ── PAGE ENTRANCE ── */
+  .main > div {
+    animation: fadeUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .page-title {
+    animation: slideInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .page-subtitle {
+    animation: fadeUp 0.4s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .gold-rule {
+    animation: goldRule 0.55s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--ivory3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 8px rgba(20,15,5,0.05);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    animation: fadeUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .card:hover {
+    box-shadow: 0 4px 20px rgba(20,15,5,0.09);
+    transform: translateY(-1px);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.12);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .btn:hover::after { opacity: 1; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--ewp-slate); color: #fff; }
+  .btn-primary:hover { background: var(--ewp-slate2); box-shadow: 0 4px 14px rgba(73,77,77,0.28); transform: translateY(-1px); }
+  .btn-gold { background: var(--gold); color: #fff; }
+  .btn-gold:hover { background: #7A5C2C; box-shadow: 0 4px 14px rgba(138,106,56,0.38); transform: translateY(-1px); }
+  .btn-outline { background: transparent; color: var(--char); border: 1px solid var(--rule); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--mid); border: none; padding: 6px 10px; }
+  .btn-ghost:hover { color: var(--char); }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(184,59,46,0.3); }
+  .btn-danger:hover { background: rgba(184,59,46,0.05); border-color: var(--red); }
+  .btn-sm { padding: 5px 12px; font-size: 10px; }
+  .btn-lg { padding: 13px 32px; font-size: 12px; letter-spacing: 0.1em; }
+
+  /* ── INPUTS ── */
+  input, select, textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--char);
+    background: var(--input-bg);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 9px 12px;
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    outline: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(138,106,56,0.12);
+    background: var(--input-focus-bg);
+    transform: translateY(-1px);
+  }
+
+  /* ── PROJECT ROWS ── */
+  .project-list { display: flex; flex-direction: column; gap: 8px; }
+  .project-row {
+    background: var(--card-bg);
+    border: 1px solid var(--ivory3);
+    border-left: 3px solid transparent;
+    border-radius: 4px;
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    transition: border-left-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease, background 0.18s ease;
+    animation: fadeUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .project-row:nth-child(1) { animation-delay: 0.03s; }
+  .project-row:nth-child(2) { animation-delay: 0.07s; }
+  .project-row:nth-child(3) { animation-delay: 0.11s; }
+  .project-row:nth-child(4) { animation-delay: 0.15s; }
+  .project-row:nth-child(5) { animation-delay: 0.19s; }
+  .project-row:nth-child(6) { animation-delay: 0.23s; }
+  .project-row:nth-child(7) { animation-delay: 0.27s; }
+  .project-row:nth-child(8) { animation-delay: 0.31s; }
+  .project-row:hover {
+    border-left-color: var(--gold);
+    box-shadow: 0 4px 20px rgba(20,15,5,0.1);
+    transform: translateX(3px);
+  }
+
+  /* ── ROOM TABS ── */
+  .room-tab {
+    padding: 7px 15px;
+    border-radius: 3px;
+    border: 1px solid var(--ivory3);
+    background: var(--card-bg);
+    cursor: pointer;
+    font-size: 12px; font-weight: 500;
+    color: var(--mid);
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); transform: translateY(-2px); box-shadow: 0 3px 10px rgba(138,106,56,0.15); }
+  .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(20,15,5,0.18); }
+
+  /* ── STEPPER ── */
+  .step {
+    display: flex; align-items: center;
+    padding: 14px 22px;
+    gap: 9px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.22s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .step:hover { background: var(--ivory2); }
+  .step.active { border-bottom-color: var(--gold); }
+  .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+    background: var(--ivory3);
+    color: var(--mid);
+    flex-shrink: 0;
+    border: 1.5px solid var(--rule);
+    transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+  .step.active .step-num { background: var(--gold); color: #fff; border-color: var(--gold); transform: scale(1.1); }
+  .step.done .step-num { background: var(--green); color: #fff; border-color: var(--green); animation: stepDone 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+
+  /* ── SUMMARY CARDS ── */
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
+  .summary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--ivory3);
+    border-radius: 4px;
+    padding: 14px 16px;
+    border-top: 2px solid var(--gold);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    animation: scaleIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(138,106,56,0.12); }
+  .summary-card-value {
+    font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--char); text-align: center;
+    animation: countUp 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── GRAND TOTAL ── */
+  .grand-total {
+    background: var(--ewp-slate);
+    border-radius: 4px;
+    padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 8px;
+    transition: box-shadow 0.25s ease;
+    animation: scaleIn 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .grand-total:hover { box-shadow: 0 8px 32px rgba(20,15,5,0.18); }
+  .grand-total-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px; font-weight: 700;
+    color: var(--gold-light);
+    animation: countUp 0.5s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(20,15,5,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; padding: 20px;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease both;
+  }
+  .modal {
+    background: var(--card-bg); border-radius: 4px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 20px 60px rgba(20,15,5,0.22);
+    overflow: hidden;
+    border: 1px solid var(--ivory3);
+    animation: scaleIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── DATA TABLE ROWS ── */
+  .data-table tbody tr {
+    transition: background 0.15s ease;
+  }
+  .data-table input, .data-table select {
+    padding: 5px 8px;
+    font-size: 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .data-table input:focus, .data-table select:focus {
+    background: var(--input-focus-bg);
+    border-color: var(--gold);
+    transform: none;
+  }
+
+  /* ── SECTION BANNER ── */
+  .section-banner {
+    background: var(--ivory2);
+    color: var(--ewp-slate);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--ivory3);
+    border-left: 3px solid var(--ewp-slate);
+    display: flex; align-items: center; justify-content: space-between;
+    transition: border-left-color 0.2s ease;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--char); color: #fff;
+    padding: 12px 20px; border-radius: 3px;
+    font-size: 13px; border-left: 3px solid var(--gold);
+    z-index: 999; animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 8px 32px rgba(20,15,5,0.25);
+  }
+
+  /* ── DASHBOARD STAT CARDS ── */
+  .stat-card-anim:nth-child(1) { animation: fadeUp 0.38s 0.04s cubic-bezier(0.22,1,0.36,1) both; }
+  .stat-card-anim:nth-child(2) { animation: fadeUp 0.38s 0.10s cubic-bezier(0.22,1,0.36,1) both; }
+  .stat-card-anim:nth-child(3) { animation: fadeUp 0.38s 0.16s cubic-bezier(0.22,1,0.36,1) both; }
+
+  /* ── REPORT LINES ── */
+  .report-line {
+    display: flex; justify-content: space-between;
+    padding: 4px 0; font-size: 13px;
+    border-bottom: 1px solid var(--ivory3);
+    color: var(--char);
+    transition: background 0.12s ease;
+  }
+  .report-line:hover { background: var(--gold-bg); padding-left: 4px; padding-right: 4px; border-radius: 2px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 80px 20px;
+    color: var(--muted);
+    animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 
   @media (max-width: 768px) {
     .main { padding: 20px 16px; }
@@ -1204,7 +1398,7 @@ function exportPDFCustomer(project, rooms, onStatus) {
     const upg  = calcUpgrades(r.upgrades);
     const fin  = calcFinishing(r.finishing);
     const inst = calcInstall(r.install, cab);
-    return { name: r.name, total: cab + upg + fin + inst };
+    return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst };
   });
   const grandSubtotal = roomTotals.reduce((s,r) => s + r.total, 0);
   const delivery   = parseFloat(project.deliveryAmount) || 0;
@@ -1363,13 +1557,123 @@ function exportPDFCustomer(project, rooms, onStatus) {
     .thank-you p {
       font-size: 9pt; color: #9B8E82; line-height: 1.5;
     }
+
+    /* ── SECTION LABEL ── */
+    .sec {
+      background: #F2EDE4;
+      color: #2A2118;
+      font-family: 'DM Sans', Arial, sans-serif;
+      font-size: 8pt; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 5px 10px;
+      border-top: 1.5px solid #8C7355;
+      border-left: 1px solid #DDD5C8;
+      border-right: 1px solid #DDD5C8;
+    }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    thead th {
+      background: #F2EDE4;
+      font-size: 6.5pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: #5A4E42; padding: 4px 5px;
+      text-align: left;
+      border-bottom: 1px solid #DDD5C8;
+      border-left: 1px solid #DDD5C8;
+      white-space: nowrap;
+    }
+    thead th:first-child { border-left: none; }
+    thead th.r { text-align: right; }
+    tbody tr { border-bottom: 1px solid #EDE6DC; }
+    tbody tr:nth-child(even) td { background: #FAF7F2; }
+    tbody td { padding: 4px 5px; vertical-align: middle; color: #3D3228; border-left: 1px solid #EDE6DC; }
+    tbody td:first-child { border-left: none; }
+    tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody td.amt { text-align: right; font-weight: 600; color: #5A3E1A; font-variant-numeric: tabular-nums; }
+    table { border: 1px solid #DDD5C8; border-top: none; table-layout: fixed; }
+
+    /* ── SUBTOTAL BAR ── */
+    .sub-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #F2EDE4;
+      border: 1px solid #DDD5C8; border-top: 1.5px solid #8C7355;
+      padding: 5px 10px;
+      margin-bottom: 0;
+    }
+    .sub-bar-lbl { font-size: 7.5pt; font-weight: 700; color: #8C7355; letter-spacing: 0.09em; text-transform: uppercase; }
+    .sub-bar-val { font-size: 12pt; font-weight: 700; color: #2A2118; font-family: 'Cormorant Garamond', serif; }
+
+    .block { margin-bottom: 10px; }
+
+    /* ── TOTALS STRIP ── */
+    .totals-strip {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      background: #F2EDE4;
+      border: 1px solid #DDD5C8;
+      border-top: 2px solid #8C7355;
+      margin-top: 10px;
+    }
+    .ts { padding: 8px 12px; border-right: 1px solid #DDD5C8; text-align: center; }
+    .ts:last-child { border-right: none; }
+    .ts-lbl { font-size: 7pt; color: #9B8E82; text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 3px; font-weight: 600; }
+    .ts-val { font-size: 13pt; font-weight: 700; color: #2A2118; font-family: 'Cormorant Garamond', serif; }
+
+    /* ── GRAND TOTAL ── */
+    .grand-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #E8E0D4;
+      border: 1px solid #C8B89A;
+      border-top: none;
+      border-left: 5px solid #6B5030;
+      padding: 14px 20px;
+    }
+    .grand-bar .gl {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16pt; font-weight: 700; color: #1A120A;
+      letter-spacing: 0.06em;
+    }
+    .grand-bar .gs { font-size: 7.5pt; color: #9B8E82; margin-top: 3px; }
+    .grand-bar .gv {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28pt; font-weight: 700; color: #3D2408;
+      letter-spacing: -0.01em;
+    }
+    .grand-bar.standalone {
+      border-top: 2px solid #6B5030;
+      margin-top: 12px; padding: 18px 24px;
+    }
+    .grand-bar.standalone .gl { font-size: 18pt; }
+    .grand-bar.standalone .gv { font-size: 34pt; }
   `;
 
   // helpers
   const ic = (l, v) => `<div class="ic"><div class="ic-lbl">${l}</div><div class="ic-val">${v || "—"}</div></div>`;
+  const sub = (l, v) => `<div class="sub-bar"><span class="sub-bar-lbl">${l}</span><span class="sub-bar-val">${fmtN(v)}</span></div>`;
+
+  // grand totals
+  const grandCab  = roomTotals.reduce((s,r) => s + r.cab,  0);
+  const grandUpg  = roomTotals.reduce((s,r) => s + r.upg,  0);
+  const grandFin  = roomTotals.reduce((s,r) => s + r.fin,  0);
+  const grandInst = roomTotals.reduce((s,r) => s + r.inst, 0);
 
   // ── CUSTOMER QUOTE PAGE ──────────────────────────────────────
   let html = `<div class="page">
+  <style>
+    .room-summary-table { width: 100%; border-collapse: collapse; margin-top: 0; }
+    .room-summary-table th {
+      background: #F2EDE4; font-size: 7pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: #5A4E42;
+      padding: 7px 12px; text-align: left; border-bottom: 1.5px solid #8C7355;
+    }
+    .room-summary-table th.r { text-align: right; }
+    .room-summary-table td { padding: 8px 12px; border-bottom: 1px solid #EDE6DC; font-size: 10pt; color: #3D3228; }
+    .room-summary-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+    .room-summary-table td.amt { text-align: right; font-weight: 600; color: #5A3E1A; font-variant-numeric: tabular-nums; font-size: 11pt; }
+    .room-summary-table tr:nth-child(even) td { background: #FAF7F2; }
+    .room-summary-table .total-row td { background: #F2EDE4 !important; font-weight: 700; border-top: 1.5px solid #8C7355; }
+    .room-block { margin-bottom: 0; border: 1px solid #DDD5C8; border-top: none; }
+  </style>
   <div class="hdr">
     <div>
       <div class="co-brand">
@@ -1398,17 +1702,34 @@ function exportPDFCustomer(project, rooms, onStatus) {
   <div class="sec">PROJECT SUMMARY</div>
   <table>
     <colgroup>
-      <col style="width:60%"><col style="width:40%">
+      <col style="width:28%"><col style="width:14%"><col style="width:14%">
+      <col style="width:14%"><col style="width:15%"><col style="width:15%">
     </colgroup>
     <thead><tr>
       <th>Room</th>
+      <th class="r">Cabinetry</th>
+      <th class="r">Upgrades</th>
+      <th class="r">Finishing</th>
+      <th class="r">Installation</th>
       <th class="r">Room Total</th>
     </tr></thead>
     <tbody>
       ${roomTotals.map((r,i) => `<tr>
         <td><strong>${r.name || "Room "+(i+1)}</strong></td>
+        <td class="num">${fmtN(r.cab)}</td>
+        <td class="num">${fmtN(r.upg)}</td>
+        <td class="num">${fmtN(r.fin)}</td>
+        <td class="num">${fmtN(r.inst)}</td>
         <td class="amt">${fmtN(r.total)}</td>
       </tr>`).join("")}
+      <tr style="background:#F2EDE4; border-top:1.5px solid #8C7355;">
+        <td style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8C7355;">Totals</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandCab)}</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandUpg)}</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandFin)}</td>
+        <td class="num" style="font-weight:600;">${fmtN(grandInst)}</td>
+        <td class="amt" style="font-size:11pt;">${fmtN(grandCab+grandUpg+grandFin+grandInst)}</td>
+      </tr>
     </tbody>
   </table>
 
@@ -1472,6 +1793,123 @@ function exportPDFCustomer(project, rooms, onStatus) {
 
   <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
 </div>`;
+
+  // ── PER-ROOM PAGES ───────────────────────────────────────────
+  rooms.forEach((room, ri) => {
+    const rt = roomTotals[ri];
+    html += `<div class="page">
+  <div class="hdr">
+    <div>
+      <div class="co-brand">
+        <div>
+          <div class="co-name">Engstrom Wood Products</div>
+          <div class="co-tag">CUSTOM CABINETRY &nbsp;·&nbsp; FINE WOODWORKING &nbsp;·&nbsp; PRECISION INSTALLATION</div>
+        </div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="doc-type">${room.name || "Room "+(ri+1)} &nbsp;·&nbsp; Room ${ri+1} of ${rooms.length}</div>
+      <div class="doc-id">${project.id} &nbsp;·&nbsp; ${project.name}</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="sec">CABINETRY</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0).length === 0
+          ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No cabinetry items</td></tr>`
+          : room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0).map(item => {
+              const prod = PRICING.woodwork.find(w => w.name === item.product);
+              const con  = PRICING.construction.find(c => c.name === item.construction);
+              const wood = PRICING.wood.find(w => w.name === item.wood);
+              const sp   = prod ? prod.price * (1+(con?.premium||0)) * (1+(wood?.premium||0)) : 0;
+              const qty  = parseFloat(item.qty) || 0;
+              const adj  = parseFloat(item.adjPct) || 0;
+              const lineTotal = sp * qty * (1 + adj/100);
+              const desc = [item.product, item.construction !== "Not Applicable" ? item.construction : null, item.wood !== "Not Applicable" ? item.wood : null].filter(Boolean).join(" — ");
+              return `<tr><td>${desc} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN(lineTotal)}</td></tr>`;
+            }).join("")
+        }
+      </tbody>
+    </table>
+    ${sub("Cabinetry Total", rt.cab)}
+  </div>
+
+  <div class="block">
+    <div class="sec">UPGRADES</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0).length === 0
+          ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No upgrade items</td></tr>`
+          : room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0).map(item => {
+              const upg = PRICING.upgrades.find(u => u.name === item.upgrade);
+              const qty = parseFloat(item.qty) || 0;
+              const adj = parseFloat(item.adjPct) || 0;
+              return `<tr><td>${item.upgrade} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN((upg?.price||0)*qty*(1+adj/100))}</td></tr>`;
+            }).join("")
+        }
+      </tbody>
+    </table>
+    ${sub("Upgrades Total", rt.upg)}
+  </div>
+
+  <div class="block">
+    <div class="sec">FINISHING</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.finishing.filter(i => i.type && parseFloat(i.lf) > 0).length === 0
+          ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No finishing items</td></tr>`
+          : room.finishing.filter(i => i.type && parseFloat(i.lf) > 0).map(item => {
+              const fin = PRICING.finishing.find(f => f.name === item.type);
+              const lf  = parseFloat(item.lf) || 0;
+              const adj = parseFloat(item.adjPct) || 0;
+              return `<tr><td>${item.type} — ${lf} LF${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN((fin?.pricePerLF||0)*lf*(1+adj/100))}</td></tr>`;
+            }).join("")
+        }
+      </tbody>
+    </table>
+    ${sub("Finishing Total", rt.fin)}
+  </div>
+
+  <div class="block">
+    <div class="sec">INSTALLATION</div>
+    <table>
+      <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
+      <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        ${room.install.type
+          ? `<tr><td>${room.install.type}${room.install.metric ? ` × ${room.install.metric} hrs` : ""}${room.install.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${room.install.notes}</span>` : ""}</td><td class="amt">${fmtN(rt.inst)}</td></tr>`
+          : `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No installation</td></tr>`
+        }
+      </tbody>
+    </table>
+    ${sub("Installation Total", rt.inst)}
+  </div>
+
+  <div class="totals-strip">
+    <div class="ts"><div class="ts-lbl">Cabinetry</div><div class="ts-val">${fmtN(rt.cab)}</div></div>
+    <div class="ts"><div class="ts-lbl">Upgrades</div><div class="ts-val">${fmtN(rt.upg)}</div></div>
+    <div class="ts"><div class="ts-lbl">Finishing</div><div class="ts-val">${fmtN(rt.fin)}</div></div>
+    <div class="ts"><div class="ts-lbl">Installation</div><div class="ts-val">${fmtN(rt.inst)}</div></div>
+  </div>
+  <div class="grand-bar">
+    <div>
+      <div class="gl">ROOM TOTAL</div>
+      <div class="gs">${room.name || "Room "+(ri+1)} &nbsp;·&nbsp; Room ${ri+1} of ${rooms.length}</div>
+    </div>
+    <div class="gv">${fmtN(rt.total)}</div>
+  </div>
+
+  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+</div>`;
+  });
 
   // ── open print window ─────────────────────────────────────────
   const win = window.open("about:blank", "_blank");
@@ -2484,7 +2922,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
       <div className="flex justify-between items-center mt-24">
         <button className="btn btn-outline" onClick={onBack}>← Back to Final Details</button>
         <div className="flex gap-8">
-          <button className="btn btn-outline" onClick={handleExport} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
+          <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
             
           <button className="btn btn-gold btn-lg" onClick={onSave}>💾 Save Estimate</button>
         </div>
@@ -2494,7 +2932,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
-function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onEmail }) {
+function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail }) {
   const [search, setSearch] = useState("");
   const filtered = projects
     .filter(p =>
@@ -2536,12 +2974,17 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
           ["Active Estimates", projects.length, "📝"],
           ["Total Est. Value", fmt(totalRevenue), "💰"],
         ].map(([lbl, val, icon]) => (
-          <div key={lbl} style={{
+          <div key={lbl} className="stat-card-anim" style={{
             background: "var(--card-bg)", border: "1px solid var(--ivory3)",
             borderRadius: 4, padding: "20px 24px",
             borderTop: "2px solid var(--gold)",
             boxShadow: "0 1px 6px rgba(20,15,5,0.04)",
-          }}>
+            transition: "transform 0.22s ease, box-shadow 0.22s ease",
+            cursor: "default",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(138,106,56,0.13)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 1px 6px rgba(20,15,5,0.04)"; }}
+          >
             <div style={{ fontSize: 20, marginBottom: 8, opacity: 0.5 }}>{icon}</div>
             <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--muted)", marginBottom: 4 }}>{lbl}</div>
             <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "var(--char)" }}>{val}</div>
@@ -2582,21 +3025,21 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                 </div>
                 <div className="flex items-center gap-8" onClick={e => e.stopPropagation()}>
                   <div className="project-row-total" style={{ marginRight: 8, color: "var(--gold)" }}>{fmt(gt)}</div>
-                  {/* Generate Quote */}
+                  {/* Quote — Internal */}
+                  <button
+                    className={`btn ${allComplete ? "btn-primary" : "btn-outline"}`}
+                    style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
+                    title={allComplete ? "Generate internal PDF quote" : "Complete all rooms to generate quote"}
+                    onClick={() => allComplete && onGenerateQuote(realIdx)}>
+                    📄 Internal
+                  </button>
+                  {/* Quote — Customer */}
                   <button
                     className={`btn ${allComplete ? "btn-gold" : "btn-outline"}`}
                     style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
-                    title={allComplete ? "Generate PDF quote" : "Complete all rooms to generate quote"}
-                    onClick={() => allComplete && onGenerateQuote(realIdx)}>
-                    📄 Quote
-                  </button>
-                  {/* Email */}
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "4px 10px" }}
-                    title="Email this estimate"
-                    onClick={() => onEmail(realIdx)}>
-                    ✉ Email
+                    title={allComplete ? "Generate customer PDF quote" : "Complete all rooms to generate quote"}
+                    onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
+                    📄 Client
                   </button>
                   {/* Duplicate */}
                   <button
@@ -2892,6 +3335,10 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               setTimeout(() => {
                 exportPDFInternal(p.project, p.rooms, () => {});
               }, 400);
+            }}
+            onGenerateQuoteCustomer={(i) => {
+              const p = projects[i];
+              exportPDFCustomer(p.project, p.rooms, () => {});
             }}
             onEmail={(i) => {
               const p = projects[i];
