@@ -108,63 +108,24 @@ const blankRoom = (n, masterAdj) => ({
 
 // ── STYLES ─────────────────────────────────────────────────────
 const styles = `
-  /* ── CSS VARIABLE OVERRIDES — Warm Craftsman Light Theme ── */
-  :root {
-    --ewp-slate:   rgb(73, 77, 77);
-    --ewp-slate2:  rgb(55, 58, 58);
-
-    --header-bg:      #FDFAF5;
-    --header-border:  #E4D9C8;
-    --header-text:    rgb(73, 77, 77);
-    --header-subtext: rgb(140, 145, 145);
-
-    --gold:        #8A6A38;
-    --gold-light:  #B8924F;
-    --gold-bg:     #FAF3E6;
-
-    --ivory2:  #F6F1E8;
-    --ivory3:  #EDE4D4;
-    --rule:    #D8CEBA;
-
-    --char:   rgb(73, 77, 77);
-    --char2:  rgb(55, 58, 58);
-    --mid:    rgb(120, 125, 125);
-    --muted:  rgb(160, 163, 163);
-
-    --card-bg:         #FFFFFF;
-    --input-bg:        #FDFBF7;
-    --input-focus-bg:  #FFFDF8;
-
-    --green: #2A6B40;
-    --red:   #B83B2E;
-  }
+  /* App-specific styles. Global tokens/fonts live in src/global.css */
 
   /* ── LAYOUT ── */
-  .app {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: var(--ivory2);
-  }
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
 
   /* ── TOPBAR ── */
   .topbar {
     background: var(--header-bg);
-    padding: 0 40px;
-    height: 100px;
+    padding: 0 32px;
+    height: 84px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid var(--header-border);
-    box-shadow: 0 2px 20px rgba(20,15,5,0.07);
-    transition: height 0.35s ease, box-shadow 0.35s ease;
-  }
-  .topbar.scrolled {
-    height: 62px;
-    box-shadow: 0 2px 16px rgba(20,15,5,0.11);
+    border-bottom: 2px solid var(--header-border);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
   }
   .topbar-logo {
     display: flex;
@@ -172,45 +133,24 @@ const styles = `
     gap: 18px;
   }
   .header-logo {
-    height: 75px;
+    height: 70px;
     width: auto;
     flex-shrink: 0;
-    transition: height 0.35s ease;
-  }
-  .topbar.scrolled .header-logo {
-    height: 50px;
   }
   .topbar-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 34px; font-weight: 600;
-    color: var(--ewp-slate); letter-spacing: 0.04em;
-    line-height: 1;
-    transition: font-size 0.35s ease;
+    font-family: var(--font-serif);
+    font-size: 26px; font-weight: 600;
+    color: var(--header-text); letter-spacing: 0.05em;
   }
-  .topbar.scrolled .topbar-name {
-    font-size: 21px;
-  }
-  .topbar-sub {
-    font-size: 10px; color: rgb(140, 145, 145);
-    letter-spacing: 0.18em; text-transform: uppercase;
-    margin-top: 5px; font-weight: 600;
-    opacity: 1;
-    transition: opacity 0.2s ease, max-height 0.35s ease, margin-top 0.35s ease;
-    max-height: 20px;
-    overflow: hidden;
-  }
-  .topbar.scrolled .topbar-sub {
-    opacity: 0;
-    max-height: 0;
-    margin-top: 0;
-  }
-  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .dark .topbar-name { color: var(--header-text); }
+  .topbar-sub { font-size: 12px; color: var(--header-subtext); letter-spacing: 0.12em; text-transform: uppercase; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
 
   /* ── STEPPER ── */
   .stepper {
-    background: var(--header-bg);
-    border-bottom: 1px solid var(--header-border);
-    padding: 0 40px;
+    background: var(--ivory2);
+    border-bottom: 1px solid var(--ivory3);
+    padding: 0 32px;
     display: flex;
     align-items: center;
     gap: 0;
@@ -218,30 +158,29 @@ const styles = `
   }
   .step {
     display: flex; align-items: center;
-    padding: 14px 22px;
-    gap: 9px;
+    padding: 16px 20px;
+    gap: 10px;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
+    border-bottom: 3px solid transparent;
     transition: all 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .step:hover { background: var(--ivory2); }
+  .step:hover { background: var(--ivory3); }
   .step.active { border-bottom-color: var(--gold); }
   .step-num {
-    width: 22px; height: 22px;
+    width: 24px; height: 24px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 700;
+    font-size: 11px; font-weight: 600;
     background: var(--ivory3);
-    color: var(--mid);
+    color: var(--muted);
     flex-shrink: 0;
-    border: 1.5px solid var(--rule);
   }
-  .step.active .step-num { background: var(--gold); color: #fff; border-color: var(--gold); }
-  .step.done .step-num { background: var(--green); color: #fff; border-color: var(--green); }
-  .step-label { font-size: 12px; font-weight: 500; color: var(--mid); letter-spacing: 0.02em; }
-  .step.active .step-label { color: var(--char); font-weight: 700; }
+  .step.active .step-num { background: var(--gold); color: #fff; }
+  .step.done .step-num { background: var(--green); color: #fff; }
+  .step-label { font-size: 13px; font-weight: 500; color: var(--mid); }
+  .step.active .step-label { color: var(--char); font-weight: 600; }
 
   /* ── MAIN CONTENT ── */
   .main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 40px 32px; }
@@ -250,39 +189,30 @@ const styles = `
   .page-header { margin-bottom: 32px; }
   .page-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 30px; font-weight: 600;
-    color: var(--ewp-slate); line-height: 1.1;
-    letter-spacing: 0.01em;
+    font-size: 32px; font-weight: 600;
+    color: var(--char); line-height: 1.1;
   }
-  .page-subtitle { font-size: 13px; color: var(--mid); margin-top: 4px; }
-  .gold-rule {
-    height: 1px;
-    background: linear-gradient(90deg, var(--gold) 0%, rgba(138,106,56,0.2) 60%, transparent 100%);
-    width: 100px;
-    margin: 12px 0;
-  }
+  .page-subtitle { font-size: 14px; color: var(--mid); margin-top: 4px; }
+  .gold-rule { height: 2px; background: var(--gold); width: 48px; margin: 12px 0; }
 
   /* ── CARDS ── */
   .card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-radius: 4px;
+    border-radius: 8px;
     overflow: hidden;
     margin-bottom: 20px;
-    box-shadow: 0 1px 8px rgba(20,15,5,0.05);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   .card-header {
-    background: var(--ivory2);
-    padding: 12px 20px;
+    background: var(--char);
+    padding: 14px 20px;
     display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--ewp-slate);
   }
   .card-title {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px; font-weight: 700;
-    color: var(--ewp-slate); letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; font-weight: 600;
+    color: var(--gold-light); letter-spacing: 0.06em;
   }
   .card-body { padding: 20px; }
 
@@ -292,20 +222,16 @@ const styles = `
   .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
   .form-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
 
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field-label {
-    font-size: 9px; font-weight: 700;
-    color: var(--gold); text-transform: uppercase;
-    letter-spacing: 0.14em;
-  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label { font-size: 10px; font-weight: 600; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; }
 
   input, select, textarea {
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     color: var(--char);
     background: var(--input-bg);
-    border: 1px solid var(--rule);
-    border-radius: 3px;
+    border: 1px solid var(--ivory3);
+    border-radius: 4px;
     padding: 9px 12px;
     width: 100%;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -314,14 +240,13 @@ const styles = `
   }
   input:focus, select:focus, textarea:focus {
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(138,106,56,0.1);
+    box-shadow: 0 0 0 3px rgba(160,122,58,0.1);
     background: var(--input-focus-bg);
   }
   input.error, select.error { border-color: var(--red); }
   .field-error { font-size: 11px; color: var(--red); }
 
-  select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%238C7B6A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B6B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     padding-right: 32px;
@@ -330,62 +255,61 @@ const styles = `
   /* ── BUTTONS ── */
   .btn {
     font-family: 'DM Sans', sans-serif;
-    font-size: 12px; font-weight: 700;
+    font-size: 13px; font-weight: 600;
     padding: 10px 20px;
-    border-radius: 3px;
+    border-radius: 4px;
     border: none;
     cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 7px;
     transition: all 0.15s;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
-  .btn-primary { background: var(--ewp-slate); color: #fff; }
-  .btn-primary:hover { background: var(--ewp-slate2); }
+  .btn-primary { background: var(--char); color: #fff; }
+  .btn-primary:hover { background: var(--char2); }
   .btn-gold { background: var(--gold); color: #fff; }
-  .btn-gold:hover { background: #7A5C2C; box-shadow: 0 2px 8px rgba(138,106,56,0.3); }
+  .btn-gold:hover { background: #8a6830; }
   .btn-outline { background: transparent; color: var(--char); border: 1px solid var(--rule); }
-  .btn-outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+  .btn-outline:hover { border-color: var(--char); background: var(--ivory2); }
   .btn-ghost { background: transparent; color: var(--mid); border: none; padding: 6px 10px; }
   .btn-ghost:hover { color: var(--char); }
-  .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(184,59,46,0.3); }
-  .btn-danger:hover { background: rgba(184,59,46,0.05); border-color: var(--red); }
-  .btn-sm { padding: 5px 12px; font-size: 10px; }
-  .btn-lg { padding: 13px 32px; font-size: 12px; letter-spacing: 0.1em; }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid #e8c8c5; }
+  .btn-danger:hover { background: #fdf0ef; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-lg { padding: 13px 28px; font-size: 14px; }
 
   /* ── ROOM TABS ── */
-  .room-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+  .room-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
   .room-tab {
-    padding: 7px 15px;
-    border-radius: 3px;
+    padding: 8px 16px;
+    border-radius: 4px;
     border: 1px solid var(--ivory3);
     background: var(--card-bg);
     cursor: pointer;
-    font-size: 12px; font-weight: 500;
+    font-size: 13px; font-weight: 500;
     color: var(--mid);
     transition: all 0.15s;
     display: flex; align-items: center; gap: 6px;
   }
-  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); }
+  .room-tab:hover { border-color: var(--gold-light); color: var(--char); }
   .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); }
   .room-tab-add {
     border-style: dashed;
     color: var(--gold);
-    border-color: rgba(138,106,56,0.4);
+    border-color: var(--gold-light);
   }
-  .room-tab-add:hover { background: var(--gold-bg); border-style: solid; }
+  .room-tab-add:hover { background: var(--gold-bg); }
 
   /* ── DATA TABLE ── */
   .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .data-table th {
-    background: var(--ivory2);
-    color: var(--mid);
-    font-size: 9px; font-weight: 700;
+    background: var(--ivory3);
+    color: var(--char2);
+    font-size: 10px; font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     padding: 10px 10px;
     text-align: left;
-    border-bottom: 1px solid var(--ivory3);
+    border-bottom: 2px solid var(--char);
     white-space: nowrap;
   }
   .data-table td {
@@ -401,7 +325,6 @@ const styles = `
     font-size: 12px;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 2px;
   }
   .data-table input:focus, .data-table select:focus {
     background: var(--input-focus-bg);
@@ -411,7 +334,7 @@ const styles = `
   .data-table .total-row td {
     background: var(--ivory3) !important;
     font-weight: 600;
-    border-top: 1px solid var(--gold);
+    border-top: 2px solid var(--char);
     color: var(--gold);
     font-family: 'Cormorant Garamond', serif;
     font-size: 15px;
@@ -420,43 +343,39 @@ const styles = `
 
   /* ── SECTION LABEL ── */
   .section-banner {
-    background: var(--ivory2);
-    color: var(--ewp-slate);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    background: var(--char);
+    color: var(--gold-light);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 0.08em;
     padding: 10px 16px;
-    border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--ewp-slate);
-    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 4px 4px 0 0;
   }
 
   /* ── SUMMARY CARDS ── */
-  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
   .summary-card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-radius: 4px;
-    padding: 14px 16px;
-    border-top: 2px solid var(--gold);
+    border-radius: 6px;
+    padding: 16px;
+    border-left: 3px solid var(--gold);
   }
-  .summary-card-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 6px; text-align: center; }
-  .summary-card-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--char); text-align: center; }
+  .summary-card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; text-align: center; }
+  .summary-card-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--gold); text-align: center; }
 
   /* ── GRAND TOTAL ── */
   .grand-total {
-    background: var(--ewp-slate);
-    border-radius: 4px;
+    background: var(--char);
+    border-radius: 6px;
     padding: 24px 32px;
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 8px;
   }
   .grand-total-label {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 22px; font-weight: 600;
-    color: rgba(255,255,255,0.9);
-    letter-spacing: 0.06em;
+    font-size: 24px; font-weight: 600;
+    color: #fff;
   }
   .grand-total-value {
     font-family: 'Cormorant Garamond', serif;
@@ -469,22 +388,21 @@ const styles = `
   .project-row {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-left: 3px solid transparent;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 16px 20px;
     display: flex; align-items: center; justify-content: space-between;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .project-row:hover { border-left-color: var(--gold); box-shadow: 0 2px 12px rgba(20,15,5,0.07); }
-  .project-row-name { font-weight: 600; font-size: 15px; color: var(--ewp-slate); }
+  .project-row:hover { border-color: var(--gold-light); box-shadow: 0 2px 8px rgba(160,122,58,0.1); }
+  .project-row-name { font-weight: 600; font-size: 15px; }
   .project-row-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
-  .project-row-total { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--ewp-slate); }
+  .project-row-total { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--gold); }
   .badge {
-    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
-    padding: 3px 8px; border-radius: 2px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 8px; border-radius: 20px;
   }
-  .badge-new { background: rgba(42,107,64,0.12); color: var(--green); }
+  .badge-new { background: #e8f4ed; color: var(--green); }
   .badge-draft { background: var(--gold-bg); color: var(--gold); }
 
   /* ── HELPERS ── */
@@ -505,55 +423,52 @@ const styles = `
 
   /* ── EMPTY STATE ── */
   .empty-state {
-    text-align: center; padding: 80px 20px;
+    text-align: center; padding: 60px 20px;
     color: var(--muted);
   }
-  .empty-icon { font-size: 36px; margin-bottom: 16px; opacity: 0.35; }
-  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--char); margin-bottom: 8px; font-weight: 600; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--char); margin-bottom: 6px; }
 
   /* ── TOAST ── */
   .toast {
     position: fixed; bottom: 24px; right: 24px;
     background: var(--char); color: #fff;
-    padding: 12px 20px; border-radius: 3px;
+    padding: 12px 20px; border-radius: 6px;
     font-size: 13px; border-left: 3px solid var(--gold);
     z-index: 999; animation: slideUp 0.3s ease;
-    box-shadow: 0 8px 24px rgba(20,15,5,0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   }
   @keyframes slideUp { from { transform: translateY(12px); opacity:0; } to { transform:translateY(0); opacity:1; } }
 
   /* ── MODAL ── */
   .modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(20,15,5,0.45);
+    background: rgba(0,0,0,0.5);
     display: flex; align-items: center; justify-content: center;
     z-index: 200; padding: 20px;
-    backdrop-filter: blur(2px);
   }
   .modal {
-    background: var(--card-bg); border-radius: 4px;
-    width: 100%; max-width: 480px;
-    box-shadow: 0 20px 60px rgba(20,15,5,0.18);
+    background: var(--card-bg); border-radius: 8px;
+    width: 100%; max-width: 520px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     overflow: hidden;
-    border: 1px solid var(--ivory3);
   }
   .modal-header {
-    background: var(--ivory2); padding: 16px 24px;
+    background: var(--char); padding: 18px 24px;
     display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--gold);
   }
-  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--char); font-weight: 600; }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--gold-light); font-weight: 600; }
   .modal-body { padding: 24px; }
   .modal-footer { padding: 16px 24px; border-top: 1px solid var(--ivory3); display: flex; justify-content: flex-end; gap: 10px; }
 
   /* ── REPORT VIEW ── */
-  .report-room { margin-bottom: 24px; }
-  .report-section { margin-bottom: 14px; }
+  .report-room { margin-bottom: 32px; }
+  .report-section { margin-bottom: 16px; }
   .report-section-title {
-    font-size: 9px; font-weight: 700;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; font-weight: 700;
     color: var(--gold); text-transform: uppercase;
-    letter-spacing: 0.14em; margin-bottom: 8px;
+    letter-spacing: 0.1em; margin-bottom: 8px;
     padding-bottom: 4px;
     border-bottom: 1px solid var(--ivory3);
   }
@@ -561,90 +476,61 @@ const styles = `
     display: flex; justify-content: space-between;
     padding: 4px 0; font-size: 13px;
     border-bottom: 1px solid var(--ivory3);
-    color: var(--char);
   }
   .report-line-total {
     font-weight: 600; color: var(--gold);
-    border-bottom: 1px solid var(--gold);
+    border-bottom: 2px solid var(--char);
   }
+
 
   /* ── DARK MODE OVERRIDES ── */
-  .dark {
-    --ewp-slate:   rgb(195, 200, 200);
-    --ewp-slate2:  rgb(220, 223, 223);
-
-    --header-bg:      #2A2820;
-    --header-border:  #3A3628;
-    --header-text:    rgb(210, 213, 210);
-    --header-subtext: #A09580;
-    --gold:        #B8904A;
-    --gold-light:  #D4AA72;
-    --gold-bg:     #2E2A1A;
-    --ivory2:  #272420;
-    --ivory3:  #323028;
-    --rule:    #484030;
-    --char:    rgb(210, 213, 210);
-    --char2:   rgb(230, 232, 230);
-    --mid:     #B0A090;
-    --muted:   #887870;
-    --card-bg:         #222018;
-    --input-bg:        #2A2820;
-    --input-focus-bg:  #2E2C22;
-    --green: #4A9B65;
-    --red:   #D05050;
-  }
-  .dark body { background: #201E18; }
-  .dark .app { background: #201E18; }
-  .dark .stepper { background: var(--header-bg); border-bottom-color: var(--header-border); }
-  .dark .step:hover { background: #323028; }
-  .dark .step-num { background: #323028; border-color: #484030; }
+  .dark body { background: #141414; }
+  .dark .app { background: #141414; }
+  .dark .stepper { background: #1C1C1C; border-bottom-color: #2A2A2A; }
+  .dark .step:hover { background: #2A2A2A; }
+  .dark .step-num { background: #2A2A2A; }
   .dark .step.active .step-label { color: var(--gold-light); }
-  .dark .card-header { background: #2A2820; border-left-color: var(--ewp-slate); border-bottom-color: var(--ivory3); }
-  .dark .card-title { color: var(--ewp-slate); }
-  .dark .section-banner { background: #2A2820; color: var(--ewp-slate); border-left-color: var(--ewp-slate); }
-  .dark .grand-total { background: #181610; }
-  .dark .data-table th { background: #2A2820; color: var(--mid); border-bottom-color: var(--ivory3); }
-  .dark .data-table td { border-bottom-color: var(--ivory3); }
-  .dark .data-table tr:nth-child(even) td { background: #272420; }
-  .dark .data-table tr:hover td { background: #2E2A1A; }
-  .dark .data-table .total-row td { background: #323028 !important; border-top-color: var(--gold); }
-  .dark .modal-footer { border-top-color: var(--ivory3); }
-  .dark .modal-header { background: #2A2820; }
-  .dark .modal { background: var(--card-bg); border-color: var(--ivory3); }
+  .dark .card-header { background: #111111; }
+  .dark .section-banner { background: #111111; }
+  .dark .grand-total { background: #111111; }
+  .dark .data-table th { background: #2A2A2A; border-bottom-color: #3A3A3A; color: var(--char2); }
+  .dark .data-table td { border-bottom-color: #2A2A2A; }
+  .dark .data-table tr:nth-child(even) td { background: #1C1C1C; }
+  .dark .data-table tr:hover td { background: #1F1A10; }
+  .dark .data-table .total-row td { background: #2A2A2A !important; border-top-color: #3A3A3A; }
+  .dark .modal-footer { border-top-color: #2A2A2A; }
+  .dark .modal-header { background: #111111; }
   /* Buttons in dark mode */
-  .dark .btn-primary { background: var(--ewp-slate); color: #201E18; }
-  .dark .btn-primary:hover { background: var(--ewp-slate2); }
-  .dark .btn-gold { background: #B8904A; color: #201E18; }
-  .dark .btn-gold:hover { background: #D4AA72; }
-  .dark .btn-outline { color: #D5D0C8; border-color: #484030; background: transparent; }
-  .dark .btn-outline:hover { background: #2E2A1A; border-color: var(--gold); color: var(--gold-light); }
-  .dark .btn-ghost { color: #A09080; }
-  .dark .btn-ghost:hover { color: #D5D0C8; }
-  .dark .btn-danger { border-color: #5A3030; color: #D05050; }
-  .dark .btn-danger:hover { background: #2E2020; }
-  .dark .toast { background: #2A2820; }
-  .dark .badge-new { background: #1A3028; color: var(--green); }
-  .dark .badge-draft { background: #2E2A1A; color: var(--gold); }
-  .dark .modal-overlay { background: rgba(0,0,0,0.55); }
-  .dark .divider { background: var(--ivory3); }
-  .dark .project-row { background: var(--card-bg); border-color: var(--ivory3); }
-  .dark .project-row:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.25); border-left-color: var(--gold); }
-  .dark .project-row-name { color: var(--char); }
-  .dark .project-row-total { color: var(--gold-light); }
-  .dark .summary-card { background: var(--card-bg); border-color: var(--ivory3); }
-  .dark .summary-card-value { color: var(--gold-light); }
+  .dark .btn-primary { background: #E8E2D9; color: #1A1A1A; }
+  .dark .btn-primary:hover { background: #CFC9BF; }
+  .dark .btn-gold { background: #C9A96E; color: #1A1A1A; }
+  .dark .btn-gold:hover { background: #E0C48A; }
+  .dark .btn-outline { color: #E8E2D9; border-color: #444; background: transparent; }
+  .dark .btn-outline:hover { background: #2A2A2A; border-color: #888; }
+  .dark .btn-ghost { color: #9A9A9A; }
+  .dark .btn-ghost:hover { color: #E8E2D9; }
+  .dark .btn-danger { border-color: #5A2A28; color: #E05C50; }
+  .dark .btn-danger:hover { background: #2A1210; }
+  /* Delete confirm button */
+  .dark .btn[style*="var(--red)"] { color: #1A1A1A !important; }
+  .dark .toast { background: #1C1C1C; }
+  .dark .badge-new { background: #0D2A1A; color: var(--green); }
+  .dark .badge-draft { background: #1F1A10; color: var(--gold); }
+  .dark .modal-overlay { background: rgba(0,0,0,0.75); }
+  .dark .divider { background: #2A2A2A; }
+  .dark .project-row:hover { box-shadow: 0 2px 8px rgba(201,169,110,0.08); }
   /* Room tabs in dark mode */
-  .dark .room-tab { background: var(--card-bg); border-color: var(--ivory3); color: var(--mid); }
-  .dark .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); }
-  .dark .room-tab.active { background: var(--gold); color: #201E18; border-color: var(--gold); }
+  .dark .room-tab { background: #1C1C1C; border-color: #2A2A2A; color: #9A9A9A; }
+  .dark .room-tab:hover { border-color: var(--gold-light); color: #E8E2D9; }
+  .dark .room-tab.active { background: #C9A96E; color: #1A1A1A; border-color: #C9A96E; }
 
   @media (max-width: 768px) {
     .main { padding: 20px 16px; }
-    .topbar { padding: 0 16px; height: 76px; }
+    .topbar { padding: 0 16px; }
     .stepper { padding: 0 16px; }
     .summary-grid { grid-template-columns: 1fr 1fr; }
     .form-grid-3, .form-grid-4 { grid-template-columns: 1fr 1fr; }
-    .grand-total { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
+    .grand-total { flex-direction: column; gap: 8px; text-align: center; }
   }
 `;
 
@@ -1356,7 +1242,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
     <div className="card" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>CABINETRY</span>
-        <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.1)", color: "var(--gold-light)", border: "1px solid rgba(201,169,110,0.4)" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
         <table className="data-table">
@@ -1438,7 +1324,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
     <div className="card" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>UPGRADES / OVERRIDES</span>
-        <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.1)", color: "var(--gold-light)", border: "1px solid rgba(201,169,110,0.4)" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
         <table className="data-table">
@@ -1504,7 +1390,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
     <div className="card" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>FINISHING</span>
-        <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.1)", color: "var(--gold-light)", border: "1px solid rgba(201,169,110,0.4)" }} onClick={addRow}>+ Add Row</button>
       </div>
 
       {/* Estimated LF hint from cabinetry */}
@@ -1859,16 +1745,9 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
                   placeholder="8"
                   onChange={e => {
                     const raw = e.target.value
-                    if (raw === "" || raw === "." || raw === "0" || raw === "0.") {
-                      onChange({ taxRate: raw })
-                      return
-                    }
+                    if (raw === "") { onChange({ taxRate: "" }); return }
                     const n = parseFloat(raw)
-                    onChange({ taxRate: Number.isFinite(n) ? raw : "" })
-                  }}
-                  onBlur={e => {
-                    const n = parseFloat(project.taxRate)
-                    if (!Number.isFinite(n) || n < 0.1) onChange({ taxRate: "8" })
+                    onChange({ taxRate: Number.isFinite(n) ? String(Math.max(0.1, n)) : "" })
                   }}
                 />
               </Field>
@@ -2075,7 +1954,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
             <div className="card">
               <div className="card-header" style={{ justifyContent: "space-between" }}>
                 <span className="card-title">{room.name || `ROOM ${ri + 1}`}</span>
-                <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "var(--gold)", fontWeight: 700 }}>{fmt(rt.total)}</span>
+                <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "var(--gold-light)", fontWeight: 600 }}>{fmt(rt.total)}</span>
               </div>
               <div className="card-body">
                 {cabItems.length > 0 && (
@@ -2213,21 +2092,16 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 28 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
         {[
           ["Total Projects", projects.length, "📋"],
           ["Active Estimates", projects.length, "📝"],
           ["Total Est. Value", fmt(totalRevenue), "💰"],
         ].map(([lbl, val, icon]) => (
-          <div key={lbl} style={{
-            background: "var(--card-bg)", border: "1px solid var(--ivory3)",
-            borderRadius: 4, padding: "20px 24px",
-            borderTop: "2px solid var(--gold)",
-            boxShadow: "0 1px 6px rgba(20,15,5,0.04)",
-          }}>
-            <div style={{ fontSize: 20, marginBottom: 8, opacity: 0.5 }}>{icon}</div>
-            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--muted)", marginBottom: 4 }}>{lbl}</div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "var(--char)" }}>{val}</div>
+          <div key={lbl} style={{ background: "var(--card-bg)", border: "1px solid var(--ivory3)", borderRadius: 6, padding: "20px 24px", borderLeft: "3px solid var(--gold)" }}>
+            <div style={{ fontSize: 24, marginBottom: 6 }}>{icon}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", marginBottom: 4 }}>{lbl}</div>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 700, color: "var(--char)" }}>{val}</div>
           </div>
         ))}
       </div>
@@ -2264,11 +2138,11 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                   <div className="project-row-meta">{p.project.address} · {p.rooms.length} room{p.rooms.length !== 1 ? "s" : ""} · {fmtDate(p.project.bidDate)}</div>
                 </div>
                 <div className="flex items-center gap-8" onClick={e => e.stopPropagation()}>
-                  <div className="project-row-total" style={{ marginRight: 8, color: "var(--gold)" }}>{fmt(gt)}</div>
+                  <div className="project-row-total" style={{ marginRight: 8 }}>{fmt(gt)}</div>
                   {/* Generate Quote */}
                   <button
                     className={`btn ${allComplete ? "btn-gold" : "btn-outline"}`}
-                    style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
+                    style={{ fontSize: 11, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
                     title={allComplete ? "Generate PDF quote" : "Complete all rooms to generate quote"}
                     onClick={() => allComplete && onGenerateQuote(realIdx)}>
                     📄 Quote
@@ -2276,7 +2150,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                   {/* Email */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "4px 10px" }}
+                    style={{ fontSize: 11, padding: "4px 10px" }}
                     title="Email this estimate"
                     onClick={() => onEmail(realIdx)}>
                     ✉ Email
@@ -2284,7 +2158,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                   {/* Duplicate */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "4px 10px" }}
+                    style={{ fontSize: 11, padding: "4px 10px" }}
                     title="Duplicate project"
                     onClick={() => onDuplicate(realIdx)}>
                     ⧉ Duplicate
@@ -2292,7 +2166,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                   {/* Delete */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "4px 10px", color: "var(--red)", borderColor: "rgba(184,59,46,0.3)" }}
+                    style={{ fontSize: 11, padding: "4px 10px", color: "var(--red, #c0392b)", borderColor: "var(--red, #c0392b)" }}
                     title="Delete project"
                     onClick={() => onDelete(realIdx)}>
                     🗑
@@ -2319,19 +2193,12 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const [deletePendingIdx, setDeletePendingIdx] = useState(null);
 
   const [dark, setDark] = useState(() => localStorage.getItem('ewp-theme') === 'dark');
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
     localStorage.setItem('ewp-theme', dark ? 'dark' : 'light');
     window.dispatchEvent(new Event("ewp-theme-change"))
   }, [dark]);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const [project, setProject] = useState({
     id: genId(), name: "", address: "", contactName: "", contactPhone: "",
@@ -2445,14 +2312,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
-      background:"#F6F1E8", fontFamily:"'DM Sans',sans-serif", color:"rgb(140,145,145)", fontSize:11,
-      letterSpacing: "0.14em", textTransform: "uppercase", flexDirection: "column", gap: 14 }}>
-      <div style={{ width: 52, height: 52, border: "2px solid rgb(73,77,77)", borderRadius: "50%",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "rgb(73,77,77)", fontWeight: 700,
-        background: "rgba(73,77,77,0.06)" }}>
-        EWP
-      </div>
+      background:"#FDFAF5", fontFamily:"'DM Sans',sans-serif", color:"#9E9E9E", fontSize:14 }}>
       Loading estimates…
     </div>
   );
@@ -2462,7 +2322,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
       <style>{styles}</style>
       <div className={`app${dark ? " dark" : ""}`}>
         {/* TOPBAR */}
-        <div className={`topbar${scrolled ? " scrolled" : ""}`}>
+        <div className="topbar">
           <div className="topbar-logo">
             <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" />
             <div>
@@ -2474,12 +2334,11 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             {isAdmin && (
               <button onClick={onOpenAdmin} style={{
                 background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                color: "var(--ewp-slate)", fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                border: "1px solid rgba(201,169,110,0.35)",
+                borderRadius: 20, padding: "6px 14px", cursor: "pointer",
+                color: "var(--gold-light)", fontSize: 13,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
                 display: "flex", alignItems: "center", gap: 6,
-                letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
                 👥 Admin
               </button>
@@ -2488,18 +2347,17 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               onClick={() => setDark(d => !d)}
               title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               style={{
-                background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3,
+                background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
+                border: "1px solid rgba(201,169,110,0.35)",
+                borderRadius: 20,
                 padding: "6px 14px",
                 cursor: "pointer",
-                color: "var(--ewp-slate)",
-                fontSize: 11,
+                color: "var(--gold-light)",
+                fontSize: 13,
                 fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 700,
+                fontWeight: 500,
                 display: "flex", alignItems: "center", gap: 6,
                 transition: "all 0.15s",
-                letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
               {dark ? "☀ Light" : "☾ Dark"}
             </button>
@@ -2507,12 +2365,11 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               onClick={() => import("./supabase.js").then(m => m.supabase.auth.signOut())}
               style={{
                 background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                color: "var(--ewp-slate)", fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                border: "1px solid rgba(201,169,110,0.35)",
+                borderRadius: 20, padding: "6px 14px", cursor: "pointer",
+                color: "var(--gold-light)", fontSize: 13,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
                 display: "flex", alignItems: "center", gap: 6,
-                letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
               Sign Out
             </button>

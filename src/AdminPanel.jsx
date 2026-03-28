@@ -1,0 +1,724 @@
+import { useState, useEffect, useRef } from "react"
+import { supabase } from "./supabase.js"
+import { DEFAULT_PRICING } from "./pricing.js"
+
+const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
+
+// ── SheetJS loader (CDN, loaded once) ─────────────────────────
+let _XLSX = null
+const loadXLSX = () => new Promise((resolve, reject) => {
+  if (_XLSX) return resolve(_XLSX)
+  if (window.XLSX) { _XLSX = window.XLSX; return resolve(_XLSX) }
+  const s = document.createElement("script")
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+  s.onload = () => { _XLSX = window.XLSX; resolve(_XLSX) }
+  s.onerror = reject
+  document.head.appendChild(s)
+})
+
+// ── Download helpers ───────────────────────────────────────────
+const downloadCSV = (rows, columns, filename) => {
+  const header = columns.map(c => c.label).join(",")
+  const body = rows.map(row =>
+    columns.map(c => {
+      const v = row[c.key] ?? ""
+      return typeof v === "string" && v.includes(",") ? `"${v}"` : v
+    }).join(",")
+  ).join("\n")
+  const blob = new Blob([header + "\n" + body], { type: "text/csv" })
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob)
+  a.download = filename + ".csv"; a.click()
+}
+
+const downloadXLSX = async (rows, columns, filename) => {
+  const XLSX = await loadXLSX()
+  const data = [
+    columns.map(c => c.label),
+    ...rows.map(row => columns.map(c => row[c.key] ?? ""))
+  ]
+  const ws = XLSX.utils.aoa_to_sheet(data)
+  // Bold header row
+  const range = XLSX.utils.decode_range(ws["!ref"])
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })]
+    if (cell) cell.s = { font: { bold: true } }
+  }
+  // Auto column widths
+  ws["!cols"] = columns.map(c => ({ wch: Math.max(c.label.length + 2, 16) }))
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, filename.slice(0, 31))
+  XLSX.writeFile(wb, filename + ".xlsx")
+}
+
+// ── Upload / parse helpers ─────────────────────────────────────
+const parseUploadedFile = async (file, expectedColumns) => {
+  const XLSX = await loadXLSX()
+  const buf = await file.arrayBuffer()
+  const wb = XLSX.read(buf, { type: "array" })
+  const ws = wb.Sheets[wb.SheetNames[0]]
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: "" })
+
+  if (rows.length === 0) throw new Error("File is empty or has no data rows.")
+
+  // Map header labels → keys
+  const labelToKey = {}
+  expectedColumns.forEach(c => { labelToKey[c.label.toLowerCase()] = c })
+
+  const firstRow = rows[0]
+  const fileHeaders = Object.keys(firstRow).map(h => h.toLowerCase().trim())
+  const missing = expectedColumns.filter(c => !fileHeaders.includes(c.label.toLowerCase()))
+  if (missing.length > 0) {
+    throw new Error(`Missing columns: ${missing.map(c => c.label).join(", ")}.\n\nExpected: ${expectedColumns.map(c => c.label).join(", ")}`)
+  }
+
+  return rows.map(row => {
+    const out = {}
+    expectedColumns.forEach(col => {
+      const rawKey = Object.keys(row).find(k => k.toLowerCase().trim() === col.label.toLowerCase())
+      const val = rawKey !== undefined ? row[rawKey] : ""
+      out[col.key] = col.type === "number" ? (val === "" ? 0 : Number(val)) : String(val)
+    })
+    return out
+  }).filter(row => row[expectedColumns[0].key] !== "" && row[expectedColumns[0].key] !== 0)
+}
+
+// ── TABLE CONFIG ───────────────────────────────────────────────
+const TABLE_CONFIG = [
+  {
+    key: "woodwork",
+    label: "Cabinet Products",
+    description: "Base prices and finishing linear feet per unit",
+    columns: [
+      { key: "name",   label: "Product Name",  type: "text",   width: "45%" },
+      { key: "price",  label: "Base Price ($)", type: "number", width: "25%" },
+      { key: "finLF",  label: "Fin. LF",        type: "number", width: "20%" },
+    ],
+  },
+  {
+    key: "construction",
+    label: "Construction Styles",
+    description: "Price premium multipliers (e.g. 0.05 = 5%)",
+    columns: [
+      { key: "name",    label: "Style",          type: "text",   width: "60%" },
+      { key: "premium", label: "Premium (×)",    type: "number", width: "30%" },
+    ],
+  },
+  {
+    key: "wood",
+    label: "Wood Species",
+    description: "Price premium multipliers per species",
+    columns: [
+      { key: "name",    label: "Species",        type: "text",   width: "60%" },
+      { key: "premium", label: "Premium (×)",    type: "number", width: "30%" },
+    ],
+  },
+  {
+    key: "finishing",
+    label: "Finishing Types",
+    description: "Price per linear foot for each finish type",
+    columns: [
+      { key: "name",       label: "Finish Type",     type: "text",   width: "50%" },
+      { key: "pricePerLF", label: "Price / LF ($)",  type: "number", width: "40%" },
+    ],
+  },
+  {
+    key: "installType",
+    label: "Installation Types",
+    description: "Rate as decimal of cabinetry total (or $/hr for Hourly Rate)",
+    columns: [
+      { key: "name", label: "Install Type", type: "text",   width: "60%" },
+      { key: "rate", label: "Rate",         type: "number", width: "30%" },
+    ],
+  },
+  {
+    key: "upgrades",
+    label: "Upgrades & Hardware",
+    description: "Fixed prices per upgrade item",
+    columns: [
+      { key: "name",  label: "Upgrade Name", type: "text",   width: "65%" },
+      { key: "price", label: "Price ($)",    type: "number", width: "25%" },
+    ],
+  },
+]
+
+export default function AdminPanel({ currentUser, onBack }) {
+  const [tab, setTab] = useState("users")         // "users" | "pricing"
+  const [activeTable, setActiveTable] = useState("woodwork")
+  const [pricing, setPricing] = useState(null)    // null = loading
+  const [dirty, setDirty] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const uploadRef = useRef(null)
+  const [sortCol, setSortCol] = useState(null)   // { key, dir: "asc"|"desc" }
+  const [sortTable, setSortTable] = useState(null) // track which table the sort applies to
+
+  // Users state
+  const [users, setUsers] = useState([])
+  const [usersLoading, setUsersLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState(null)
+
+  const [toast, setToast] = useState(null)
+  const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
+
+  const isAdmin = ADMIN_EMAILS.includes(currentUser.email?.toLowerCase())
+
+  useEffect(() => {
+    const handler = () => setDark(localStorage.getItem("ewp-theme") === "dark")
+    window.addEventListener("storage", handler)
+    return () => window.removeEventListener("storage", handler)
+  }, [])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    fetchUsers()
+    fetchPricing()
+  }, [])
+
+  const fetchUsers = async () => {
+    setUsersLoading(true)
+    const { data, error } = await supabase
+      .from("user_approvals").select("*").order("created_at", { ascending: false })
+    if (!error) setUsers(data || [])
+    setUsersLoading(false)
+  }
+
+  const fetchPricing = async () => {
+    const { data, error } = await supabase
+      .from("pricing").select("data").eq("id", "main").single()
+    if (error || !data) {
+      setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING)))
+    } else {
+      // Merge with defaults so new keys added to DEFAULT_PRICING are always present
+      const merged = {}
+      for (const key of Object.keys(DEFAULT_PRICING)) {
+        merged[key] = data.data[key] ?? DEFAULT_PRICING[key]
+      }
+      setPricing(merged)
+    }
+  }
+
+  const savePricing = async () => {
+    // Validate: no blank names, no blank/zero numeric values
+    for (const tc of TABLE_CONFIG) {
+      const rows = pricing[tc.key] || []
+      for (let i = 0; i < rows.length; i++) {
+        for (const col of tc.columns) {
+          const val = rows[i][col.key]
+          if (val === "" || val === null || val === undefined) {
+            showToast(`⚠ "${tc.label}" row ${i + 1}: "${col.label}" cannot be blank`)
+            return
+          }
+          if (col.type === "number" && (isNaN(Number(val)))) {
+            showToast(`⚠ "${tc.label}" row ${i + 1}: "${col.label}" must be a number`)
+            return
+          }
+        }
+      }
+    }
+
+    // Check for duplicate first-column values within each table
+    for (const tc of TABLE_CONFIG) {
+      const firstCol = tc.columns[0].key
+      const seen = new Set()
+      const rows = pricing[tc.key] || []
+      for (let i = 0; i < rows.length; i++) {
+        const val = String(rows[i][firstCol] ?? "").toLowerCase().trim()
+        if (seen.has(val)) {
+          showToast(`⚠ "${tc.label}": duplicate entry "${rows[i][firstCol]}"`)
+          return
+        }
+        seen.add(val)
+      }
+    }
+
+    // Sort every table by first column before saving
+    const sorted = {}
+    for (const tc of TABLE_CONFIG) {
+      sorted[tc.key] = sortByFirstCol(tc.key, pricing[tc.key] || [])
+    }
+    // Also carry over any non-TABLE_CONFIG keys (e.g. productType)
+    const finalPricing = { ...pricing, ...sorted }
+
+    setPricing(finalPricing)
+    setSaving(true)
+    const { error } = await supabase
+      .from("pricing")
+      .upsert({ id: "main", data: finalPricing, updated_at: new Date().toISOString() }, { onConflict: "id" })
+    if (error) showToast("Error saving prices")
+    else { showToast("✓ Prices saved & sorted successfully"); setDirty(false) }
+    setSaving(false)
+  }
+
+  const resetToDefaults = () => {
+    if (!confirm("Reset all prices to factory defaults? This cannot be undone.")) return
+    setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING)))
+    setDirty(true)
+    showToast("Prices reset to defaults — click Save to apply")
+  }
+
+  const updateCell = (tableKey, rowIdx, colKey, value) => {
+    setPricing(prev => {
+      const next = { ...prev, [tableKey]: prev[tableKey].map((row, i) =>
+        i === rowIdx ? { ...row, [colKey]: colKey === "name" ? value : (value === "" ? "" : Number(value)) } : row
+      )}
+      return next
+    })
+    setDirty(true)
+  }
+
+  const addRow = (tableKey) => {
+    const cfg = TABLE_CONFIG.find(t => t.key === tableKey)
+    const blank = {}
+    cfg.columns.forEach(c => { blank[c.key] = c.type === "number" ? "" : "" })
+    setPricing(prev => ({ ...prev, [tableKey]: [...prev[tableKey], blank] }))
+    setDirty(true)
+  }
+
+  const sortByFirstCol = (tableKey, rows) => {
+    const cfg = TABLE_CONFIG.find(t => t.key === tableKey)
+    const firstCol = cfg.columns[0].key
+    return [...rows].sort((a, b) => String(a[firstCol]).localeCompare(String(b[firstCol])))
+  }
+
+  const deleteRow = (tableKey, rowIdx) => {
+    const cfg = TABLE_CONFIG.find(t => t.key === tableKey)
+    const firstCol = cfg.columns[0].key
+    const rowName = pricing[tableKey][rowIdx][firstCol] || "this row"
+    if (!window.confirm(`Delete "${rowName}"?`)) return
+    setPricing(prev => ({ ...prev, [tableKey]: prev[tableKey].filter((_, i) => i !== rowIdx) }))
+    setDirty(true)
+  }
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    e.target.value = ""   // reset so same file can be re-uploaded
+    setUploading(true)
+    try {
+      const cfg = TABLE_CONFIG.find(tc => tc.key === activeTable)
+      const parsed = await parseUploadedFile(file, cfg.columns)
+      setPricing(prev => ({ ...prev, [activeTable]: parsed }))
+      setDirty(true)
+      showToast(`✓ Imported ${parsed.length} rows — click Save to apply`)
+    } catch (err) {
+      showToast("Upload error: " + err.message)
+    }
+    setUploading(false)
+  }
+
+  const handleSort = (colKey) => {
+    if (sortTable !== activeTable || sortCol?.key !== colKey) {
+      setSortCol({ key: colKey, dir: "asc" })
+      setSortTable(activeTable)
+    } else if (sortCol.dir === "asc") {
+      setSortCol({ key: colKey, dir: "desc" })
+    } else {
+      setSortCol(null)
+      setSortTable(null)
+    }
+  }
+
+  const getSortedRows = (rows) => {
+    if (!sortCol || sortTable !== activeTable) return rows
+    return [...rows].sort((a, b) => {
+      const av = a[sortCol.key] ?? ""
+      const bv = b[sortCol.key] ?? ""
+      const cmp = typeof av === "number" ? av - bv : String(av).localeCompare(String(bv))
+      return sortCol.dir === "asc" ? cmp : -cmp
+    })
+  }
+
+  const sortArrow = (colKey) => {
+    if (sortTable !== activeTable || sortCol?.key !== colKey) return " ↕"
+    return sortCol.dir === "asc" ? " ↑" : " ↓"
+  }
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3500) }
+
+  const confirmIfDirty = (action) => {
+    if (dirty && tab === "pricing") {
+      if (!window.confirm("You have unsaved changes. Discard them and continue?")) return
+      setDirty(false)
+    }
+    action()
+  }
+
+  // Users helpers
+  const approve = async (userId, email) => {
+    setActionLoading(userId)
+    const { error } = await supabase.from("user_approvals")
+      .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
+      .eq("user_id", userId)
+    if (error) showToast("Error approving user")
+    else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "approved" } : u)); showToast(`✓ Approved ${email}`) }
+    setActionLoading(null)
+  }
+
+  const reject = async (userId, email) => {
+    setActionLoading(userId)
+    const { error } = await supabase.from("user_approvals")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
+      .eq("user_id", userId)
+    if (error) showToast("Error rejecting user")
+    else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "rejected" } : u)); showToast(`Rejected ${email}`) }
+    setActionLoading(null)
+  }
+
+  // ── Theme tokens ───────────────────────────────────────────
+  const t = dark ? {
+    bg: "#141414", card: "#1C1C1C", cardAlt: "#111111", border: "#2A2A2A",
+    text: "#E8E2D9", textMid: "#9A9A9A", textMuted: "#666666",
+    gold: "#C9A96E", inputBg: "#141414", inputText: "#E8E2D9",
+    tabActiveBg: "#2A2A2A", tabActiveText: "#E8E2D9",
+    tabBg: "#111111", tabText: "#666666",
+    headerBg: "#111111",
+    pendingApprove: "#1A4D35", pendingReject: "#5A2A28", pendingRejectText: "#E05C50",
+    badgePending:  { bg: "#2A1F00", color: "#E0C48A" },
+    badgeApproved: { bg: "#0D2A1A", color: "#4CAF80" },
+    badgeRejected: { bg: "#2A0D0D", color: "#E05C50" },
+  } : {
+    bg: "#FDFAF5", card: "#fff", cardAlt: "#F9F7F3", border: "#EDE8DF",
+    text: "#2D2D2D", textMid: "#6B6B6B", textMuted: "#9E9E9E",
+    gold: "#C9A96E", inputBg: "#FDFAF5", inputText: "#2D2D2D",
+    tabActiveBg: "#fff", tabActiveText: "#2D2D2D",
+    tabBg: "#F5F0E8", tabText: "#9E9E9E",
+    headerBg: "#2D2D2D",
+    pendingApprove: "#065F46", pendingReject: "#FCA5A5", pendingRejectText: "#991B1B",
+    badgePending:  { bg: "#FEF3C7", color: "#92400E" },
+    badgeApproved: { bg: "#D1FAE5", color: "#065F46" },
+    badgeRejected: { bg: "#FEE2E2", color: "#991B1B" },
+  }
+
+  const font = "'DM Sans', sans-serif"
+  const serif = "'Cormorant Garamond', Georgia, serif"
+
+  if (!isAdmin) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", background: t.bg, minHeight: "100vh", fontFamily: font }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>🚫</div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: t.text, marginBottom: 8 }}>Access Denied</div>
+        <div style={{ fontSize: 14, color: t.textMid }}>You don't have admin privileges.</div>
+        <button onClick={onBack} style={{ marginTop: 24, padding: "8px 20px", borderRadius: 6, border: `1px solid ${t.border}`, background: t.card, color: t.text, cursor: "pointer", fontFamily: font }}>← Back</button>
+      </div>
+    )
+  }
+
+  const pending  = users.filter(u => u.status === "pending")
+  const reviewed = users.filter(u => u.status !== "pending")
+  const activeCfg = TABLE_CONFIG.find(tc => tc.key === activeTable)
+
+  return (
+    <div style={{ minHeight: "100vh", background: t.bg, fontFamily: font }}>
+      <style>{`body { margin: 0; padding: 0; background: ${t.bg}; }`}</style>
+
+      {/* Top bar */}
+      <div style={{ background: "var(--header-bg)", borderBottom: `2px solid var(--header-border)`, padding: "0 32px", height: 72, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 10px 30px rgba(0,0,0,0.18)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", border: `2px solid ${t.gold}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: serif, fontWeight: 700, fontSize: 16, color: t.gold, background: "rgba(201,169,110,0.10)" }}>E</div>
+          <div>
+            <div style={{ fontFamily: serif, fontSize: 20, fontWeight: 600, color: "var(--header-text)", letterSpacing: "0.05em" }}>Engstrom Wood Products</div>
+            <div style={{ fontSize: 11, color: "var(--header-subtext)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Admin Panel</div>
+          </div>
+        </div>
+        <button onClick={() => confirmIfDirty(onBack)} style={{ background: "transparent", border: `1px solid rgba(201,169,110,0.35)`, borderRadius: 20, padding: "6px 16px", cursor: "pointer", color: t.gold, fontSize: 13, fontFamily: font, fontWeight: 500 }}>
+          ← Back to App
+        </button>
+      </div>
+
+      {/* Main tab bar */}
+      <div style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0 }}>
+        {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"]].map(([key, label]) => (
+          <button key={key} onClick={() => confirmIfDirty(() => setTab(key))} style={{
+            padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === key ? t.gold : "transparent"}`,
+            background: "transparent", color: tab === key ? t.text : t.textMuted,
+            fontWeight: tab === key ? 600 : 400, fontSize: 14,
+            cursor: "pointer", fontFamily: font, transition: "all 0.15s",
+          }}>{label}</button>
+        ))}
+        {dirty && tab === "pricing" && (
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, paddingRight: 0 }}>
+            <span style={{ fontSize: 12, color: "#E0C48A", fontStyle: "italic" }}>Unsaved changes</span>
+          </div>
+        )}
+      </div>
+
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px" }}>
+
+        {/* ── USERS TAB ── */}
+        {tab === "users" && (
+          <div>
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: t.text, fontFamily: serif }}>User Approvals</div>
+              <div style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>Manage who can access the Estimate Manager</div>
+              <div style={{ height: 2, background: t.gold, width: 48, marginTop: 12 }} />
+            </div>
+
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.gold, marginBottom: 12 }}>
+                Pending Approval ({pending.length})
+              </div>
+              {usersLoading ? (
+                <div style={{ color: t.textMuted, fontSize: 14 }}>Loading…</div>
+              ) : pending.length === 0 ? (
+                <div style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: 24, textAlign: "center", color: t.textMuted, fontSize: 14 }}>
+                  No pending approvals
+                </div>
+              ) : pending.map(u => (
+                <div key={u.user_id} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: "16px 20px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{u.email}</div>
+                    <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
+                      Requested {new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                      style={{ padding: "7px 16px", borderRadius: 6, border: "none", background: t.pendingApprove, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }}>
+                      Approve
+                    </button>
+                    <button onClick={() => reject(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                      style={{ padding: "7px 16px", borderRadius: 6, border: `1px solid ${t.pendingReject}`, background: "transparent", color: t.pendingRejectText, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }}>
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {reviewed.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.textMuted, marginBottom: 12 }}>
+                  Previously Reviewed ({reviewed.length})
+                </div>
+                {reviewed.map(u => {
+                  const badge = t[`badge${u.status.charAt(0).toUpperCase() + u.status.slice(1)}`] || t.badgePending
+                  return (
+                    <div key={u.user_id} style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: "14px 20px", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.85 }}>
+                      <div>
+                        <div style={{ fontWeight: 500, fontSize: 14, color: t.text }}>{u.email}</div>
+                        <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
+                          Reviewed by {u.reviewed_by || "admin"} · {u.reviewed_at ? new Date(u.reviewed_at).toLocaleDateString() : "—"}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ ...badge, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "3px 8px", borderRadius: 20 }}>{u.status}</span>
+                        {u.status === "rejected" && (
+                          <button onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                            style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${t.gold}`, background: "transparent", color: t.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                            Re-approve
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── PRICING TAB ── */}
+        {tab === "pricing" && (
+          <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+
+            {/* Sidebar */}
+            <div style={{ width: 210, flexShrink: 0 }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.gold, marginBottom: 10 }}>Tables</div>
+                {TABLE_CONFIG.map(tc => (
+                  <button key={tc.key} onClick={() => confirmIfDirty(() => setActiveTable(tc.key))} style={{
+                    display: "block", width: "100%", textAlign: "left",
+                    padding: "9px 14px", borderRadius: 6, marginBottom: 4,
+                    border: `1px solid ${activeTable === tc.key ? t.gold : t.border}`,
+                    background: activeTable === tc.key ? (dark ? "#1F1A10" : "#FDF5E6") : t.card,
+                    color: activeTable === tc.key ? t.gold : t.textMid,
+                    fontWeight: activeTable === tc.key ? 600 : 400,
+                    fontSize: 13, cursor: "pointer", fontFamily: font,
+                    transition: "all 0.15s",
+                  }}>
+                    {tc.label}
+                    <span style={{ float: "right", fontSize: 11, color: t.textMuted, fontWeight: 400 }}>
+                      {pricing ? pricing[tc.key]?.length : "…"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <button onClick={resetToDefaults} style={{
+                display: "block", width: "100%", padding: "8px 14px", borderRadius: 6,
+                border: `1px solid ${dark ? "#5A2A28" : "#FCA5A5"}`,
+                background: "transparent", color: dark ? "#E05C50" : "#991B1B",
+                fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font, marginTop: 8,
+              }}>
+                ↺ Reset All to Defaults
+              </button>
+            </div>
+
+            {/* Table area */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {pricing === null ? (
+                <div style={{ color: t.textMuted, fontSize: 14, padding: 20 }}>Loading prices…</div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: t.text, fontFamily: serif }}>{activeCfg.label}</div>
+                      <div style={{ fontSize: 13, color: t.textMuted, marginTop: 3 }}>{activeCfg.description}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      {/* Download CSV */}
+                      <button
+                        onClick={() => downloadCSV(pricing[activeTable], activeCfg.columns, `EWP_${activeCfg.label.replace(/\s+/g, "_")}`)}
+                        title="Download as CSV"
+                        style={{
+                          padding: "7px 14px", borderRadius: 6, border: `1px solid ${t.border}`,
+                          background: t.card, color: t.textMid, fontSize: 12, fontWeight: 600,
+                          cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5,
+                        }}>
+                        ↓ CSV
+                      </button>
+                      {/* Download XLSX */}
+                      <button
+                        onClick={() => downloadXLSX(pricing[activeTable], activeCfg.columns, `EWP_${activeCfg.label.replace(/\s+/g, "_")}`)}
+                        title="Download as Excel"
+                        style={{
+                          padding: "7px 14px", borderRadius: 6, border: `1px solid ${t.border}`,
+                          background: t.card, color: t.textMid, fontSize: 12, fontWeight: 600,
+                          cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5,
+                        }}>
+                        ↓ Excel
+                      </button>
+                      {/* Upload */}
+                      <input
+                        ref={uploadRef} type="file" accept=".xlsx,.xls,.csv"
+                        style={{ display: "none" }} onChange={handleUpload}
+                      />
+                      <button
+                        onClick={() => uploadRef.current?.click()}
+                        disabled={uploading}
+                        title="Upload CSV or Excel to replace this table"
+                        style={{
+                          padding: "7px 14px", borderRadius: 6,
+                          border: `1px solid ${t.gold}`,
+                          background: dark ? "#1F1A10" : "#FDF5E6",
+                          color: t.gold, fontSize: 12, fontWeight: 600,
+                          cursor: uploading ? "not-allowed" : "pointer",
+                          fontFamily: font, display: "flex", alignItems: "center", gap: 5,
+                          opacity: uploading ? 0.6 : 1,
+                        }}>
+                        {uploading ? "Importing…" : "↑ Import"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ display: "flex", background: t.headerBg, padding: "10px 16px", gap: 8 }}>
+                      {activeCfg.columns.map(col => {
+                        const isActive = sortTable === activeTable && sortCol?.key === col.key
+                        return (
+                          <div key={col.key} onClick={() => handleSort(col.key)} style={{
+                            width: col.width, fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+                            letterSpacing: "0.1em", color: isActive ? "#fff" : t.gold,
+                            cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 4,
+                            transition: "color 0.15s",
+                          }}>
+                            {col.label}
+                            <span style={{ fontSize: 9, opacity: isActive ? 1 : 0.45, letterSpacing: 0 }}>
+                              {sortArrow(col.key)}
+                            </span>
+                          </div>
+                        )
+                      })}
+                      <div style={{ width: 36 }} />
+                    </div>
+
+                    {/* Rows */}
+                    {getSortedRows(pricing[activeTable]).map((row, rowIdx) => {
+                      // find the real index in the unsorted array for edits/deletes
+                      const realIdx = pricing[activeTable].indexOf(row)
+                      return (
+                        <div key={realIdx} style={{
+                          display: "flex", alignItems: "center", padding: "6px 16px", gap: 8,
+                          borderTop: `1px solid ${t.border}`,
+                          background: rowIdx % 2 === 0 ? t.card : (dark ? "#161616" : "#FDFAF5"),
+                        }}>
+                          {activeCfg.columns.map(col => (
+                            <div key={col.key} style={{ width: col.width }}>
+                              <input
+                                type={col.type === "number" ? "number" : "text"}
+                                value={row[col.key] ?? ""}
+                                onChange={e => updateCell(activeTable, realIdx, col.key, e.target.value)}
+                                step={col.type === "number" ? "any" : undefined}
+                                style={{
+                                  width: "100%", padding: "5px 8px", borderRadius: 4,
+                                  border: `1px solid transparent`, background: "transparent",
+                                  color: t.text, fontSize: 13, fontFamily: font,
+                                  outline: "none", transition: "border-color 0.15s, background 0.15s",
+                                }}
+                                onFocus={e => { e.target.style.borderColor = t.gold; e.target.style.background = dark ? "#1F1A10" : "#FFF8EE" }}
+                                onBlur={e => {
+                                  e.target.style.borderColor = "transparent"
+                                  e.target.style.background = "transparent"
+                                }}
+                              />
+                            </div>
+                          ))}
+                          <div style={{ width: 36, display: "flex", justifyContent: "center" }}>
+                            <button onClick={() => deleteRow(activeTable, realIdx)} title="Delete row"
+                              style={{ background: "none", border: "none", cursor: "pointer", color: dark ? "#5A2A28" : "#DDA8A4", fontSize: 16, lineHeight: 1, padding: "2px 4px", borderRadius: 4, transition: "color 0.15s" }}
+                              onMouseEnter={e => e.currentTarget.style.color = dark ? "#E05C50" : "#C0392B"}
+                              onMouseLeave={e => e.currentTarget.style.color = dark ? "#5A2A28" : "#DDA8A4"}>
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+
+                    {/* Add row + Save */}
+                    <div style={{ borderTop: `1px solid ${t.border}`, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                      <button onClick={() => addRow(activeTable)} style={{
+                        background: "transparent", border: `1px dashed ${t.gold}`,
+                        borderRadius: 6, padding: "6px 16px", cursor: "pointer",
+                        color: t.gold, fontSize: 12, fontWeight: 600, fontFamily: font,
+                        display: "flex", alignItems: "center", gap: 6,
+                      }}>
+                        + Add Row
+                      </button>
+                      {dirty && (
+                        <button onClick={savePricing} disabled={saving} style={{
+                          padding: "6px 18px", borderRadius: 6, border: "none",
+                          background: t.gold, color: "#fff", fontWeight: 600, fontSize: 12,
+                          cursor: saving ? "not-allowed" : "pointer", fontFamily: font, opacity: saving ? 0.7 : 1,
+                        }}>{saving ? "Saving…" : "Save Changes"}</button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: 11, color: t.textMuted, marginTop: 10, lineHeight: 1.6 }}>
+                    Changes take effect for all users after saving. Existing estimates are not affected.
+                    {" "}Import expects columns: <em>{activeCfg.columns.map(c => c.label).join(", ")}</em>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          background: dark ? "#1C1C1C" : "#2D2D2D", color: "#fff",
+          padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+          borderLeft: `3px solid ${t.gold}`,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)", zIndex: 9999, whiteSpace: "nowrap",
+        }}>
+          {toast}
+        </div>
+      )}
+    </div>
+  )
+}
