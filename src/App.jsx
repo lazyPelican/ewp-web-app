@@ -649,8 +649,8 @@ const styles = `
 `;
 
 
-// ── PDF EXPORT ────────────────────────────────────────────────
-function exportPDF(project, rooms, onStatus) {
+// ── PDF EXPORT (INTERNAL) ─────────────────────────────────────────
+function exportPDFInternal(project, rooms, onStatus) {
   onStatus("generating");
 
   const fmtN = (n) => n == null ? "$0.00" : new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(n);
@@ -890,7 +890,7 @@ function exportPDF(project, rooms, onStatus) {
       </div>
     </div>
     <div class="hdr-right">
-      <div class="doc-type">ESTIMATE SUMMARY</div>
+      <div class="doc-type">QUOTE — INTERNAL USE</div>
       <div class="doc-id">${project.id}</div>
     </div>
   </div>
@@ -1077,7 +1077,7 @@ function exportPDF(project, rooms, onStatus) {
       </div>
     </div>
     <div class="hdr-right">
-      <div class="doc-type">ESTIMATE — ${room.name || "Room "+(ri+1)}</div>
+      <div class="doc-type">QUOTE — ${room.name || "Room "+(ri+1)}</div>
       <div class="doc-id">${project.id} &nbsp;·&nbsp; ${project.name} &nbsp;·&nbsp; ${fmtD(project.bidDate)}</div>
     </div>
   </div>
@@ -1175,6 +1175,309 @@ function exportPDF(project, rooms, onStatus) {
   if (!win) { onStatus("error", "Pop-ups blocked — please allow pop-ups for this site."); return; }
 
   const safeName = (project.name||"Estimate").replace(/[^a-zA-Z0-9_\- ]/g,"");
+  win.document.open();
+  win.document.write("<!DOCTYPE html><html><head>");
+  win.document.write("<meta charset='utf-8'>");
+  win.document.write("<title>EWP — " + safeName + "</title>");
+  win.document.write("<style>" + css + "</style>");
+  win.document.write("</head><body>");
+  win.document.write(html);
+  win.document.write("</body></html>");
+  win.document.close();
+
+  win.onload = function() {
+    setTimeout(function() { win.focus(); win.print(); onStatus("done"); }, 900);
+  };
+  if (win.document.readyState === "complete") {
+    setTimeout(function() { win.focus(); win.print(); onStatus("done"); }, 900);
+  }
+}
+
+function exportPDFCustomer(project, rooms, onStatus) {
+  onStatus("generating");
+
+  const fmtN = (n) => n == null ? "$0.00" : new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(n);
+  const fmtD = (d) => { if (!d) return ""; const [y,m,day] = d.split("-"); return new Date(+y,+m-1,+day).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); };
+
+  const roomTotals = rooms.map(r => {
+    const cab  = calcCabinetry(r.cabinetry);
+    const upg  = calcUpgrades(r.upgrades);
+    const fin  = calcFinishing(r.finishing);
+    const inst = calcInstall(r.install, cab);
+    return { name: r.name, total: cab + upg + fin + inst };
+  });
+  const grandSubtotal = roomTotals.reduce((s,r) => s + r.total, 0);
+  const delivery   = parseFloat(project.deliveryAmount) || 0;
+  const pdfTaxRate = parseFloat(project.taxRate) || 8;
+  const pdfSubtotal = grandSubtotal + delivery;
+  const pdfTaxAmt  = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0;
+  const grandTotal = pdfSubtotal + pdfTaxAmt;
+
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+    @page { size: 11in 8.5in landscape; margin: 0.4in 0.48in; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', Arial, sans-serif; font-size: 10pt; color: #333; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: avoid; }
+
+    /* ─── PALETTE
+       Page bg:      #FFFFFF
+       Ivory light:  #FAF7F2   (table alt row, info strip bg)
+       Ivory mid:    #F2EDE4   (table header, section header bg)
+       Ivory border: #DDD5C8   (all dividers)
+       Warm stone:   #8C7355   (accent, labels, borders)
+       Deep ink:     #2A2118   (headings, strong text)
+       Text body:    #3D3228
+       Muted text:   #9B8E82
+    ─── */
+
+    /* ── HEADER ── */
+    .hdr {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 13px 20px 11px;
+      background: #FAF7F2;
+      border-bottom: 2px solid #8C7355;
+      margin-bottom: 12px;
+    }
+    .co-brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .co-logo { height: 70px; width: auto; display: block; }
+    .co-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 27pt; font-weight: 700;
+      color: #2A2118; letter-spacing: 0.02em; line-height: 1;
+      white-space: nowrap;
+    }
+    .co-tag { font-size: 9.5pt; color: #9B8E82; margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+    .hdr-right { text-align: left; }
+    .doc-type {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14pt; font-weight: 600;
+      color: #8C7355; letter-spacing: 0.1em; line-height: 1;
+    }
+    .doc-id { font-size: 7.5pt; color: #9B8E82; margin-top: 4px; letter-spacing: 0.05em; }
+
+    /* ── INFO STRIP ── */
+    .info-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid #DDD5C8;
+      border-left: 3px solid #8C7355;
+      border-radius: 2px;
+      margin-bottom: 12px;
+      background: #FAF7F2;
+      overflow: hidden;
+    }
+    .ic { padding: 7px 12px 8px; border-right: 1px solid #DDD5C8; border-bottom: 1px solid #DDD5C8; }
+    .ic:nth-child(even) { border-right: none; }
+    .ic:nth-last-child(-n+2) { border-bottom: none; }
+    .ic-lbl { font-size: 7pt; font-weight: 600; color: #8C7355; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+    .ic-val { font-size: 10.5pt; font-weight: 500; color: #2A2118; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── SECTION LABEL ── */
+    .sec {
+      background: #F2EDE4;
+      color: #2A2118;
+      font-family: 'DM Sans', Arial, sans-serif;
+      font-size: 8pt; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 5px 10px;
+      border-top: 1.5px solid #8C7355;
+      border-left: 1px solid #DDD5C8;
+      border-right: 1px solid #DDD5C8;
+    }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    thead th {
+      background: #F2EDE4;
+      font-size: 6.5pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: #5A4E42; padding: 4px 5px;
+      text-align: left;
+      border-bottom: 1px solid #DDD5C8;
+      border-left: 1px solid #DDD5C8;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    thead th:first-child { border-left: none; }
+    thead th.r { text-align: right; }
+    tbody tr { border-bottom: 1px solid #EDE6DC; }
+    tbody tr:nth-child(even) td { background: #FAF7F2; }
+    tbody td { padding: 4px 5px; vertical-align: middle; color: #3D3228; border-left: 1px solid #EDE6DC; word-break: break-word; overflow: hidden; }
+    tbody td:first-child { border-left: none; }
+    tbody td.r { text-align: right; }
+    tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody td.amt { text-align: right; font-weight: 600; color: #5A3E1A; font-variant-numeric: tabular-nums; }
+    table { border: 1px solid #DDD5C8; border-top: none; table-layout: fixed; }
+    .col-fill { width: auto; }
+
+    /* ── GRAND TOTAL ── */
+    .grand-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #E8E0D4;
+      border: 1px solid #C8B89A;
+      border-top: none;
+      border-left: 5px solid #6B5030;
+      padding: 14px 20px;
+    }
+    .grand-bar .gl {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16pt; font-weight: 700; color: #1A120A;
+      letter-spacing: 0.06em;
+    }
+    .grand-bar .gs { font-size: 7.5pt; color: #9B8E82; margin-top: 3px; }
+    .grand-bar .gv {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28pt; font-weight: 700; color: #3D2408;
+      letter-spacing: -0.01em;
+    }
+    .grand-bar.standalone {
+      border-top: 2px solid #6B5030;
+      margin-top: 12px; padding: 18px 24px;
+    }
+    .grand-bar.standalone .gl { font-size: 18pt; }
+    .grand-bar.standalone .gv { font-size: 34pt; }
+
+    /* ── FOOTER ── */
+    .footer {
+      font-size: 7.5pt; color: #9B8E82;
+      text-align: center; margin-top: 10px;
+      padding-top: 6px; border-top: 1px solid #DDD5C8;
+      letter-spacing: 0.03em;
+    }
+    .thank-you {
+      background: #FAF7F2;
+      border: 1px solid #DDD5C8;
+      border-left: 3px solid #8C7355;
+      border-radius: 2px;
+      padding: 16px 20px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    .thank-you h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14pt; font-weight: 600; color: #2A2118;
+      margin-bottom: 6px;
+    }
+    .thank-you p {
+      font-size: 9pt; color: #9B8E82; line-height: 1.5;
+    }
+  `;
+
+  // helpers
+  const ic = (l, v) => `<div class="ic"><div class="ic-lbl">${l}</div><div class="ic-val">${v || "—"}</div></div>`;
+
+  // ── CUSTOMER QUOTE PAGE ──────────────────────────────────────
+  let html = `<div class="page">
+  <div class="hdr">
+    <div>
+      <div class="co-brand">
+        <img src="data:image/png;base64,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" class="co-logo" />
+        <div>
+          <div class="co-name">Engstrom Wood Products</div>
+          <div class="co-tag">CUSTOM CABINETRY &nbsp;·&nbsp; FINE WOODWORKING &nbsp;·&nbsp; PRECISION INSTALLATION</div>
+        </div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="doc-type">QUOTE — FOR CUSTOMER</div>
+      <div class="doc-id">${project.id}</div>
+    </div>
+  </div>
+
+  <div class="info-strip">
+    ${ic("Project Name", project.name)}
+    ${ic("Address", project.address)}
+    ${ic("Bid Date", fmtD(project.bidDate))}
+    ${ic("Contact", project.contactName)}
+    ${ic("Phone", project.contactPhone)}
+    ${ic("Email", project.email)}
+  </div>
+
+  <div class="sec">PROJECT SUMMARY</div>
+  <table>
+    <colgroup>
+      <col style="width:60%"><col style="width:40%">
+    </colgroup>
+    <thead><tr>
+      <th>Room</th>
+      <th class="r">Room Total</th>
+    </tr></thead>
+    <tbody>
+      ${roomTotals.map((r,i) => `<tr>
+        <td><strong>${r.name || "Room "+(i+1)}</strong></td>
+        <td class="amt">${fmtN(r.total)}</td>
+      </tr>`).join("")}
+    </tbody>
+  </table>
+
+  ${delivery > 0 ? `
+  <div class="grand-bar standalone" style="margin-top:8px; background:#FAF7F2; border-color:#DDD5C8;">
+    <div>
+      <div class="gl" style="font-size:11pt; color:#8C7355;">DELIVERY</div>
+      ${project.deliveryNotes ? `<div class="gs">${project.deliveryNotes}</div>` : ""}
+    </div>
+    <div class="gv" style="font-size:15pt; color:#8C7355;">${fmtN(delivery)}</div>
+  </div>` : ""}
+
+  ${project.taxEnabled ? `
+  <div class="grand-bar standalone" style="margin-top:4px; background:#FAF7F2; border-color:#DDD5C8;">
+    <div>
+      <div class="gl" style="font-size:11pt; color:#8C7355;">ESTIMATED TAX (${pdfTaxRate}%)</div>
+      <div class="gs">Applied to project subtotal${delivery > 0 ? " including delivery" : ""}</div>
+    </div>
+    <div class="gv" style="font-size:15pt; color:#8C7355;">${fmtN(pdfTaxAmt)}</div>
+  </div>` : ""}
+
+  <div class="grand-bar standalone">
+    <div>
+      <div class="gl">GRAND TOTAL</div>
+      <div class="gs">${rooms.length} room${rooms.length!==1?"s":""} &nbsp;·&nbsp; ${fmtD(project.bidDate)}${delivery > 0 ? " &nbsp;·&nbsp; incl. delivery" : ""}${project.taxEnabled ? ` &nbsp;·&nbsp; incl. ${pdfTaxRate}% tax` : ""}</div>
+    </div>
+    <div class="gv">${fmtN(grandTotal)}</div>
+  </div>
+
+  <div class="thank-you">
+    <h3>Thank You for Considering Engstrom Wood Products</h3>
+    <p>We look forward to working with you on this project. Please contact us if you have any questions.</p>
+  </div>
+
+  <div style="margin-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:32px;">
+    <div>
+      <div style="font-size:8pt; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:#9B8E82; margin-bottom:6px;">Client Acceptance</div>
+      <div style="border-bottom:1px solid #2A2118; height:36px; margin-bottom:6px;"></div>
+      <div style="margin-bottom:4px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Printed Name</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Date</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:8pt; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:#9B8E82; margin-bottom:6px;">Authorized by Engstrom Wood Products</div>
+      <div style="border-bottom:1px solid #2A2118; height:36px; margin-bottom:6px;"></div>
+      <div style="margin-bottom:4px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Printed Name</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div style="border-bottom:1px solid #DDD5C8; height:24px; margin-bottom:4px;"></div>
+        <div style="font-size:7.5pt; color:#9B8E82;">Date</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+</div>`;
+
+  // ── open print window ─────────────────────────────────────────
+  const win = window.open("about:blank", "_blank");
+  if (!win) { onStatus("error", "Pop-ups blocked — please allow pop-ups for this site."); return; }
+
+  const safeName = (project.name||"Quote").replace(/[^a-zA-Z0-9_\- ]/g,"");
   win.document.open();
   win.document.write("<!DOCTYPE html><html><head>");
   win.document.write("<meta charset='utf-8'>");
@@ -1946,16 +2249,29 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
   const [pdfStatus, setPdfStatus] = useState("idle");
   const [pdfError, setPdfError]   = useState(null);
 
-  const handleExport = () => {
+  const [pdfStatus2, setPdfStatus2] = useState("idle");
+  const [pdfError2, setPdfError2] = useState(null);
+
+  const handleExportInternal = () => {
     setPdfError(null);
-    exportPDF(project, rooms, (status, errMsg) => {
+    exportPDFInternal(project, rooms, (status, errMsg) => {
       setPdfStatus(status);
       if (errMsg) setPdfError(errMsg);
     });
   };
 
-  const pdfBtnLabel = { idle:"📥 Export PDF", generating:"⏳ Preparing…", done:"📥 Export Again", error:"⚠ Try Again" }[pdfStatus] || "📥 Export PDF";
+  const handleExportCustomer = () => {
+    setPdfError2(null);
+    exportPDFCustomer(project, rooms, (status, errMsg) => {
+      setPdfStatus2(status);
+      if (errMsg) setPdfError2(errMsg);
+    });
+  };
+
+  const pdfBtnLabel = { idle:"📥 Quote (Internal)", generating:"⏳ Preparing…", done:"📥 Quote (Internal)", error:"⚠ Try Again" }[pdfStatus] || "📥 Quote (Internal)";
+  const pdfBtnLabel2 = { idle:"📥 Quote (Customer)", generating:"⏳ Preparing…", done:"📥 Quote (Customer)", error:"⚠ Try Again" }[pdfStatus2] || "📥 Quote (Customer)";
   const pdfBusy = pdfStatus === "generating";
+  const pdfBusy2 = pdfStatus2 === "generating";
   const roomTotals = rooms.map(r => {
     const cab = calcCabinetry(r.cabinetry);
     const upg = calcUpgrades(r.upgrades);
@@ -1984,7 +2300,8 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
             <div className="page-subtitle">{project.name} · {fmtDate(project.bidDate)} · ID: {project.id}</div>
           </div>
           <div className="flex gap-8">
-            <button className="btn btn-outline" onClick={handleExport} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
+            <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
+            <button className="btn btn-outline" onClick={handleExportCustomer} disabled={pdfBusy2} style={{opacity:pdfBusy2?0.6:1}}>{pdfBtnLabel2}</button>
             
             <button className="btn btn-gold" onClick={onSave}>💾 Save Estimate</button>
           </div>
