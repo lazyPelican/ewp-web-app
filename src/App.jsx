@@ -1179,7 +1179,7 @@ function exportPDFInternal(project, rooms, onStatus) {
     </div>
   </div>
 
-  <div class="footer">This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+  <div class="footer">This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification. Our current lead time is 8 weeks after receipt of approved shop drawings, estimates, dimensions verified, and down payment received. &nbsp;|&nbsp; Engstrom Wood Products</div>
 </div>`;
 
   // ── PER-ROOM PAGES ───────────────────────────────────────────
@@ -1360,7 +1360,7 @@ function exportPDFInternal(project, rooms, onStatus) {
     <div class="gv">${fmtN(rt.total)}</div>
   </div>
 
-  <div class="footer">This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+  <div class="footer">This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification. Our current lead time is 8 weeks after receipt of approved shop drawings, estimates, dimensions verified, and down payment received. &nbsp;|&nbsp; Engstrom Wood Products</div>
 </div>`;
   });
 
@@ -1791,7 +1791,7 @@ function exportPDFCustomer(project, rooms, onStatus) {
     </div>
   </div>
 
-  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. Our current lead time is 8 weeks after receipt of approved shop drawings, estimates, dimensions verified, and down payment received. &nbsp;|&nbsp; Engstrom Wood Products</div>
 </div>`;
 
   // ── PER-ROOM PAGES ───────────────────────────────────────────
@@ -1907,7 +1907,7 @@ function exportPDFCustomer(project, rooms, onStatus) {
     <div class="gv">${fmtN(rt.total)}</div>
   </div>
 
-  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. &nbsp;|&nbsp; Engstrom Wood Products</div>
+  <div class="footer">This quote is valid for 30 days from the bid date. All prices subject to final measurement verification. Our current lead time is 8 weeks after receipt of approved shop drawings, estimates, dimensions verified, and down payment received. &nbsp;|&nbsp; Engstrom Wood Products</div>
 </div>`;
   });
 
