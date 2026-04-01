@@ -85,10 +85,10 @@ function Root() {
         left: 0,
         right: 0,
         bottom: 0,
-        padding: "10px 12px",
+        padding: "10px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
         textAlign: "center",
         fontFamily: "'DM Sans', sans-serif",
-        fontSize: 14,
+        fontSize: "clamp(11px, 2.8vw, 14px)",
         color: dark ? "rgba(232, 226, 217, 0.72)" : "#9E9E9E",
         background: dark ? "rgba(20, 20, 20, 0.82)" : "rgba(253, 250, 245, 0.9)",
         backdropFilter: "blur(6px)",
@@ -105,10 +105,6 @@ function Root() {
         lineHeight: 1.25,
         flexWrap: "wrap",
       }}>
-        <span>Created by Bilal Ahmed</span>
-        <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
-        <span style={{ fontWeight: 600, letterSpacing: "0.02em" }}>NextGen Sheets</span>
-        <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
         <a
           href="https://www.upwork.com/freelancers/~017990988818971adb?mp_source=share"
           target="_blank"
@@ -118,8 +114,8 @@ function Root() {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 0,
-            padding: "4px 8px",
+            gap: 10,
+            padding: "8px 12px",
             borderRadius: 999,
             textDecoration: "none",
             color: "inherit",
@@ -127,9 +123,13 @@ function Root() {
             background: dark ? "rgba(28, 28, 28, 0.6)" : "rgba(255, 255, 255, 0.65)",
           }}
         >
+          <span>Created by Bilal Ahmed</span>
+          <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
+          <span style={{ fontWeight: 600, letterSpacing: "0.02em" }}>NextGen Sheets</span>
+          <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
           <img
-            src="/upwork-logo.png"
-            alt=""
+            src="/upwork_light.png"
+            alt="Upwork logo"
             aria-hidden="true"
             width={24}
             height={24}
@@ -199,7 +199,7 @@ function Root() {
   }
 
   return (
-    <div style={{ paddingBottom: 64 }}>
+    <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
       {content}
       {footer}
     </div>

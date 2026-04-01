@@ -13,13 +13,17 @@ export default function PendingApproval({ user }) {
       justifyContent: "center",
       background: "#FDFAF5",
       fontFamily: "'DM Sans', sans-serif",
+      padding: "max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))",
+      boxSizing: "border-box",
     }}>
       <div style={{
         background: "#fff",
         border: "1px solid #EDE8DF",
         borderRadius: 12,
-        padding: "48px 40px",
-        width: 400,
+        padding: "clamp(28px, 5vw, 48px) clamp(20px, 5vw, 40px)",
+        width: "100%",
+        maxWidth: 400,
+        boxSizing: "border-box",
         boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
         textAlign: "center",
       }}>

@@ -159,6 +159,7 @@ export default function AdminPanel({ currentUser, onBack }) {
 
   const [toast, setToast] = useState(null)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
+  const [scrolled, setScrolled] = useState(false)
 
   const isAdmin = ADMIN_EMAILS.includes(currentUser.email?.toLowerCase())
 
@@ -166,6 +167,12 @@ export default function AdminPanel({ currentUser, onBack }) {
     const handler = () => setDark(localStorage.getItem("ewp-theme") === "dark")
     window.addEventListener("storage", handler)
     return () => window.removeEventListener("storage", handler)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 30)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   useEffect(() => {
@@ -411,22 +418,89 @@ export default function AdminPanel({ currentUser, onBack }) {
     <div style={{ minHeight: "100vh", background: t.bg, fontFamily: font }}>
       <style>{`body { margin: 0; padding: 0; background: ${t.bg}; }`}</style>
 
-      {/* Top bar */}
-      <div style={{ background: "var(--header-bg)", borderBottom: `2px solid var(--header-border)`, padding: "0 32px", height: 72, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 10px 30px rgba(0,0,0,0.18)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", border: `2px solid ${t.gold}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: serif, fontWeight: 700, fontSize: 16, color: t.gold, background: "rgba(201,169,110,0.10)" }}>E</div>
+      {/* Top bar - matching main app header */}
+      <div 
+        className={`admin-topbar${scrolled ? " scrolled" : ""}`}
+        style={{ 
+          background: dark ? "#2A2820" : "#FDFAF5", 
+          borderBottom: dark ? "1px solid #3A3628" : "1px solid #E4D9C8", 
+          padding: "0 48px", 
+          height: 130, 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "space-between", 
+          boxShadow: "0 2px 24px rgba(20,15,5,0.08)",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        <style>{`
+          .admin-topbar {
+            transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+          }
+          .admin-topbar.scrolled { height: 70px !important; box-shadow: 0 2px 16px rgba(20,15,5,0.11) !important; }
+          .admin-topbar.scrolled .admin-header-logo { height: 54px !important; }
+          .admin-topbar.scrolled .admin-header-name { font-size: 24px !important; }
+          .admin-topbar.scrolled .admin-header-sub { opacity: 0 !important; max-height: 0 !important; margin-top: 0 !important; }
+          .admin-pricing-table-shell { overflow: hidden; }
+          @media (max-width: 900px) {
+            .admin-topbar {
+              padding: 10px 14px !important;
+              height: auto !important;
+              min-height: 72px;
+              flex-wrap: wrap;
+              row-gap: 10px;
+            }
+            .admin-topbar > div:first-child {
+              gap: 12px !important;
+              min-width: 0;
+              flex: 1 1 auto;
+            }
+            .admin-header-name {
+              font-size: clamp(18px, 4.5vw, 28px) !important;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            .admin-header-logo { height: 48px !important; }
+            .admin-topbar.scrolled .admin-header-logo { height: 36px !important; }
+          }
+          @media (max-width: 768px) {
+            .admin-main-inner { padding: 16px 14px !important; }
+            .admin-tab-bar { padding: 0 8px !important; flex-wrap: wrap; }
+            .admin-pricing-layout { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; }
+            .admin-pricing-sidebar { width: 100% !important; flex-shrink: 0 !important; }
+            .admin-user-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+            .admin-user-actions { justify-content: flex-start !important; flex-wrap: wrap !important; }
+            .admin-pricing-table-shell {
+              overflow-x: auto !important;
+              overflow-y: hidden !important;
+              -webkit-overflow-scrolling: touch;
+            }
+          }
+        `}</style>
+        <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+          <img 
+            src="/ewp-logo.png" 
+            alt="Engstrom Wood Products" 
+            style={{ height: 100, width: "auto", flexShrink: 0, transition: "height 0.4s cubic-bezier(0.22, 1, 0.36, 1)" }}
+            className="admin-header-logo"
+          />
           <div>
-            <div style={{ fontFamily: serif, fontSize: 20, fontWeight: 600, color: "var(--header-text)", letterSpacing: "0.05em" }}>Engstrom Wood Products</div>
-            <div style={{ fontSize: 11, color: "var(--header-subtext)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Admin Panel</div>
+            <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 600, color: dark ? "#C3C8C8" : "#494D4D", letterSpacing: "0.04em", lineHeight: 1, transition: "font-size 0.4s cubic-bezier(0.22, 1, 0.36, 1)" }} className="admin-header-name">Engstrom Wood Products</div>
+            <div style={{ fontSize: 11, color: dark ? "#A09580" : "#8C9191", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 7, fontWeight: 600, opacity: 1, transition: "opacity 0.3s ease, max-height 0.4s ease, margin-top 0.4s cubic-bezier(0.22, 1, 0.36, 1)", maxHeight: 24, overflow: "hidden" }} className="admin-header-sub">Admin Panel</div>
           </div>
         </div>
-        <button onClick={() => confirmIfDirty(onBack)} style={{ background: "transparent", border: `1px solid rgba(201,169,110,0.35)`, borderRadius: 20, padding: "6px 16px", cursor: "pointer", color: t.gold, fontSize: 13, fontFamily: font, fontWeight: 500 }}>
-          ← Back to App
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={() => confirmIfDirty(onBack)} style={{ background: "transparent", border: `1px solid rgba(201,169,110,0.35)`, borderRadius: 20, padding: "6px 16px", cursor: "pointer", color: t.gold, fontSize: 13, fontFamily: font, fontWeight: 500 }}>
+            ← Back to App
+          </button>
+        </div>
       </div>
 
       {/* Main tab bar */}
-      <div style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0 }}>
+      <div className="admin-tab-bar" style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0 }}>
         {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"]].map(([key, label]) => (
           <button key={key} onClick={() => confirmIfDirty(() => setTab(key))} style={{
             padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === key ? t.gold : "transparent"}`,
@@ -442,7 +516,7 @@ export default function AdminPanel({ currentUser, onBack }) {
         )}
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px" }}>
+      <div className="admin-main-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px" }}>
 
         {/* ── USERS TAB ── */}
         {tab === "users" && (
@@ -464,14 +538,14 @@ export default function AdminPanel({ currentUser, onBack }) {
                   No pending approvals
                 </div>
               ) : pending.map(u => (
-                <div key={u.user_id} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: "16px 20px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div key={u.user_id} className="admin-user-row" style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: "16px 20px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{u.email}</div>
                     <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
                       Requested {new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div className="admin-user-actions" style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
                       style={{ padding: "7px 16px", borderRadius: 6, border: "none", background: t.pendingApprove, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }}>
                       Approve
@@ -493,7 +567,7 @@ export default function AdminPanel({ currentUser, onBack }) {
                 {reviewed.map(u => {
                   const badge = t[`badge${u.status.charAt(0).toUpperCase() + u.status.slice(1)}`] || t.badgePending
                   return (
-                    <div key={u.user_id} style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: "14px 20px", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.85 }}>
+                    <div key={u.user_id} className="admin-user-row" style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: "14px 20px", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.85 }}>
                       <div>
                         <div style={{ fontWeight: 500, fontSize: 14, color: t.text }}>{u.email}</div>
                         <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
@@ -519,10 +593,10 @@ export default function AdminPanel({ currentUser, onBack }) {
 
         {/* ── PRICING TAB ── */}
         {tab === "pricing" && (
-          <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+          <div className="admin-pricing-layout" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
 
             {/* Sidebar */}
-            <div style={{ width: 210, flexShrink: 0 }}>
+            <div className="admin-pricing-sidebar" style={{ width: 210, flexShrink: 0 }}>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.gold, marginBottom: 10 }}>Tables</div>
                 {TABLE_CONFIG.map(tc => (
@@ -612,7 +686,7 @@ export default function AdminPanel({ currentUser, onBack }) {
                   </div>
 
                   {/* Table */}
-                  <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, overflow: "hidden" }}>
+                  <div className="admin-pricing-table-shell" style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8 }}>
                     {/* Header */}
                     <div style={{ display: "flex", background: t.headerBg, padding: "10px 16px", gap: 8 }}>
                       {activeCfg.columns.map(col => {

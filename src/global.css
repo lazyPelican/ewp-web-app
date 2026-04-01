@@ -6,6 +6,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -13,6 +17,7 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   transition: background 0.2s ease, color 0.2s ease;
+  overflow-x: hidden;
 }
 
 :root {
