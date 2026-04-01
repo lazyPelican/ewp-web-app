@@ -1042,6 +1042,19 @@ const styles = `
     .data-table { min-width: 520px; }
     .btn-lg { padding: 12px 20px; font-size: 11px; }
   }
+
+  /* ── VERSION FOOTER ── */
+  .version-footer {
+    position: fixed;
+    bottom: 12px;
+    right: 16px;
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.6;
+    font-family: 'DM Sans', sans-serif;
+    pointer-events: none;
+    z-index: 50;
+  }
 `;
 
 
@@ -3668,6 +3681,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             </div>
           </div>
         )}
+        <div className="version-footer">version_01042026</div>
       </div>
     </>
   );
