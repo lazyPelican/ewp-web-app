@@ -487,7 +487,7 @@ const styles = `
     --char:    rgb(210, 213, 210);
     --char2:   rgb(230, 232, 230);
     --mid:     #B0A090;
-    --muted:   #887870;
+    --muted:   #b8b0a5;
     --card-bg:         #222018;
     --input-bg:        #2A2820;
     --input-focus-bg:  #2E2C22;

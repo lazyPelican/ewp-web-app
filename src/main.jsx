@@ -1,11 +1,29 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense, lazy } from "react"
 import ReactDOM from "react-dom/client"
 import "./global.css"
 import { supabase } from "./supabase.js"
-import Auth from "./Auth.jsx"
-import PendingApproval from "./PendingApproval.jsx"
-import AdminPanel from "./AdminPanel.jsx"
-import App from "./App.jsx"
+
+const Auth = lazy(() => import("./Auth.jsx"))
+const PendingApproval = lazy(() => import("./PendingApproval.jsx"))
+const AdminPanel = lazy(() => import("./AdminPanel.jsx"))
+const App = lazy(() => import("./App.jsx"))
+
+const suspenseFallback = (
+  <div
+    style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "#FDFAF5",
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+      color: "#9E9E9E",
+      fontSize: 14,
+    }}
+  >
+    Loading…
+  </div>
+)
 
 function Root() {
   const [session, setSession] = useState(null)
@@ -129,10 +147,13 @@ function Root() {
           <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
           <img
             src="/upwork_light.png"
-            alt="Upwork logo"
+            alt=""
             aria-hidden="true"
             width={24}
             height={24}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
             style={{ display: "block" }}
           />
         </a>
@@ -153,9 +174,17 @@ function Root() {
       </div>
     )
   } else if (!session) {
-    content = <Auth />
+    content = (
+      <Suspense fallback={suspenseFallback}>
+        <Auth />
+      </Suspense>
+    )
   } else if (approvalStatus === "pending") {
-    content = <PendingApproval user={session.user} />
+    content = (
+      <Suspense fallback={suspenseFallback}>
+        <PendingApproval user={session.user} />
+      </Suspense>
+    )
   } else if (approvalStatus === "rejected") {
     content = (
       <div style={{
@@ -193,16 +222,22 @@ function Root() {
   } else {
     // Approved — show the app (with optional admin panel link for admins)
     const isAdmin = ADMIN_EMAILS.includes(session.user.email?.toLowerCase())
-    content = showAdmin
-      ? <AdminPanel currentUser={session.user} onBack={() => setShowAdmin(false)} />
-      : <App session={session} isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
+    content = (
+      <Suspense fallback={suspenseFallback}>
+        {showAdmin
+          ? <AdminPanel currentUser={session.user} onBack={() => setShowAdmin(false)} />
+          : <App session={session} isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />}
+      </Suspense>
+    )
   }
 
   return (
-    <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
-      {content}
+    <>
+      <main id="main-content" style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
+        {content}
+      </main>
       {footer}
-    </div>
+    </>
   )
 }
 
