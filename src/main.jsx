@@ -107,10 +107,10 @@ function Root() {
         textAlign: "center",
         fontFamily: "'DM Sans', sans-serif",
         fontSize: "clamp(11px, 2.8vw, 14px)",
-        color: dark ? "rgba(232, 226, 217, 0.72)" : "#9E9E9E",
-        background: dark ? "rgba(20, 20, 20, 0.82)" : "rgba(253, 250, 245, 0.9)",
-        backdropFilter: "blur(6px)",
-        borderTop: dark ? "1px solid rgba(42, 42, 42, 0.8)" : "1px solid rgba(237, 232, 223, 0.8)",
+        color: dark ? "#A09580" : "rgb(140, 145, 145)",
+        background: dark ? "rgba(42, 40, 32, 0.65)" : "rgba(253, 250, 245, 0.65)",
+        backdropFilter: "blur(14px)",
+        borderTop: dark ? "1px solid #3A3628" : "1px solid #E4D9C8",
         zIndex: 9999,
       }}
     >
@@ -137,8 +137,8 @@ function Root() {
             borderRadius: 999,
             textDecoration: "none",
             color: "inherit",
-            border: dark ? "1px solid rgba(42, 42, 42, 0.9)" : "1px solid rgba(237, 232, 223, 0.95)",
-            background: dark ? "rgba(28, 28, 28, 0.6)" : "rgba(255, 255, 255, 0.65)",
+            border: dark ? "1px solid #3A3628" : "1px solid #E4D9C8",
+            background: dark ? "rgba(55, 51, 38, 0.6)" : "rgba(255, 255, 255, 0.65)",
           }}
         >
           <span>Created by Bilal Ahmed</span>
@@ -231,12 +231,33 @@ function Root() {
     )
   }
 
+  const versionLabel = (() => {
+    const d = new Date()
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yyyy = d.getFullYear()
+    return `version_${dd}${mm}${yyyy}`
+  })()
+
   return (
     <>
       <main id="main-content" style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
         {content}
       </main>
       {footer}
+      <div style={{
+        position: "fixed",
+        bottom: "max(6px, env(safe-area-inset-bottom, 6px))",
+        right: 16,
+        fontSize: 10,
+        fontFamily: "'DM Sans', sans-serif",
+        color: dark ? "rgba(160, 149, 128, 0.6)" : "rgba(122, 122, 122, 0.55)",
+        pointerEvents: "none",
+        zIndex: 10000,
+        letterSpacing: "0.04em",
+      }}>
+        {versionLabel}
+      </div>
     </>
   )
 }

@@ -116,7 +116,7 @@ const styles = `
     --ewp-slate:   rgb(73, 77, 77);
     --ewp-slate2:  rgb(55, 58, 58);
 
-    --header-bg:      #FDFAF5;
+    --header-bg:      rgba(253, 250, 245, 0.65);
     --header-border:  #E4D9C8;
     --header-text:    rgb(73, 77, 77);
     --header-subtext: rgb(140, 145, 145);
@@ -153,14 +153,13 @@ const styles = `
   /* ── TOPBAR ── */
   .topbar {
     background: var(--header-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     padding: 0 48px;
     height: 130px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
     border-bottom: 1px solid var(--header-border);
     box-shadow: 0 2px 24px rgba(20,15,5,0.08);
     transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
@@ -220,6 +219,8 @@ const styles = `
   /* ── STEPPER (see animation block below) ── */
   .stepper {
     background: var(--header-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--header-border);
     padding: 0 40px;
     display: flex;
@@ -474,7 +475,7 @@ const styles = `
     --ewp-slate:   rgb(195, 200, 200);
     --ewp-slate2:  rgb(220, 223, 223);
 
-    --header-bg:      #2A2820;
+    --header-bg:      rgba(42, 40, 32, 0.65);
     --header-border:  #3A3628;
     --header-text:    rgb(210, 213, 210);
     --header-subtext: #A09580;
@@ -1023,7 +1024,13 @@ const styles = `
       width: auto;
     }
 
-    .empty-state { padding: 48px 16px; }
+    .empty-state { padding: 32px 16px; }
+    .dashboard-stats { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+    .dashboard-stats > div { padding: 10px 10px !important; }
+    .dashboard-stats > div > div:first-child { font-size: 14px !important; margin-bottom: 4px !important; }
+    .dashboard-stats > div > div:nth-child(3) { font-size: 18px !important; }
+    .page-header { margin-bottom: 14px; }
+    .dashboard-search-wrap { margin-bottom: 10px !important; }
 
     .modal-overlay {
       padding: 12px;
@@ -3216,7 +3223,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
       </div>
 
       {/* Search */}
-      <div style={{ marginBottom: 16 }}>
+      <div className="dashboard-search-wrap" style={{ marginBottom: 16 }}>
         <input className="dashboard-search" placeholder="🔍  Search by project name or address…" value={search} onChange={e => setSearch(e.target.value)}
           style={{ background: "var(--card-bg)" }} />
       </div>
@@ -3483,7 +3490,8 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     <>
       <style>{styles}</style>
       <div className={`app${dark ? " dark" : ""}`}>
-        {/* TOPBAR */}
+        {/* TOPBAR + STEPPER sticky wrapper */}
+        <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}`}>
           <div className="topbar-logo">
             <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" />
@@ -3575,6 +3583,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             </div>
           );
         })()}
+        </div>{/* end sticky wrapper */}
 
         {/* MAIN */}
         <div className="main">
@@ -3681,7 +3690,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             </div>
           </div>
         )}
-        <div className="version-footer">version_01042026</div>
+        <div className="version-footer">{(() => { const d = new Date(); return `version_${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}${d.getFullYear()}`; })()}</div>
       </div>
     </>
   );
