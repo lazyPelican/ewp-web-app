@@ -13,6 +13,16 @@ let PRICING = DEFAULT_PRICING;
 const fmt = (n) => n == null ? "$0.00" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 const genId = () => "EWP" + new Date().toISOString().replace(/[-T:.Z]/g, "").slice(0, 14);
 
+// Escape user-supplied text before inserting into PDF HTML templates
+const escHtml = (s) => String(s ?? "")
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;");
+
+// Install type constant — avoids magic string scattered throughout
+const HOURLY_RATE = "Hourly Rate";
+
 // Format ISO date (yyyy-mm-dd) -> "Jan 15, 2026"
 const fmtDate = (d) => {
   if (!d) return "";
@@ -78,7 +88,7 @@ const calcInstall = (installData, cabTotal) => {
   if (!inst) return 0;
   const adjPct = parseFloat(installData.adjPct) || 0;
   let base;
-  if (installData.type === "Hourly Rate") {
+  if (installData.type === HOURLY_RATE) {
     const hours = parseFloat(installData.metric) || 0;
     base = inst.rate * hours;
   } else {
@@ -1046,7 +1056,8 @@ const styles = `
   @media (max-width: 480px) {
     .summary-grid { grid-template-columns: 1fr; }
     .summary-tax-grid { grid-template-columns: 1fr !important; }
-    .data-table { min-width: 520px; }
+    .data-table { min-width: 460px; }
+    .card-body .scrollable { margin: 0 -14px; padding: 0 14px; }
     .btn-lg { padding: 12px 20px; font-size: 11px; }
   }
 
@@ -1096,7 +1107,7 @@ function _renderPDF(css, html, filename, onStatus) {
 
     const opt = {
       margin:       [0.4, 0.48],
-      filename:     filename.replace(/[^a-zA-Z0-9_\- ]/g, '') + '.pdf',
+      filename:     (filename.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Estimate') + '.pdf',
       image:        { type: 'jpeg', quality: 0.97 },
       html2canvas:  { scale: 2, useCORS: true, allowTaint: true, logging: false, windowWidth: 1056 },
       jsPDF:        { unit: 'in', format: [11, 8.5], orientation: 'landscape' },
@@ -1470,9 +1481,9 @@ function exportPDFInternal(project, rooms, onStatus) {
           const adj  = parseFloat(item.adjPct)||0;
           const tot  = sp*qty*(1+adj/100);
           return `<tr>
-            <td>${item.product}</td>
-            <td>${item.construction==="Not Applicable"?"—":item.construction}</td>
-            <td>${item.wood==="Not Applicable"?"—":item.wood}</td>
+            <td>${escHtml(item.product)}</td>
+            <td>${item.construction==="Not Applicable"?"—":escHtml(item.construction)}</td>
+            <td>${item.wood==="Not Applicable"?"—":escHtml(item.wood)}</td>
             <td class="num">${con?.premium?(con.premium*100).toFixed(0)+"%":"0%"}</td>
             <td class="num">${wood?.premium?(wood.premium*100).toFixed(0)+"%":"0%"}</td>
             <td class="num">${qty}</td>
@@ -1490,13 +1501,13 @@ function exportPDFInternal(project, rooms, onStatus) {
           const adj = parseFloat(item.adjPct)||0;
           const tot = (upg?.price||0)*qty*(1+adj/100);
           return `<tr>
-            <td>${item.upgrade}</td>
+            <td>${escHtml(item.upgrade)}</td>
             <td class="num">${qty}</td>
             <td class="num">${fmtN(upg?.price||0)}</td>
             <td class="num">${fmtN((upg?.price||0)*qty)}</td>
             <td class="num">${adj?adj+"%":"—"}</td>
             <td class="amt">${fmtN(tot)}</td>
-            <td>${item.notes||""}</td>
+            <td>${escHtml(item.notes||"")}</td>
           </tr>`;
         }).join("");
 
@@ -1509,20 +1520,20 @@ function exportPDFInternal(project, rooms, onStatus) {
           const sub2= (fin?.pricePerLF||0)*lf;
           const tot = sub2*(1+adj/100);
           return `<tr>
-            <td>${item.type}</td>
+            <td>${escHtml(item.type)}</td>
             <td class="num">${lf}</td>
             <td class="num">${fmtN(fin?.pricePerLF||0)}/LF</td>
             <td class="num">${fmtN(sub2)}</td>
             <td class="num">${adj?adj+"%":"—"}</td>
             <td class="amt">${fmtN(tot)}</td>
-            <td>${item.notes||""}</td>
+            <td>${escHtml(item.notes||"")}</td>
           </tr>`;
         }).join("");
 
-    const instMetric = room.install.type === "Hourly Rate"
+    const instMetric = room.install.type === HOURLY_RATE
       ? (room.install.metric||"0")+" hrs × $135.00/hr"
       : instDef ? (instDef.rate*100).toFixed(0)+"% of cabinetry" : "—";
-    const instPrice = room.install.type === "Hourly Rate"
+    const instPrice = room.install.type === HOURLY_RATE
       ? fmtN((parseFloat(room.install.metric)||0)*135)
       : fmtN(instDef ? rt.cab*instDef.rate : 0);
     const instAdj = room.install.adjPct ? room.install.adjPct+"%" : "0%";
@@ -2069,9 +2080,9 @@ function exportPDFCustomer(project, rooms, onStatus) {
       <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
       <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
       <tbody>
-        ${room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0).length === 0
+        ${(() => { const rows = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0); return rows.length === 0
           ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No cabinetry items</td></tr>`
-          : room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0).map(item => {
+          : rows.map(item => {
               const prod = PRICING.woodwork.find(w => w.name === item.product);
               const con  = PRICING.construction.find(c => c.name === item.construction);
               const wood = PRICING.wood.find(w => w.name === item.wood);
@@ -2079,9 +2090,9 @@ function exportPDFCustomer(project, rooms, onStatus) {
               const qty  = parseFloat(item.qty) || 0;
               const adj  = parseFloat(item.adjPct) || 0;
               const lineTotal = sp * qty * (1 + adj/100);
-              const desc = [item.product, item.construction !== "Not Applicable" ? item.construction : null, item.wood !== "Not Applicable" ? item.wood : null].filter(Boolean).join(" — ");
-              return `<tr><td>${desc} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN(lineTotal)}</td></tr>`;
-            }).join("")
+              const desc = [item.product, item.construction !== "Not Applicable" ? item.construction : null, item.wood !== "Not Applicable" ? item.wood : null].filter(Boolean).map(escHtml).join(" — ");
+              return `<tr><td>${desc} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${escHtml(item.notes)}</span>` : ""}</td><td class="amt">${fmtN(lineTotal)}</td></tr>`;
+            }).join(""); })()
         }
       </tbody>
     </table>
@@ -2094,14 +2105,14 @@ function exportPDFCustomer(project, rooms, onStatus) {
       <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
       <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
       <tbody>
-        ${room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0).length === 0
+        ${(() => { const rows = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0); return rows.length === 0
           ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No upgrade items</td></tr>`
-          : room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0).map(item => {
+          : rows.map(item => {
               const upg = PRICING.upgrades.find(u => u.name === item.upgrade);
               const qty = parseFloat(item.qty) || 0;
               const adj = parseFloat(item.adjPct) || 0;
-              return `<tr><td>${item.upgrade} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN((upg?.price||0)*qty*(1+adj/100))}</td></tr>`;
-            }).join("")
+              return `<tr><td>${escHtml(item.upgrade)} × ${qty}${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${escHtml(item.notes)}</span>` : ""}</td><td class="amt">${fmtN((upg?.price||0)*qty*(1+adj/100))}</td></tr>`;
+            }).join(""); })()
         }
       </tbody>
     </table>
@@ -2114,14 +2125,14 @@ function exportPDFCustomer(project, rooms, onStatus) {
       <colgroup><col style="width:60%"><col style="width:40%"></colgroup>
       <thead><tr><th>Description</th><th class="r">Total</th></tr></thead>
       <tbody>
-        ${room.finishing.filter(i => i.type && parseFloat(i.lf) > 0).length === 0
+        ${(() => { const rows = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0); return rows.length === 0
           ? `<tr><td colspan="2" style="color:#9B8E82;font-style:italic;padding:6px 5px;">No finishing items</td></tr>`
-          : room.finishing.filter(i => i.type && parseFloat(i.lf) > 0).map(item => {
+          : rows.map(item => {
               const fin = PRICING.finishing.find(f => f.name === item.type);
               const lf  = parseFloat(item.lf) || 0;
               const adj = parseFloat(item.adjPct) || 0;
-              return `<tr><td>${item.type} — ${lf} LF${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${item.notes}</span>` : ""}</td><td class="amt">${fmtN((fin?.pricePerLF||0)*lf*(1+adj/100))}</td></tr>`;
-            }).join("")
+              return `<tr><td>${escHtml(item.type)} — ${lf} LF${item.notes ? ` <span style="color:#9B8E82;font-size:8pt;">— ${escHtml(item.notes)}</span>` : ""}</td><td class="amt">${fmtN((fin?.pricePerLF||0)*lf*(1+adj/100))}</td></tr>`;
+            }).join(""); })()
         }
       </tbody>
     </table>
@@ -2211,11 +2222,11 @@ function ProjectSetup({ project, onChange, onNext }) {
         <div className="card-body">
           <div className="form-grid form-grid-2">
             <Field label="Project Name" error={errors.name}>
-              <input className={errors.name ? "error" : ""} value={project.name} placeholder="e.g. Johnson Kitchen Remodel"
+              <input aria-label="Project name" className={errors.name ? "error" : ""} value={project.name} placeholder="e.g. Johnson Kitchen Remodel"
                 onChange={e => onChange({ name: e.target.value })} />
             </Field>
             <Field label="Project Address" error={errors.address}>
-              <input className={errors.address ? "error" : ""} value={project.address} placeholder="123 Main St, Minneapolis MN"
+              <input aria-label="Project address" className={errors.address ? "error" : ""} value={project.address} placeholder="123 Main St, Minneapolis MN"
                 onChange={e => onChange({ address: e.target.value })} />
             </Field>
             <Field label="Contact Name">
@@ -2239,7 +2250,7 @@ function ProjectSetup({ project, onChange, onNext }) {
               />
             </Field>
             <Field label="Email Address">
-              <input type="email" value={project.email} placeholder="client@email.com"
+              <input aria-label="Email address" type="email" value={project.email} placeholder="client@email.com"
                 onChange={e => onChange({ email: e.target.value })} />
             </Field>
             <Field label="Bid Date" error={errors.bidDate}>
@@ -2580,7 +2591,7 @@ function InstallSection({ data, cabTotal, onChange }) {
               {PRICING.installType.map(i => <option key={i.name}>{i.name}</option>)}
             </select>
           </Field>
-          {data.type === "Hourly Rate" && (
+          {data.type === HOURLY_RATE && (
             <Field label="Total Hours">
               <input type="number" min="0" step="0.5" value={data.metric} placeholder="0"
                 onChange={e => onChange({ ...data, metric: e.target.value })} />
@@ -2600,7 +2611,7 @@ function InstallSection({ data, cabTotal, onChange }) {
             <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 600, color: "var(--gold)" }}>
               Install Total: {fmt(instTotal)}
             </span>
-            {data.type !== "Hourly Rate" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {PRICING.installType.find(i => i.name === data.type)?.rate * 100}% of cabinetry total</div>}
+            {data.type !== HOURLY_RATE && <div className="text-muted" style={{ marginTop: 4 }}>Based on {PRICING.installType.find(i => i.name === data.type)?.rate * 100}% of cabinetry total</div>}
           </div>
         )}
       </div>
@@ -3325,7 +3336,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
 
   // ── Global scroll-reveal: auto-tag cards and sections ────────
   useEffect(() => {
-    // Small delay lets React finish painting before we observe
+    let io;
     const timer = setTimeout(() => {
       const selectors = [
         '.card', '.report-room', '.summary-card',
@@ -3334,12 +3345,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
       ];
       const els = document.querySelectorAll(selectors.join(','));
 
-      // Track stagger index per "batch" — reset when element is above viewport
-      let batchIdx = 0;
-      let lastTop = -9999;
-
-      const io = new IntersectionObserver((entries) => {
-        // Sort by vertical position for predictable order
+      io = new IntersectionObserver((entries) => {
         const visible = entries
           .filter(e => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -3357,9 +3363,11 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
           io.observe(el);
         }
       });
-      return () => io.disconnect();
     }, 60);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      io?.disconnect();
+    };
   }, [view, step]);
 
   const [project, setProject] = useState({
@@ -3374,26 +3382,29 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
 
   // ── Load projects and pricing from Supabase on mount ──
   useEffect(() => {
-    // Load pricing first, then projects
-    supabase.from("pricing").select("data").eq("id", "main").single()
-      .then(({ data }) => {
-        if (data?.data) {
-          // Merge with defaults so any new keys are always present
-          const merged = { ...DEFAULT_PRICING }
-          for (const key of Object.keys(DEFAULT_PRICING)) {
-            if (data.data[key]) merged[key] = data.data[key]
-          }
-          PRICING = merged
+    Promise.all([
+      supabase.from("pricing").select("data").eq("id", "main").single(),
+      supabase.from("projects").select("*").order("updated_at", { ascending: false }),
+    ]).then(([pricingRes, projectsRes]) => {
+      // Apply pricing if available
+      if (pricingRes.data?.data) {
+        const merged = { ...DEFAULT_PRICING }
+        for (const key of Object.keys(DEFAULT_PRICING)) {
+          if (pricingRes.data.data[key]) merged[key] = pricingRes.data.data[key]
         }
-      })
-      .finally(() => {
-        supabase.from("projects").select("*").order("updated_at", { ascending: false })
-          .then(({ data, error }) => {
-            if (error) console.error(error)
-            else setProjects((data || []).map(row => ({ ...row.data, _rowId: row.id })))
-            setLoading(false)
-          })
-      })
+        PRICING = merged
+      }
+      // Load projects
+      if (projectsRes.error) {
+        showToast("Failed to load estimates — check your connection")
+      } else {
+        setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id })))
+      }
+      setLoading(false)
+    }).catch(() => {
+      showToast("Failed to connect — check your internet connection")
+      setLoading(false)
+    })
   }, [])
 
 
