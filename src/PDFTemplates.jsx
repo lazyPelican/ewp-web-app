@@ -53,13 +53,13 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
     backgroundColor: C.ivory,
     borderBottom: `2 solid ${C.stone}`,
-    paddingTop: 10,
-    paddingBottom: 9,
+    paddingTop: 7,
+    paddingBottom: 7,
     paddingLeft: 14,
     paddingRight: 14,
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  coLogo: { width: 52, height: 52 },
+  coLogo: { width: 42, height: 42 },
   coBrand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   coName: {
     fontFamily: FONT_SERIF_BD,
@@ -102,8 +102,8 @@ const s = StyleSheet.create({
   },
   ic: {
     width: '50%',
-    paddingTop: 6,
-    paddingBottom: 7,
+    paddingTop: 4,
+    paddingBottom: 4,
     paddingLeft: 10,
     paddingRight: 10,
     borderRight: `1 solid ${C.border}`,
@@ -258,52 +258,52 @@ const s = StyleSheet.create({
     backgroundColor: C.grandBg,
     border: `1 solid ${C.grandBorder}`,
     borderLeft: `5 solid ${C.grandAccent}`,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingLeft: 18,
-    paddingRight: 18,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 14,
+    paddingRight: 14,
   },
   grandBarStandalone: {
     borderTop: `2 solid ${C.grandAccent}`,
-    marginTop: 10,
-    paddingTop: 15,
-    paddingBottom: 15,
-    paddingLeft: 22,
-    paddingRight: 22,
+    marginTop: 6,
+    paddingTop: 9,
+    paddingBottom: 9,
+    paddingLeft: 16,
+    paddingRight: 16,
   },
   grandBarSmall: {
     backgroundColor: C.ivory,
     border: `1 solid ${C.border}`,
     borderLeft: `3 solid ${C.stone}`,
-    marginTop: 4,
+    marginTop: 3,
   },
   gl: {
     fontFamily: FONT_SERIF_BD,
-    fontSize: 15,
+    fontSize: 12,
     color: C.grandText,
     letterSpacing: 0.8,
   },
-  glStandalone: { fontSize: 17 },
+  glStandalone: { fontSize: 13 },
   glSmall: {
     fontFamily: FONT_SERIF_BD,
-    fontSize: 10,
+    fontSize: 9,
     color: C.stone,
   },
   gs: {
     fontFamily: FONT_SANS,
-    fontSize: 7,
+    fontSize: 6.5,
     color: C.muted,
-    marginTop: 3,
+    marginTop: 2,
   },
   gv: {
     fontFamily: FONT_SERIF_BD,
-    fontSize: 26,
+    fontSize: 20,
     color: C.grandVal,
   },
-  gvStandalone: { fontSize: 32 },
+  gvStandalone: { fontSize: 22 },
   gvSmall: {
     fontFamily: FONT_SERIF_BD,
-    fontSize: 13,
+    fontSize: 11,
     color: C.stone,
   },
 
@@ -313,8 +313,8 @@ const s = StyleSheet.create({
     fontSize: 7,
     color: C.muted,
     textAlign: 'center',
-    marginTop: 10,
-    paddingTop: 5,
+    marginTop: 6,
+    paddingTop: 4,
     borderTop: `1 solid ${C.border}`,
     letterSpacing: 0.3,
   },
@@ -322,8 +322,8 @@ const s = StyleSheet.create({
   // Signature blocks
   sigGrid: {
     flexDirection: 'row',
-    gap: 28,
-    marginTop: 22,
+    gap: 20,
+    marginTop: 10,
   },
   sigBlock: { flex: 1 },
   sigTitle: {
@@ -332,24 +332,24 @@ const s = StyleSheet.create({
     color: C.muted,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 5,
+    marginBottom: 3,
   },
   sigLine: {
     borderBottom: `1 solid ${C.ink}`,
-    height: 32,
-    marginBottom: 5,
+    height: 22,
+    marginBottom: 3,
   },
   sigSubLine: {
     borderBottom: `1 solid ${C.border}`,
-    height: 20,
-    marginBottom: 3,
+    height: 14,
+    marginBottom: 2,
   },
   sigSubLbl: {
     fontFamily: FONT_SANS,
     fontSize: 7,
     color: C.muted,
   },
-  gap: { height: 8 },
+  gap: { height: 6 },
 })
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
@@ -372,7 +372,7 @@ function PageHeader({ docType, docId }) {
   return (
     <View style={s.hdr} fixed>
       <View style={s.coBrand}>
-        <Image style={s.coLogo} src="/ewp-logo.png" />
+        <Image style={s.coLogo} src="/favicon-512_dark.png" />
         <View>
           <Text style={s.coName}>Engstrom Wood Products</Text>
           <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
@@ -538,8 +538,8 @@ function InternalSummaryPage({
         { label: 'Project Name', value: project.name },
         { label: 'Address', value: project.address },
         { label: 'Bid Date', value: fmtD(project.bidDate) },
-        { label: 'Contact', value: project.contact },
-        { label: 'Phone', value: project.phone },
+        { label: 'Contact', value: project.contactName },
+        { label: 'Phone', value: project.contactPhone },
         { label: 'Email', value: project.email },
       ]} />
 
@@ -563,64 +563,66 @@ function InternalSummaryPage({
         ))}
       </View>
 
-      <SubBar
-        label={`Project Totals — all ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''} combined`}
-        value={grandCab + grandUpg + grandFin + grandInst}
-      />
-
-      {delivery > 0 && (
-        <GrandBar
-          label="Delivery"
-          sub={project.deliveryNotes || undefined}
-          value={delivery}
-          standalone
-          small
+      <View wrap={false}>
+        <SubBar
+          label={`Project Totals — all ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''} combined`}
+          value={grandCab + grandUpg + grandFin + grandInst}
         />
-      )}
 
-      {project.taxEnabled && (
+        {delivery > 0 && (
+          <GrandBar
+            label="Delivery"
+            sub={project.deliveryNotes || undefined}
+            value={delivery}
+            standalone
+            small
+          />
+        )}
+
+        {project.taxEnabled && (
+          <GrandBar
+            label={`Estimated Tax (${pdfTaxRate}%)`}
+            sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
+            value={pdfTaxAmt}
+            standalone
+            small
+          />
+        )}
+
         <GrandBar
-          label={`Estimated Tax (${pdfTaxRate}%)`}
-          sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
-          value={pdfTaxAmt}
+          label="Grand Total"
+          sub={[
+            `All rooms · ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
+            fmtD(project.bidDate),
+            delivery > 0 ? 'incl. delivery' : '',
+            project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
+          ].filter(Boolean).join('  ·  ')}
+          value={grandTotal}
           standalone
-          small
         />
-      )}
 
-      <GrandBar
-        label="Grand Total"
-        sub={[
-          `All rooms · ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-          fmtD(project.bidDate),
-          delivery > 0 ? 'incl. delivery' : '',
-          project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
-        ].filter(Boolean).join('  ·  ')}
-        value={grandTotal}
-        standalone
-      />
+        {/* Signature blocks */}
+        <View style={s.sigGrid}>
+          <View style={s.sigBlock}>
+            <Text style={s.sigTitle}>Client Acceptance</Text>
+            <View style={s.sigLine} />
+            <View style={s.sigSubLine} />
+            <Text style={s.sigSubLbl}>Printed Name</Text>
+            <View style={[s.sigSubLine, { marginTop: 10 }]} />
+            <Text style={s.sigSubLbl}>Date</Text>
+          </View>
+          <View style={s.sigBlock}>
+            <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
+            <View style={s.sigLine} />
+            <View style={s.sigSubLine} />
+            <Text style={s.sigSubLbl}>Printed Name</Text>
+            <View style={[s.sigSubLine, { marginTop: 10 }]} />
+            <Text style={s.sigSubLbl}>Date</Text>
+          </View>
+        </View>
 
-      {/* Signature blocks */}
-      <View style={s.sigGrid}>
-        <View style={s.sigBlock}>
-          <Text style={s.sigTitle}>Client Acceptance</Text>
-          <View style={s.sigLine} />
-          <View style={s.sigSubLine} />
-          <Text style={s.sigSubLbl}>Printed Name</Text>
-          <View style={[s.sigSubLine, { marginTop: 10 }]} />
-          <Text style={s.sigSubLbl}>Date</Text>
-        </View>
-        <View style={s.sigBlock}>
-          <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
-          <View style={s.sigLine} />
-          <View style={s.sigSubLine} />
-          <Text style={s.sigSubLbl}>Printed Name</Text>
-          <View style={[s.sigSubLine, { marginTop: 10 }]} />
-          <Text style={s.sigSubLbl}>Date</Text>
-        </View>
+        <PdfFooter />
       </View>
-
-      <PdfFooter />
     </Page>
   )
 }
@@ -806,15 +808,15 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing })
       </View>
       <SubBar label="Install Total" value={rt.inst} />
 
-      <TotalsStrip4 cab={rt.cab} upg={rt.upg} fin={rt.fin} inst={rt.inst} />
-
-      <GrandBar
-        label="Room Grand Total"
-        sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
-        value={rt.total}
-      />
-
-      <PdfFooter />
+      <View wrap={false}>
+        <TotalsStrip4 cab={rt.cab} upg={rt.upg} fin={rt.fin} inst={rt.inst} />
+        <GrandBar
+          label="Room Grand Total"
+          sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
+          value={rt.total}
+        />
+        <PdfFooter />
+      </View>
     </Page>
   )
 }
@@ -874,8 +876,8 @@ function CustomerSummaryPage({
         { label: 'Project Name', value: project.name },
         { label: 'Address', value: project.address },
         { label: 'Bid Date', value: fmtD(project.bidDate) },
-        { label: 'Contact', value: project.contact },
-        { label: 'Phone', value: project.phone },
+        { label: 'Contact', value: project.contactName },
+        { label: 'Phone', value: project.contactPhone },
         { label: 'Email', value: project.email },
       ]} />
 
@@ -896,64 +898,66 @@ function CustomerSummaryPage({
         ))}
       </View>
 
-      <SubBar
-        label={`Project Subtotal — ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
-        value={roomTotals.reduce((s, r) => s + r.total, 0)}
-      />
-
-      {delivery > 0 && (
-        <GrandBar
-          label="Delivery"
-          sub={project.deliveryNotes || undefined}
-          value={delivery}
-          standalone
-          small
+      <View wrap={false}>
+        <SubBar
+          label={`Project Subtotal — ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
+          value={roomTotals.reduce((s, r) => s + r.total, 0)}
         />
-      )}
 
-      {project.taxEnabled && (
+        {delivery > 0 && (
+          <GrandBar
+            label="Delivery"
+            sub={project.deliveryNotes || undefined}
+            value={delivery}
+            standalone
+            small
+          />
+        )}
+
+        {project.taxEnabled && (
+          <GrandBar
+            label={`Estimated Tax (${pdfTaxRate}%)`}
+            sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
+            value={pdfTaxAmt}
+            standalone
+            small
+          />
+        )}
+
         <GrandBar
-          label={`Estimated Tax (${pdfTaxRate}%)`}
-          sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
-          value={pdfTaxAmt}
+          label="Grand Total"
+          sub={[
+            `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
+            fmtD(project.bidDate),
+            delivery > 0 ? 'incl. delivery' : '',
+            project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
+          ].filter(Boolean).join('  ·  ')}
+          value={grandTotal}
           standalone
-          small
         />
-      )}
 
-      <GrandBar
-        label="Grand Total"
-        sub={[
-          `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-          fmtD(project.bidDate),
-          delivery > 0 ? 'incl. delivery' : '',
-          project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
-        ].filter(Boolean).join('  ·  ')}
-        value={grandTotal}
-        standalone
-      />
+        {/* Signature blocks */}
+        <View style={s.sigGrid}>
+          <View style={s.sigBlock}>
+            <Text style={s.sigTitle}>Client Acceptance</Text>
+            <View style={s.sigLine} />
+            <View style={s.sigSubLine} />
+            <Text style={s.sigSubLbl}>Printed Name</Text>
+            <View style={[s.sigSubLine, { marginTop: 10 }]} />
+            <Text style={s.sigSubLbl}>Date</Text>
+          </View>
+          <View style={s.sigBlock}>
+            <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
+            <View style={s.sigLine} />
+            <View style={s.sigSubLine} />
+            <Text style={s.sigSubLbl}>Printed Name</Text>
+            <View style={[s.sigSubLine, { marginTop: 10 }]} />
+            <Text style={s.sigSubLbl}>Date</Text>
+          </View>
+        </View>
 
-      {/* Signature blocks */}
-      <View style={s.sigGrid}>
-        <View style={s.sigBlock}>
-          <Text style={s.sigTitle}>Client Acceptance</Text>
-          <View style={s.sigLine} />
-          <View style={s.sigSubLine} />
-          <Text style={s.sigSubLbl}>Printed Name</Text>
-          <View style={[s.sigSubLine, { marginTop: 10 }]} />
-          <Text style={s.sigSubLbl}>Date</Text>
-        </View>
-        <View style={s.sigBlock}>
-          <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
-          <View style={s.sigLine} />
-          <View style={s.sigSubLine} />
-          <Text style={s.sigSubLbl}>Printed Name</Text>
-          <View style={[s.sigSubLine, { marginTop: 10 }]} />
-          <Text style={s.sigSubLbl}>Date</Text>
-        </View>
+        <PdfFooter />
       </View>
-
-      <PdfFooter />
     </Page>
   )
 }
@@ -984,7 +988,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt }) {
         { label: 'Room', value: room.name || `Room ${roomIndex + 1}` },
         { label: 'Room', value: `${roomIndex + 1} of ${totalRooms}` },
         { label: 'Bid Date', value: fmtD(project.bidDate) },
-        { label: 'Contact', value: project.contact },
+        { label: 'Contact', value: project.contactName },
       ]} />
 
       <SectionLabel label="Room Cost Summary" />
@@ -1003,14 +1007,15 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt }) {
         ))}
       </View>
 
-      <GrandBar
-        label="Room Total"
-        sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
-        value={rt.total}
-        standalone
-      />
-
-      <PdfFooter />
+      <View wrap={false}>
+        <GrandBar
+          label="Room Total"
+          sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
+          value={rt.total}
+          standalone
+        />
+        <PdfFooter />
+      </View>
     </Page>
   )
 }
@@ -1082,11 +1087,13 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
       />
     ).toBlob()
 
-    const safeName = (project.name || 'Estimate').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Estimate'
+    const safeName   = (project.name    || 'Estimate').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Estimate'
+    const safeClient = (project.contactName || '').replace(/[^a-zA-Z0-9_\- ]/g, '').trim()
+    const filePrefix = safeClient ? `${safeClient} — ${safeName}` : safeName
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${safeName} — Internal.pdf`
+    a.download = `${filePrefix} — Internal.pdf`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -1126,11 +1133,13 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
       />
     ).toBlob()
 
-    const safeName = (project.name || 'Quote').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Quote'
+    const safeName   = (project.name    || 'Quote').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Quote'
+    const safeClient = (project.contactName || '').replace(/[^a-zA-Z0-9_\- ]/g, '').trim()
+    const filePrefix = safeClient ? `${safeClient} — ${safeName}` : safeName
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${safeName} — Quote.pdf`
+    a.download = `${filePrefix} — Quote.pdf`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

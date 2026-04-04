@@ -157,9 +157,18 @@ export default function AdminPanel({ currentUser, onBack }) {
   const [usersLoading, setUsersLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(null)
 
+  // Pre-approved emails state
+  const [preApproved, setPreApproved] = useState([])
+  const [preApprovedLoading, setPreApprovedLoading] = useState(true)
+  const [newPreEmail, setNewPreEmail] = useState("")
+  const [addingPreEmail, setAddingPreEmail] = useState(false)
+
+  // Reset password modal state
+  const [resetModal, setResetModal] = useState(null) // null | { email }
+  const [resetSent, setResetSent] = useState(false)
+
   const [toast, setToast] = useState(null)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
-  const [scrolled, setScrolled] = useState(false)
 
   const isAdmin = ADMIN_EMAILS.includes(currentUser.email?.toLowerCase())
 
@@ -170,15 +179,10 @@ export default function AdminPanel({ currentUser, onBack }) {
   }, [])
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30)
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  useEffect(() => {
     if (!isAdmin) return
     fetchUsers()
     fetchPricing()
+    fetchPreApproved()
   }, [])
 
   const fetchUsers = async () => {
@@ -371,6 +375,58 @@ export default function AdminPanel({ currentUser, onBack }) {
     setActionLoading(null)
   }
 
+  const deleteUser = async (userId, email) => {
+    if (!window.confirm(`Remove ${email} from the system? They will lose all access immediately.`)) return
+    setActionLoading(userId)
+    const { error } = await supabase.from("user_approvals").delete().eq("user_id", userId)
+    if (error) showToast("Error removing user")
+    else { setUsers(prev => prev.filter(u => u.user_id !== userId)); showToast(`✓ ${email} removed`) }
+    setActionLoading(null)
+  }
+
+  const sendPasswordReset = async (email) => {
+    setResetSent(false)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    })
+    if (error) showToast("Error sending reset email: " + error.message)
+    else { setResetSent(true); showToast(`✓ Password reset email sent to ${email}`) }
+  }
+
+  // Pre-approved emails
+  const fetchPreApproved = async () => {
+    setPreApprovedLoading(true)
+    const { data, error } = await supabase.from("pre_approved_emails").select("*").order("added_at", { ascending: false })
+    if (!error) setPreApproved(data || [])
+    setPreApprovedLoading(false)
+  }
+
+  const addPreApproved = async () => {
+    const email = newPreEmail.trim().toLowerCase()
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast("Enter a valid email address"); return }
+    if (preApproved.some(p => p.email === email)) { showToast("Already in pre-approved list"); return }
+    setAddingPreEmail(true)
+    const { error } = await supabase.from("pre_approved_emails").insert({
+      email,
+      added_by: currentUser.email,
+      added_at: new Date().toISOString(),
+    })
+    if (error) showToast("Error adding email: " + error.message)
+    else {
+      setPreApproved(prev => [{ email, added_by: currentUser.email, added_at: new Date().toISOString() }, ...prev])
+      setNewPreEmail("")
+      showToast(`✓ ${email} pre-approved`)
+    }
+    setAddingPreEmail(false)
+  }
+
+  const removePreApproved = async (email) => {
+    if (!window.confirm(`Remove ${email} from pre-approved list?`)) return
+    const { error } = await supabase.from("pre_approved_emails").delete().eq("email", email)
+    if (error) showToast("Error removing email")
+    else { setPreApproved(prev => prev.filter(p => p.email !== email)); showToast(`Removed ${email}`) }
+  }
+
   // ── Theme tokens ───────────────────────────────────────────
   const t = dark ? {
     bg: "#141414", card: "#1C1C1C", cardAlt: "#111111", border: "#2A2A2A",
@@ -420,7 +476,7 @@ export default function AdminPanel({ currentUser, onBack }) {
 
       {/* Top bar - matching main app header */}
       <div 
-        className={`admin-topbar${scrolled ? " scrolled" : ""}`}
+        className="admin-topbar"
         style={{ 
           background: dark ? "#2A2820" : "#FDFAF5", 
           borderBottom: dark ? "1px solid #3A3628" : "1px solid #E4D9C8", 
@@ -436,14 +492,51 @@ export default function AdminPanel({ currentUser, onBack }) {
         }}
       >
         <style>{`
-          .admin-topbar {
-            transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+          @keyframes adminFadeDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
           }
-          .admin-topbar.scrolled { height: 70px !important; box-shadow: 0 2px 16px rgba(20,15,5,0.11) !important; }
-          .admin-topbar.scrolled .admin-header-logo { height: 54px !important; }
-          .admin-topbar.scrolled .admin-header-name { font-size: 24px !important; }
-          .admin-topbar.scrolled .admin-header-sub { opacity: 0 !important; max-height: 0 !important; margin-top: 0 !important; }
-          .admin-pricing-table-shell { overflow: hidden; }
+          @keyframes adminFadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes adminSlideRight {
+            from { opacity: 0; transform: translateX(-14px); }
+            to   { opacity: 1; transform: translateX(0); }
+          }
+          @keyframes adminScaleIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+          }
+          @keyframes adminGoldPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(201,169,110,0); }
+            50%       { box-shadow: 0 0 0 4px rgba(201,169,110,0.18); }
+          }
+
+          /* Header entrance */
+          .admin-topbar { animation: adminFadeDown 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+          /* Tab bar slides in from left */
+          .admin-tab-bar { animation: adminSlideRight 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+          /* Main content fades up */
+          .admin-main-inner { animation: adminFadeUp 0.45s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+          /* User rows stagger in */
+          .admin-user-row { animation: adminFadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+          .admin-user-row:nth-child(1) { animation-delay: 0.05s; }
+          .admin-user-row:nth-child(2) { animation-delay: 0.10s; }
+          .admin-user-row:nth-child(3) { animation-delay: 0.15s; }
+          .admin-user-row:nth-child(4) { animation-delay: 0.20s; }
+          .admin-user-row:nth-child(5) { animation-delay: 0.25s; }
+          .admin-user-row:nth-child(6) { animation-delay: 0.30s; }
+
+          /* Pricing table scales in */
+          .admin-pricing-table-shell { overflow: hidden; animation: adminScaleIn 0.4s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+          /* Active tab pulse */
+          .admin-tab-active { animation: adminGoldPulse 2.5s 0.5s ease-in-out infinite; }
+
           @media (max-width: 900px) {
             .admin-topbar {
               padding: 10px 14px !important;
@@ -464,7 +557,6 @@ export default function AdminPanel({ currentUser, onBack }) {
               text-overflow: ellipsis;
             }
             .admin-header-logo { height: 48px !important; }
-            .admin-topbar.scrolled .admin-header-logo { height: 36px !important; }
           }
           @media (max-width: 768px) {
             .admin-main-inner { padding: 16px 14px !important; }
@@ -484,12 +576,12 @@ export default function AdminPanel({ currentUser, onBack }) {
           <img 
             src="/ewp-logo.png" 
             alt="Engstrom Wood Products" 
-            style={{ height: 100, width: "auto", flexShrink: 0, transition: "height 0.4s cubic-bezier(0.22, 1, 0.36, 1)" }}
+            style={{ height: 100, width: "auto", flexShrink: 0 }}
             className="admin-header-logo"
           />
           <div>
-            <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 600, color: dark ? "#C3C8C8" : "#494D4D", letterSpacing: "0.04em", lineHeight: 1, transition: "font-size 0.4s cubic-bezier(0.22, 1, 0.36, 1)" }} className="admin-header-name">Engstrom Wood Products</div>
-            <div style={{ fontSize: 11, color: dark ? "#A09580" : "#8C9191", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 7, fontWeight: 600, opacity: 1, transition: "opacity 0.3s ease, max-height 0.4s ease, margin-top 0.4s cubic-bezier(0.22, 1, 0.36, 1)", maxHeight: 24, overflow: "hidden" }} className="admin-header-sub">Admin Panel</div>
+            <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 600, color: dark ? "#C3C8C8" : "#494D4D", letterSpacing: "0.04em", lineHeight: 1 }} className="admin-header-name">Engstrom Wood Products</div>
+            <div style={{ fontSize: 11, color: dark ? "#A09580" : "#8C9191", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 7, fontWeight: 600 }} className="admin-header-sub">Admin Panel</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -522,11 +614,62 @@ export default function AdminPanel({ currentUser, onBack }) {
         {tab === "users" && (
           <div>
             <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: t.text, fontFamily: serif }}>User Approvals</div>
-              <div style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>Manage who can access the Estimate Manager</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: t.text, fontFamily: serif }}>User Management</div>
+              <div style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>Manage access, approvals, and credentials</div>
               <div style={{ height: 2, background: t.gold, width: 48, marginTop: 12 }} />
             </div>
 
+            {/* ── Pre-Approved Emails ── */}
+            <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 10, padding: "20px 24px", marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.gold, marginBottom: 4 }}>
+                Pre-Approved Emails
+              </div>
+              <div style={{ fontSize: 12, color: t.textMuted, marginBottom: 14 }}>
+                Anyone who signs up with these emails will be automatically approved without waiting for review.
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                <input
+                  type="email"
+                  placeholder="colleague@example.com"
+                  value={newPreEmail}
+                  onChange={e => setNewPreEmail(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addPreApproved()}
+                  style={{
+                    flex: 1, padding: "8px 12px", borderRadius: 6, fontSize: 13,
+                    border: `1px solid ${t.border}`, background: t.inputBg, color: t.inputText,
+                    fontFamily: font, outline: "none",
+                  }}
+                />
+                <button onClick={addPreApproved} disabled={addingPreEmail || !newPreEmail.trim()}
+                  style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: t.gold, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: addingPreEmail ? 0.6 : 1, fontFamily: font, whiteSpace: "nowrap" }}>
+                  {addingPreEmail ? "Adding…" : "+ Add Email"}
+                </button>
+              </div>
+              {preApprovedLoading ? (
+                <div style={{ fontSize: 13, color: t.textMuted }}>Loading…</div>
+              ) : preApproved.length === 0 ? (
+                <div style={{ fontSize: 13, color: t.textMuted, fontStyle: "italic" }}>No pre-approved emails yet.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {preApproved.map(p => (
+                    <div key={p.email} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 6, padding: "8px 14px" }}>
+                      <div>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: t.text }}>{p.email}</span>
+                        <span style={{ fontSize: 11, color: t.textMuted, marginLeft: 10 }}>
+                          Added by {p.added_by} · {p.added_at ? new Date(p.added_at).toLocaleDateString() : ""}
+                        </span>
+                      </div>
+                      <button onClick={() => removePreApproved(p.email)}
+                        style={{ padding: "4px 10px", borderRadius: 5, border: `1px solid ${t.pendingReject}`, background: "transparent", color: t.pendingRejectText, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* ── Pending Approvals ── */}
             <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.gold, marginBottom: 12 }}>
                 Pending Approval ({pending.length})
@@ -554,27 +697,32 @@ export default function AdminPanel({ currentUser, onBack }) {
                       style={{ padding: "7px 16px", borderRadius: 6, border: `1px solid ${t.pendingReject}`, background: "transparent", color: t.pendingRejectText, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }}>
                       Reject
                     </button>
+                    <button onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                      style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${t.border}`, background: "transparent", color: t.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }} title="Delete user">
+                      🗑
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
 
+            {/* ── Reviewed Users ── */}
             {reviewed.length > 0 && (
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.textMuted, marginBottom: 12 }}>
-                  Previously Reviewed ({reviewed.length})
+                  All Users ({reviewed.length})
                 </div>
                 {reviewed.map(u => {
                   const badge = t[`badge${u.status.charAt(0).toUpperCase() + u.status.slice(1)}`] || t.badgePending
                   return (
-                    <div key={u.user_id} className="admin-user-row" style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: "14px 20px", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.85 }}>
+                    <div key={u.user_id} className="admin-user-row" style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: "14px 20px", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div>
                         <div style={{ fontWeight: 500, fontSize: 14, color: t.text }}>{u.email}</div>
                         <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
                           Reviewed by {u.reviewed_by || "admin"} · {u.reviewed_at ? new Date(u.reviewed_at).toLocaleDateString() : "—"}
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div className="admin-user-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ ...badge, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "3px 8px", borderRadius: 20 }}>{u.status}</span>
                         {u.status === "rejected" && (
                           <button onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
@@ -582,12 +730,51 @@ export default function AdminPanel({ currentUser, onBack }) {
                             Re-approve
                           </button>
                         )}
+                        <button onClick={() => { setResetModal({ email: u.email }); setResetSent(false) }}
+                          style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${t.border}`, background: "transparent", color: t.textMid, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                          🔑 Reset PW
+                        </button>
+                        <button onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                          style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${t.pendingReject}`, background: "transparent", color: t.pendingRejectText, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                          🗑 Delete
+                        </button>
                       </div>
                     </div>
                   )
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── RESET PASSWORD MODAL ── */}
+        {resetModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
+            onClick={e => { if (e.target === e.currentTarget) setResetModal(null) }}>
+            <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 12, padding: 32, width: 420, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: t.text, fontFamily: serif, marginBottom: 6 }}>Reset Password</div>
+              <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 20 }}>
+                Send a password reset link to:
+              </div>
+              <div style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 6, padding: "10px 14px", fontSize: 14, color: t.text, fontWeight: 500, marginBottom: 20 }}>
+                {resetModal.email}
+              </div>
+              {resetSent && (
+                <div style={{ background: "#e8f5e9", border: "1px solid #a5d6a7", borderRadius: 6, padding: "10px 14px", fontSize: 13, color: "#2e7d32", marginBottom: 16, fontWeight: 500 }}>
+                  ✅ Reset email sent! They will receive a link to set a new password.
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                <button onClick={() => setResetModal(null)}
+                  style={{ padding: "8px 18px", borderRadius: 6, border: `1px solid ${t.border}`, background: "transparent", color: t.textMid, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: font }}>
+                  Cancel
+                </button>
+                <button onClick={() => sendPasswordReset(resetModal.email)} disabled={resetSent}
+                  style={{ padding: "8px 20px", borderRadius: 6, border: "none", background: resetSent ? "#4caf50" : t.gold, color: "#fff", fontSize: 13, fontWeight: 600, cursor: resetSent ? "default" : "pointer", fontFamily: font, opacity: resetSent ? 0.8 : 1 }}>
+                  {resetSent ? "✓ Sent" : "Send Reset Link"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

@@ -574,6 +574,26 @@ const styles = `
     40%  { transform: scale(1.25); }
     100% { transform: scale(1); }
   }
+  @keyframes headerSlideDown {
+    from { opacity: 0; transform: translateY(-100%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes softFloat {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-3px); }
+  }
+  @keyframes borderGlow {
+    0%, 100% { border-color: rgba(138,106,56,0.25); }
+    50%       { border-color: rgba(138,106,56,0.65); }
+  }
+  @keyframes tabSlideIn {
+    from { opacity: 0; transform: translateX(10px) scale(0.97); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes sectionFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   /* ── AUTO SCROLL-REVEAL (.sr applied by JS) ── */
   .sr {
@@ -597,6 +617,35 @@ const styles = `
   }
   .gold-rule {
     animation: goldRule 0.6s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── HEADER SLIDE DOWN ── */
+  .topbar {
+    animation: headerSlideDown 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── GRAND TOTAL GENTLE FLOAT ── */
+  .grand-total-float {
+    animation: softFloat 4s ease-in-out infinite;
+  }
+
+  /* ── ROOM TAB ENTRANCE ── */
+  .room-tab-enter {
+    animation: tabSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── FORM SECTION FADE UP ── */
+  .form-section-anim {
+    animation: sectionFadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .form-section-anim:nth-child(1) { animation-delay: 0.04s; }
+  .form-section-anim:nth-child(2) { animation-delay: 0.10s; }
+  .form-section-anim:nth-child(3) { animation-delay: 0.16s; }
+  .form-section-anim:nth-child(4) { animation-delay: 0.22s; }
+
+  /* ── ACTIVE ROOM TAB BORDER GLOW ── */
+  .room-tab.active {
+    animation: borderGlow 2.8s ease-in-out infinite;
   }
 
   /* ── CARDS ── */
@@ -1222,7 +1271,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
   const subTotal = calcCabinetry(items);
 
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
+    <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>CABINETRY</span>
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
@@ -1304,7 +1353,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
   const subTotal = calcUpgrades(items);
 
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
+    <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>UPGRADES / OVERRIDES</span>
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
@@ -1370,7 +1419,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
   const lfDiff = enteredLF - estimatedLF;
 
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
+    <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>FINISHING</span>
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
@@ -1466,7 +1515,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
 function InstallSection({ data, cabTotal, onChange }) {
   const instTotal = calcInstall(data, cabTotal);
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
+    <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner">INSTALLATION</div>
       <div className="card-body">
         <div className="form-grid form-grid-4">
@@ -1816,6 +1865,18 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
   const [pdfStatus2, setPdfStatus2] = useState("idle");
   const [pdfError2, setPdfError2] = useState(null);
 
+  const [saving, setSaving]           = useState(false);
+  const [saveConfirmed, setSaveConfirmed] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveConfirmed(false);
+    await onSave();
+    setSaving(false);
+    setSaveConfirmed(true);
+    setTimeout(() => setSaveConfirmed(false), 4000);
+  };
+
   const handleExportInternal = () => {
     setPdfError(null);
     exportPDFInternal(project, rooms, (status, errMsg) => {
@@ -1866,8 +1927,18 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
           <div className="flex gap-8 summary-actions-row">
             <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
             <button className="btn btn-outline" onClick={handleExportCustomer} disabled={pdfBusy2} style={{opacity:pdfBusy2?0.6:1}}>{pdfBtnLabel2}</button>
-            
-            <button className="btn btn-gold" onClick={onSave}>💾 Save Estimate</button>
+            <button
+              className="btn btn-gold"
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                opacity: saving ? 0.7 : 1,
+                background: saveConfirmed ? "var(--green)" : undefined,
+                transition: "background 0.3s ease",
+              }}
+            >
+              {saving ? "⏳ Saving…" : saveConfirmed ? "✅ Saved!" : "💾 Save Estimate"}
+            </button>
           </div>
         </div>
       </div>
@@ -2030,7 +2101,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
       })}
 
       {/* Grand Total */}
-      <div className="grand-total">
+      <div className="grand-total grand-total-float">
         <div className="grand-total-label">GRAND TOTAL</div>
         {(delivery > 0 || taxAmt > 0) && (
           <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "0 8px", justifyContent: "center" }}>
@@ -2045,12 +2116,41 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
         This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.
       </div>
 
+      {saveConfirmed && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          background: "linear-gradient(135deg, #e8f5e9, #f1f8e9)",
+          border: "1px solid #a5d6a7",
+          borderLeft: "4px solid var(--green)",
+          borderRadius: 6,
+          padding: "14px 20px",
+          marginBottom: 16,
+          animation: "fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both",
+        }}>
+          <span style={{ fontSize: 22 }}>✅</span>
+          <div>
+            <div style={{ fontWeight: 600, color: "#2e7d32", fontSize: 14 }}>Estimate saved successfully</div>
+            <div style={{ color: "#4caf50", fontSize: 12, marginTop: 2 }}>{project.name} · {project.id}</div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mt-24">
         <button className="btn btn-outline" onClick={onBack}>← Back to Final Details</button>
         <div className="flex gap-8 summary-actions-row">
           <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
-            
-          <button className="btn btn-gold btn-lg" onClick={onSave}>💾 Save Estimate</button>
+          <button
+            className="btn btn-gold btn-lg"
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              opacity: saving ? 0.7 : 1,
+              background: saveConfirmed ? "var(--green)" : undefined,
+              transition: "background 0.3s ease",
+            }}
+          >
+            {saving ? "⏳ Saving…" : saveConfirmed ? "✅ Saved!" : "💾 Save Estimate"}
+          </button>
         </div>
       </div>
     </div>
@@ -2061,10 +2161,15 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
 function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail }) {
   const [search, setSearch] = useState("");
   const filtered = projects
-    .filter(p =>
-      p.project.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.project.address.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter(p => {
+      const q = search.toLowerCase()
+      return (
+        p.project.name.toLowerCase().includes(q) ||
+        p.project.address.toLowerCase().includes(q) ||
+        (p.project.contactName || '').toLowerCase().includes(q) ||
+        (p.project.contactPhone || '').toLowerCase().includes(q)
+      )
+    })
     .sort((a, b) => {
       // Project IDs are "EWP" + YYYYMMDDHHmmss — sort descending (newest first)
       const idA = a.project.id || ""
@@ -2120,7 +2225,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
 
       {/* Search */}
       <div className="dashboard-search-wrap" style={{ marginBottom: 16 }}>
-        <input className="dashboard-search" placeholder="🔍  Search by project name or address…" value={search} onChange={e => setSearch(e.target.value)}
+        <input className="dashboard-search" placeholder="🔍  Search by project, client name, phone, or address…" value={search} onChange={e => setSearch(e.target.value)}
           style={{ background: "var(--card-bg)" }} />
       </div>
 

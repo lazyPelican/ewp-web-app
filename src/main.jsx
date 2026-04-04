@@ -81,14 +81,22 @@ function Root() {
       .single()
 
     if (error || !data) {
-      // First time sign-in — create a pending record
+      // First time sign-in — check if email is pre-approved
+      const { data: preApproved } = await supabase
+        .from("pre_approved_emails")
+        .select("email")
+        .eq("email", user.email?.toLowerCase())
+        .maybeSingle()
+
+      const status = preApproved ? "approved" : "pending"
       await supabase.from("user_approvals").upsert({
         user_id: user.id,
         email: user.email,
-        status: "pending",
+        status,
         created_at: new Date().toISOString(),
+        ...(preApproved ? { reviewed_at: new Date().toISOString(), reviewed_by: "pre-approved" } : {}),
       }, { onConflict: "user_id" })
-      setApprovalStatus("pending")
+      setApprovalStatus(status)
     } else {
       setApprovalStatus(data.status)
     }
@@ -231,13 +239,7 @@ function Root() {
     )
   }
 
-  const versionLabel = (() => {
-    const d = new Date()
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const yyyy = d.getFullYear()
-    return `version_${dd}${mm}${yyyy}`
-  })()
+  const versionLabel = `version_${__BUILD_DATE__}`
 
   return (
     <>
