@@ -1,0 +1,1189 @@
+// PDFTemplates.jsx — @react-pdf/renderer v4 components for EWP Quote App
+// Generates true vector PDFs (selectable text, no rasterisation)
+
+import React from 'react'
+import {
+  Document, Page, View, Text, Image, StyleSheet, Font, pdf
+} from '@react-pdf/renderer'
+
+// ── FONTS ──────────────────────────────────────────────────────────────────
+Font.register({
+  family: 'Cormorant',
+  fonts: [
+    {
+      src: 'https://fonts.gstatic.com/s/cormorantgaramond/v22/co3YmX5slCNuHLi8bLeY9MK7whWMhyjornFLsS6V7w.woff2',
+      fontWeight: 400,
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/cormorantgaramond/v22/co3VmX5slCNuHLi8bLeY9MK7whWMhyjYqXtC8yGe.woff2',
+      fontWeight: 600,
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/cormorantgaramond/v22/co3WmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKxy2Y.woff2',
+      fontWeight: 700,
+    },
+  ],
+})
+
+Font.register({
+  family: 'DMSans',
+  fonts: [
+    {
+      src: 'https://fonts.gstatic.com/s/dmsans/v15/rP2tp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2',
+      fontWeight: 400,
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/dmsans/v15/rP2tp2ywxg089UriI5-g4vlH9VoD8Cmcqbu6-K4.woff2',
+      fontWeight: 600,
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/dmsans/v15/rP2tp2ywxg089UriI5-g4vlH9VoD8Cmcqbu7-K4.woff2',
+      fontWeight: 700,
+    },
+  ],
+})
+
+// ── COLOUR PALETTE ─────────────────────────────────────────────────────────
+const C = {
+  ivory:       '#FAF7F2',
+  ivoryMid:    '#F2EDE4',
+  border:      '#DDD5C8',
+  border2:     '#EDE6DC',
+  stone:       '#8C7355',
+  ink:         '#2A2118',
+  body:        '#3D3228',
+  muted:       '#9B8E82',
+  amount:      '#5A3E1A',
+  tableHdr:    '#5A4E42',
+  grandBg:     '#E8E0D4',
+  grandBorder: '#C8B89A',
+  grandAccent: '#6B5030',
+  grandText:   '#1A120A',
+  grandVal:    '#3D2408',
+  white:       '#FFFFFF',
+}
+
+// ── STYLE SHEET ────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  page: {
+    fontFamily: 'DMSans',
+    fontSize: 9,
+    color: C.body,
+    paddingTop: 28,
+    paddingBottom: 28,
+    paddingLeft: 34,
+    paddingRight: 34,
+    backgroundColor: C.white,
+  },
+
+  // Header
+  hdr: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    backgroundColor: C.ivory,
+    borderBottom: `2 solid ${C.stone}`,
+    paddingTop: 10,
+    paddingBottom: 9,
+    paddingLeft: 14,
+    paddingRight: 14,
+    marginBottom: 10,
+  },
+  coLogo: { width: 52, height: 52 },
+  coBrand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  coName: {
+    fontFamily: 'Cormorant',
+    fontWeight: 700,
+    fontSize: 22,
+    color: C.ink,
+    letterSpacing: 0.3,
+  },
+  coTag: {
+    fontFamily: 'DMSans',
+    fontSize: 7,
+    color: C.muted,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: 3,
+  },
+  docType: {
+    fontFamily: 'Cormorant',
+    fontWeight: 600,
+    fontSize: 13,
+    color: C.stone,
+    letterSpacing: 1.5,
+    textAlign: 'right',
+  },
+  docId: {
+    fontFamily: 'DMSans',
+    fontSize: 7,
+    color: C.muted,
+    letterSpacing: 0.6,
+    marginTop: 3,
+    textAlign: 'right',
+  },
+
+  // Info strip
+  infoStrip: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    border: `1 solid ${C.border}`,
+    borderLeft: `3 solid ${C.stone}`,
+    marginBottom: 10,
+    backgroundColor: C.ivory,
+  },
+  ic: {
+    width: '50%',
+    paddingTop: 6,
+    paddingBottom: 7,
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderRight: `1 solid ${C.border}`,
+    borderBottom: `1 solid ${C.border}`,
+  },
+  icEven: { borderRight: 'none' },
+  icLbl: {
+    fontFamily: 'DMSans',
+    fontWeight: 600,
+    fontSize: 6,
+    color: C.stone,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: 2,
+  },
+  icVal: {
+    fontFamily: 'DMSans',
+    fontWeight: 500,
+    fontSize: 9.5,
+    color: C.ink,
+  },
+
+  // Section label
+  sec: {
+    fontFamily: 'DMSans',
+    fontWeight: 700,
+    fontSize: 7,
+    color: C.ink,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    backgroundColor: C.ivoryMid,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderTop: `1.5 solid ${C.stone}`,
+    borderLeft: `1 solid ${C.border}`,
+    borderRight: `1 solid ${C.border}`,
+  },
+
+  // Table
+  tblWrap: {
+    border: `1 solid ${C.border}`,
+    borderTop: 'none',
+  },
+  tRow: {
+    flexDirection: 'row',
+    borderBottom: `1 solid ${C.border2}`,
+  },
+  tRowAlt: {
+    backgroundColor: C.ivory,
+  },
+  tRowHdr: {
+    backgroundColor: C.ivoryMid,
+    borderBottom: `1 solid ${C.border}`,
+  },
+  tCell: {
+    fontFamily: 'DMSans',
+    fontSize: 8,
+    color: C.body,
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingLeft: 4,
+    paddingRight: 4,
+  },
+  tCellHdr: {
+    fontFamily: 'DMSans',
+    fontWeight: 700,
+    fontSize: 6,
+    color: C.tableHdr,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingLeft: 4,
+    paddingRight: 4,
+  },
+  tCellR: { textAlign: 'right' },
+  tCellAmt: {
+    textAlign: 'right',
+    fontWeight: 600,
+    color: C.amount,
+  },
+  tCellMuted: {
+    color: C.muted,
+    fontStyle: 'italic',
+  },
+  tBorderL: { borderLeft: `1 solid ${C.border}` },
+  tBorderL2: { borderLeft: `1 solid ${C.border2}` },
+
+  // Sub bar (section total)
+  subBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: C.ivory,
+    borderLeft: `1 solid ${C.border}`,
+    borderRight: `1 solid ${C.border}`,
+    borderBottom: `1 solid ${C.border}`,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    marginBottom: 8,
+  },
+  subBarLbl: {
+    fontFamily: 'DMSans',
+    fontWeight: 600,
+    fontSize: 6.5,
+    color: C.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  subBarVal: {
+    fontFamily: 'Cormorant',
+    fontWeight: 700,
+    fontSize: 11,
+    color: C.ink,
+  },
+
+  // Totals strip (4-column)
+  totalsStrip: {
+    flexDirection: 'row',
+    backgroundColor: C.ivoryMid,
+    border: `1 solid ${C.border}`,
+    borderTop: `2 solid ${C.stone}`,
+    marginTop: 8,
+    marginBottom: 0,
+  },
+  ts: {
+    flex: 1,
+    paddingTop: 6,
+    paddingBottom: 6,
+    paddingLeft: 10,
+    paddingRight: 10,
+    alignItems: 'center',
+    borderRight: `1 solid ${C.border}`,
+  },
+  tsLast: { borderRight: 'none' },
+  tsLbl: {
+    fontFamily: 'DMSans',
+    fontSize: 6,
+    color: C.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: 600,
+    marginBottom: 3,
+  },
+  tsVal: {
+    fontFamily: 'Cormorant',
+    fontWeight: 700,
+    fontSize: 12,
+    color: C.ink,
+  },
+
+  // Grand total bar
+  grandBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: C.grandBg,
+    border: `1 solid ${C.grandBorder}`,
+    borderLeft: `5 solid ${C.grandAccent}`,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingLeft: 18,
+    paddingRight: 18,
+  },
+  grandBarStandalone: {
+    borderTop: `2 solid ${C.grandAccent}`,
+    marginTop: 10,
+    paddingTop: 15,
+    paddingBottom: 15,
+    paddingLeft: 22,
+    paddingRight: 22,
+  },
+  grandBarSmall: {
+    backgroundColor: C.ivory,
+    border: `1 solid ${C.border}`,
+    borderLeft: `3 solid ${C.stone}`,
+    marginTop: 4,
+  },
+  gl: {
+    fontFamily: 'Cormorant',
+    fontWeight: 700,
+    fontSize: 15,
+    color: C.grandText,
+    letterSpacing: 0.8,
+  },
+  glStandalone: { fontSize: 17 },
+  glSmall: {
+    fontFamily: 'Cormorant',
+    fontWeight: 600,
+    fontSize: 10,
+    color: C.stone,
+  },
+  gs: {
+    fontFamily: 'DMSans',
+    fontSize: 7,
+    color: C.muted,
+    marginTop: 3,
+  },
+  gv: {
+    fontFamily: 'Cormorant',
+    fontWeight: 700,
+    fontSize: 26,
+    color: C.grandVal,
+  },
+  gvStandalone: { fontSize: 32 },
+  gvSmall: {
+    fontFamily: 'Cormorant',
+    fontWeight: 700,
+    fontSize: 13,
+    color: C.stone,
+  },
+
+  // Footer
+  footer: {
+    fontFamily: 'DMSans',
+    fontSize: 7,
+    color: C.muted,
+    textAlign: 'center',
+    marginTop: 10,
+    paddingTop: 5,
+    borderTop: `1 solid ${C.border}`,
+    letterSpacing: 0.3,
+  },
+
+  // Signature blocks
+  sigGrid: {
+    flexDirection: 'row',
+    gap: 28,
+    marginTop: 22,
+  },
+  sigBlock: { flex: 1 },
+  sigTitle: {
+    fontFamily: 'DMSans',
+    fontWeight: 600,
+    fontSize: 7,
+    color: C.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 5,
+  },
+  sigLine: {
+    borderBottom: `1 solid ${C.ink}`,
+    height: 32,
+    marginBottom: 5,
+  },
+  sigSubLine: {
+    borderBottom: `1 solid ${C.border}`,
+    height: 20,
+    marginBottom: 3,
+  },
+  sigSubLbl: {
+    fontFamily: 'DMSans',
+    fontSize: 7,
+    color: C.muted,
+  },
+  gap: { height: 8 },
+})
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const fmtN = (n) =>
+  n == null
+    ? '$0.00'
+    : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+
+const fmtD = (d) => {
+  if (!d) return ''
+  const [y, m, day] = d.split('-')
+  return new Date(+y, +m - 1, +day).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  })
+}
+
+// ── SHARED LAYOUT COMPONENTS ───────────────────────────────────────────────
+
+function PageHeader({ docType, docId }) {
+  return (
+    <View style={s.hdr} fixed>
+      <View style={s.coBrand}>
+        <Image style={s.coLogo} src="/ewp-logo.png" />
+        <View>
+          <Text style={s.coName}>Engstrom Wood Products</Text>
+          <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
+        </View>
+      </View>
+      <View>
+        <Text style={s.docType}>{docType}</Text>
+        <Text style={s.docId}>{docId}</Text>
+      </View>
+    </View>
+  )
+}
+
+function InfoStrip({ cells }) {
+  // cells = [{ label, value }, ...]  — rendered 2-per-row
+  return (
+    <View style={s.infoStrip}>
+      {cells.map((cell, i) => (
+        <View
+          key={i}
+          style={[
+            s.ic,
+            i % 2 === 1 ? s.icEven : {},
+            i >= cells.length - 2 ? { borderBottom: 'none' } : {},
+          ]}
+        >
+          <Text style={s.icLbl}>{cell.label}</Text>
+          <Text style={s.icVal}>{cell.value || '—'}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function SectionLabel({ label }) {
+  return <Text style={s.sec}>{label}</Text>
+}
+
+function SubBar({ label, value }) {
+  return (
+    <View style={s.subBar}>
+      <Text style={s.subBarLbl}>{label}</Text>
+      <Text style={s.subBarVal}>{fmtN(value)}</Text>
+    </View>
+  )
+}
+
+function GrandBar({ label, sub, value, standalone = false, small = false }) {
+  return (
+    <View style={[
+      s.grandBar,
+      standalone ? s.grandBarStandalone : {},
+      small ? s.grandBarSmall : {},
+    ]}>
+      <View>
+        <Text style={[s.gl, standalone ? s.glStandalone : {}, small ? s.glSmall : {}]}>{label}</Text>
+        {sub ? <Text style={s.gs}>{sub}</Text> : null}
+      </View>
+      <Text style={[s.gv, standalone ? s.gvStandalone : {}, small ? s.gvSmall : {}]}>{fmtN(value)}</Text>
+    </View>
+  )
+}
+
+function TotalsStrip4({ cab, upg, fin, inst }) {
+  const items = [
+    { label: 'Cabinetry', value: cab },
+    { label: 'Upgrades', value: upg },
+    { label: 'Finishing', value: fin },
+    { label: 'Installation', value: inst },
+  ]
+  return (
+    <View style={s.totalsStrip}>
+      {items.map((item, i) => (
+        <View key={i} style={[s.ts, i === 3 ? s.tsLast : {}]}>
+          <Text style={s.tsLbl}>{item.label}</Text>
+          <Text style={s.tsVal}>{fmtN(item.value)}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function PdfFooter() {
+  return (
+    <Text style={s.footer}>
+      This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.  |  Engstrom Wood Products
+    </Text>
+  )
+}
+
+// ── TABLE HELPERS ──────────────────────────────────────────────────────────
+
+// colDefs: [{ w: '22%', label: 'Product Type', right: false }, ...]
+function TableHeader({ colDefs }) {
+  return (
+    <View style={[s.tRow, s.tRowHdr]}>
+      {colDefs.map((col, i) => (
+        <View key={i} style={[{ width: col.w }, i > 0 ? s.tBorderL : {}]}>
+          <Text style={[s.tCellHdr, col.right ? s.tCellR : {}]}>{col.label}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function TableRow({ colDefs, cells, isEven }) {
+  // cells: [{ val, right, amt, muted }]
+  return (
+    <View style={[s.tRow, isEven ? s.tRowAlt : {}]}>
+      {colDefs.map((col, i) => {
+        const cell = cells[i] || {}
+        return (
+          <View key={i} style={[{ width: col.w }, i > 0 ? s.tBorderL2 : {}]}>
+            <Text style={[
+              s.tCell,
+              cell.right ? s.tCellR : {},
+              cell.amt ? s.tCellAmt : {},
+              cell.muted ? s.tCellMuted : {},
+            ]}>
+              {cell.val ?? ''}
+            </Text>
+          </View>
+        )
+      })}
+    </View>
+  )
+}
+
+function EmptyRow({ colCount, label }) {
+  return (
+    <View style={[s.tRow]}>
+      <View style={{ flex: 1 }}>
+        <Text style={[s.tCell, s.tCellMuted]}>{label}</Text>
+      </View>
+    </View>
+  )
+}
+
+// ── INTERNAL SUMMARY PAGE ──────────────────────────────────────────────────
+
+function InternalSummaryPage({
+  project, roomTotals,
+  grandCab, grandUpg, grandFin, grandInst,
+  delivery, pdfTaxRate, pdfTaxAmt, grandTotal,
+}) {
+  const roomTableCols = [
+    { w: '28%', label: 'Room' },
+    { w: '14%', label: 'Cabinetry', right: true },
+    { w: '14%', label: 'Upgrades', right: true },
+    { w: '14%', label: 'Finishing', right: true },
+    { w: '15%', label: 'Installation', right: true },
+    { w: '15%', label: 'Room Total', right: true },
+  ]
+
+  return (
+    <Page size="LETTER" orientation="landscape" style={s.page}>
+      <PageHeader
+        docType="QUOTE — INTERNAL USE"
+        docId={`${project.id}  ·  ${fmtD(project.bidDate)}`}
+      />
+
+      <InfoStrip cells={[
+        { label: 'Project Name', value: project.name },
+        { label: 'Address', value: project.address },
+        { label: 'Bid Date', value: fmtD(project.bidDate) },
+        { label: 'Contact', value: project.contact },
+        { label: 'Phone', value: project.phone },
+        { label: 'Email', value: project.email },
+      ]} />
+
+      <SectionLabel label="Room Breakdown" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={roomTableCols} />
+        {roomTotals.map((r, i) => (
+          <TableRow
+            key={i}
+            colDefs={roomTableCols}
+            isEven={i % 2 === 1}
+            cells={[
+              { val: r.name || `Room ${i + 1}` },
+              { val: fmtN(r.cab), right: true },
+              { val: fmtN(r.upg), right: true },
+              { val: fmtN(r.fin), right: true },
+              { val: fmtN(r.inst), right: true },
+              { val: fmtN(r.total), amt: true },
+            ]}
+          />
+        ))}
+      </View>
+
+      <SubBar
+        label={`Project Totals — all ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''} combined`}
+        value={grandCab + grandUpg + grandFin + grandInst}
+      />
+
+      {delivery > 0 && (
+        <GrandBar
+          label="Delivery"
+          sub={project.deliveryNotes || undefined}
+          value={delivery}
+          standalone
+          small
+        />
+      )}
+
+      {project.taxEnabled && (
+        <GrandBar
+          label={`Estimated Tax (${pdfTaxRate}%)`}
+          sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
+          value={pdfTaxAmt}
+          standalone
+          small
+        />
+      )}
+
+      <GrandBar
+        label="Grand Total"
+        sub={[
+          `All rooms · ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
+          fmtD(project.bidDate),
+          delivery > 0 ? 'incl. delivery' : '',
+          project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
+        ].filter(Boolean).join('  ·  ')}
+        value={grandTotal}
+        standalone
+      />
+
+      {/* Signature blocks */}
+      <View style={s.sigGrid}>
+        <View style={s.sigBlock}>
+          <Text style={s.sigTitle}>Client Acceptance</Text>
+          <View style={s.sigLine} />
+          <View style={s.sigSubLine} />
+          <Text style={s.sigSubLbl}>Printed Name</Text>
+          <View style={[s.sigSubLine, { marginTop: 10 }]} />
+          <Text style={s.sigSubLbl}>Date</Text>
+        </View>
+        <View style={s.sigBlock}>
+          <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
+          <View style={s.sigLine} />
+          <View style={s.sigSubLine} />
+          <Text style={s.sigSubLbl}>Printed Name</Text>
+          <View style={[s.sigSubLine, { marginTop: 10 }]} />
+          <Text style={s.sigSubLbl}>Date</Text>
+        </View>
+      </View>
+
+      <PdfFooter />
+    </Page>
+  )
+}
+
+// ── INTERNAL ROOM PAGE ─────────────────────────────────────────────────────
+
+const HOURLY_RATE = 'Hourly Rate'
+
+function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing }) {
+  const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
+  const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
+  const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
+  const instDef  = pricing.installType?.find(i => i.name === room.install.type)
+
+  const cabCols = [
+    { w: '22%', label: 'Product Type' },
+    { w: '14%', label: 'Construction' },
+    { w: '11%', label: 'Wood Type' },
+    { w: '6%',  label: 'Con%', right: true },
+    { w: '6%',  label: 'Spec%', right: true },
+    { w: '6%',  label: 'Qty', right: true },
+    { w: '6%',  label: 'Fin.LF', right: true },
+    { w: '12%', label: 'Std Price', right: true },
+    { w: '17%', label: 'Mod. Total', right: true },
+  ]
+
+  const upgCols = [
+    { w: '36%', label: 'Description' },
+    { w: '8%',  label: 'Qty', right: true },
+    { w: '12%', label: 'Unit $', right: true },
+    { w: '12%', label: 'Price', right: true },
+    { w: '8%',  label: '% Adj', right: true },
+    { w: '12%', label: 'Total', right: true },
+    { w: '12%', label: 'Notes' },
+  ]
+
+  const finCols = [
+    { w: '30%', label: 'Type' },
+    { w: '9%',  label: 'Lin.Ft', right: true },
+    { w: '13%', label: 'Price/LF', right: true },
+    { w: '13%', label: 'Subtotal', right: true },
+    { w: '8%',  label: '% Adj', right: true },
+    { w: '13%', label: 'Total', right: true },
+    { w: '14%', label: 'Notes' },
+  ]
+
+  // Compute install display values
+  const instMetric = room.install.type === HOURLY_RATE
+    ? `${room.install.metric || '0'} hrs × $135.00/hr`
+    : instDef ? `${(instDef.rate * 100).toFixed(0)}% of cabinetry` : '—'
+  const instPrice = room.install.type === HOURLY_RATE
+    ? fmtN((parseFloat(room.install.metric) || 0) * 135)
+    : fmtN(instDef ? rt.cab * instDef.rate : 0)
+  const instAdj = room.install.adjPct ? `${room.install.adjPct}%` : '0%'
+
+  // Build cabinetry row cells
+  const cabRowCells = cabItems.map(item => {
+    const prod = pricing.woodwork?.find(w => w.name === item.product)
+    const con  = pricing.construction?.find(c => c.name === item.construction)
+    const wood = pricing.wood?.find(w => w.name === item.wood)
+    const sp   = prod ? prod.price * (1 + (con?.premium || 0)) * (1 + (wood?.premium || 0)) : 0
+    const qty  = parseFloat(item.qty) || 0
+    const finLF = prod ? (prod.finLF * qty).toFixed(1) : '0.0'
+    const adj  = parseFloat(item.adjPct) || 0
+    const tot  = sp * qty * (1 + adj / 100)
+    return [
+      { val: item.product },
+      { val: item.construction === 'Not Applicable' ? '—' : (item.construction || '—') },
+      { val: item.wood === 'Not Applicable' ? '—' : (item.wood || '—') },
+      { val: con?.premium ? `${(con.premium * 100).toFixed(0)}%` : '0%', right: true },
+      { val: wood?.premium ? `${(wood.premium * 100).toFixed(0)}%` : '0%', right: true },
+      { val: String(qty), right: true },
+      { val: finLF, right: true },
+      { val: fmtN(sp), right: true },
+      { val: fmtN(tot), amt: true },
+    ]
+  })
+
+  const upgRowCells = upgItems.map(item => {
+    const upg = pricing.upgrades?.find(u => u.name === item.upgrade)
+    const qty = parseFloat(item.qty) || 0
+    const adj = parseFloat(item.adjPct) || 0
+    const tot = (upg?.price || 0) * qty * (1 + adj / 100)
+    return [
+      { val: item.upgrade },
+      { val: String(qty), right: true },
+      { val: fmtN(upg?.price || 0), right: true },
+      { val: fmtN((upg?.price || 0) * qty), right: true },
+      { val: adj ? `${adj}%` : '—', right: true },
+      { val: fmtN(tot), amt: true },
+      { val: item.notes || '' },
+    ]
+  })
+
+  const finRowCells = finItems.map(item => {
+    const fin = pricing.finishing?.find(f => f.name === item.type)
+    const lf  = parseFloat(item.lf) || 0
+    const adj = parseFloat(item.adjPct) || 0
+    const sub2 = (fin?.pricePerLF || 0) * lf
+    const tot  = sub2 * (1 + adj / 100)
+    return [
+      { val: item.type },
+      { val: String(lf), right: true },
+      { val: `${fmtN(fin?.pricePerLF || 0)}/LF`, right: true },
+      { val: fmtN(sub2), right: true },
+      { val: adj ? `${adj}%` : '—', right: true },
+      { val: fmtN(tot), amt: true },
+      { val: item.notes || '' },
+    ]
+  })
+
+  const instInfoCols = [
+    { w: '25%', label: 'Install Type' },
+    { w: '25%', label: 'Metric / Method' },
+    { w: '25%', label: 'Base Price' },
+    { w: '25%', label: '% Adjustment' },
+  ]
+  const instInfoCells = [
+    { val: room.install.type || '—' },
+    { val: instMetric },
+    { val: instPrice, right: true },
+    { val: instAdj, right: true },
+  ]
+
+  return (
+    <Page size="LETTER" orientation="landscape" style={s.page}>
+      <PageHeader
+        docType={`QUOTE — ${room.name || `Room ${roomIndex + 1}`}`}
+        docId={`${project.id}  ·  ${project.name}  ·  ${fmtD(project.bidDate)}`}
+      />
+
+      <InfoStrip cells={[
+        { label: 'Room', value: room.name || `Room ${roomIndex + 1}` },
+        { label: 'Room', value: `${roomIndex + 1} of ${totalRooms}` },
+        { label: 'Bid Date', value: fmtD(project.bidDate) },
+        { label: 'Master Adj %', value: `${room.cabinetry[0]?.adjPct || '0'}%` },
+      ]} />
+
+      {/* Cabinetry */}
+      <SectionLabel label="Cabinetry" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={cabCols} />
+        {cabItems.length === 0
+          ? <EmptyRow colCount={9} label="No cabinetry items entered" />
+          : cabRowCells.map((cells, i) => (
+              <TableRow key={i} colDefs={cabCols} cells={cells} isEven={i % 2 === 1} />
+            ))
+        }
+      </View>
+      <SubBar label="Cabinetry Total" value={rt.cab} />
+
+      {/* Upgrades */}
+      <SectionLabel label="Upgrades / Overrides" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={upgCols} />
+        {upgItems.length === 0
+          ? <EmptyRow colCount={7} label="No upgrades entered" />
+          : upgRowCells.map((cells, i) => (
+              <TableRow key={i} colDefs={upgCols} cells={cells} isEven={i % 2 === 1} />
+            ))
+        }
+      </View>
+      <SubBar label="Upgrades Total" value={rt.upg} />
+
+      {/* Finishing */}
+      <SectionLabel label="Finishing" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={finCols} />
+        {finItems.length === 0
+          ? <EmptyRow colCount={7} label="No finishing items entered" />
+          : finRowCells.map((cells, i) => (
+              <TableRow key={i} colDefs={finCols} cells={cells} isEven={i % 2 === 1} />
+            ))
+        }
+      </View>
+      <SubBar label="Finishing Total" value={rt.fin} />
+
+      {/* Installation */}
+      <SectionLabel label="Installation" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={instInfoCols} />
+        <TableRow colDefs={instInfoCols} cells={instInfoCells} isEven={false} />
+      </View>
+      <SubBar label="Install Total" value={rt.inst} />
+
+      <TotalsStrip4 cab={rt.cab} upg={rt.upg} fin={rt.fin} inst={rt.inst} />
+
+      <GrandBar
+        label="Room Grand Total"
+        sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
+        value={rt.total}
+      />
+
+      <PdfFooter />
+    </Page>
+  )
+}
+
+// ── INTERNAL DOCUMENT ──────────────────────────────────────────────────────
+
+function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandFin, grandInst, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, pricing }) {
+  return (
+    <Document title={`${project.name || 'Estimate'} — Internal`} author="Engstrom Wood Products">
+      <InternalSummaryPage
+        project={project}
+        roomTotals={roomTotals}
+        grandCab={grandCab}
+        grandUpg={grandUpg}
+        grandFin={grandFin}
+        grandInst={grandInst}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+      />
+      {rooms.map((room, i) => (
+        <InternalRoomPage
+          key={i}
+          project={project}
+          room={room}
+          roomIndex={i}
+          totalRooms={rooms.length}
+          rt={roomTotals[i]}
+          pricing={pricing}
+        />
+      ))}
+    </Document>
+  )
+}
+
+// ── CUSTOMER SUMMARY PAGE ──────────────────────────────────────────────────
+
+function CustomerSummaryPage({
+  project, roomTotals,
+  delivery, pdfTaxRate, pdfTaxAmt, grandTotal,
+}) {
+  const roomTableCols = [
+    { w: '40%', label: 'Room' },
+    { w: '30%', label: 'Room Subtotal', right: true },
+    { w: '30%', label: 'Room Total', right: true },
+  ]
+
+  return (
+    <Page size="LETTER" orientation="landscape" style={s.page}>
+      <PageHeader
+        docType="QUOTE"
+        docId={`${project.id}  ·  ${fmtD(project.bidDate)}`}
+      />
+
+      <InfoStrip cells={[
+        { label: 'Project Name', value: project.name },
+        { label: 'Address', value: project.address },
+        { label: 'Bid Date', value: fmtD(project.bidDate) },
+        { label: 'Contact', value: project.contact },
+        { label: 'Phone', value: project.phone },
+        { label: 'Email', value: project.email },
+      ]} />
+
+      <SectionLabel label="Room Summary" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={roomTableCols} />
+        {roomTotals.map((r, i) => (
+          <TableRow
+            key={i}
+            colDefs={roomTableCols}
+            isEven={i % 2 === 1}
+            cells={[
+              { val: r.name || `Room ${i + 1}` },
+              { val: fmtN(r.total), right: true },
+              { val: fmtN(r.total), amt: true },
+            ]}
+          />
+        ))}
+      </View>
+
+      <SubBar
+        label={`Project Subtotal — ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
+        value={roomTotals.reduce((s, r) => s + r.total, 0)}
+      />
+
+      {delivery > 0 && (
+        <GrandBar
+          label="Delivery"
+          sub={project.deliveryNotes || undefined}
+          value={delivery}
+          standalone
+          small
+        />
+      )}
+
+      {project.taxEnabled && (
+        <GrandBar
+          label={`Estimated Tax (${pdfTaxRate}%)`}
+          sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
+          value={pdfTaxAmt}
+          standalone
+          small
+        />
+      )}
+
+      <GrandBar
+        label="Grand Total"
+        sub={[
+          `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
+          fmtD(project.bidDate),
+          delivery > 0 ? 'incl. delivery' : '',
+          project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
+        ].filter(Boolean).join('  ·  ')}
+        value={grandTotal}
+        standalone
+      />
+
+      {/* Signature blocks */}
+      <View style={s.sigGrid}>
+        <View style={s.sigBlock}>
+          <Text style={s.sigTitle}>Client Acceptance</Text>
+          <View style={s.sigLine} />
+          <View style={s.sigSubLine} />
+          <Text style={s.sigSubLbl}>Printed Name</Text>
+          <View style={[s.sigSubLine, { marginTop: 10 }]} />
+          <Text style={s.sigSubLbl}>Date</Text>
+        </View>
+        <View style={s.sigBlock}>
+          <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
+          <View style={s.sigLine} />
+          <View style={s.sigSubLine} />
+          <Text style={s.sigSubLbl}>Printed Name</Text>
+          <View style={[s.sigSubLine, { marginTop: 10 }]} />
+          <Text style={s.sigSubLbl}>Date</Text>
+        </View>
+      </View>
+
+      <PdfFooter />
+    </Page>
+  )
+}
+
+// ── CUSTOMER ROOM PAGE ─────────────────────────────────────────────────────
+
+function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt }) {
+  const sections = [
+    { label: 'Cabinetry', value: rt.cab },
+    { label: 'Upgrades & Options', value: rt.upg },
+    { label: 'Finishing', value: rt.fin },
+    { label: 'Installation', value: rt.inst },
+  ].filter(sec => sec.value > 0)
+
+  const secCols = [
+    { w: '60%', label: 'Section' },
+    { w: '40%', label: 'Amount', right: true },
+  ]
+
+  return (
+    <Page size="LETTER" orientation="landscape" style={s.page}>
+      <PageHeader
+        docType={`QUOTE — ${room.name || `Room ${roomIndex + 1}`}`}
+        docId={`${project.id}  ·  ${project.name}  ·  ${fmtD(project.bidDate)}`}
+      />
+
+      <InfoStrip cells={[
+        { label: 'Room', value: room.name || `Room ${roomIndex + 1}` },
+        { label: 'Room', value: `${roomIndex + 1} of ${totalRooms}` },
+        { label: 'Bid Date', value: fmtD(project.bidDate) },
+        { label: 'Contact', value: project.contact },
+      ]} />
+
+      <SectionLabel label="Room Cost Summary" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={secCols} />
+        {sections.map((sec, i) => (
+          <TableRow
+            key={i}
+            colDefs={secCols}
+            isEven={i % 2 === 1}
+            cells={[
+              { val: sec.label },
+              { val: fmtN(sec.value), amt: true },
+            ]}
+          />
+        ))}
+      </View>
+
+      <GrandBar
+        label="Room Total"
+        sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
+        value={rt.total}
+        standalone
+      />
+
+      <PdfFooter />
+    </Page>
+  )
+}
+
+// ── CUSTOMER DOCUMENT ──────────────────────────────────────────────────────
+
+function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal }) {
+  return (
+    <Document title={`${project.name || 'Quote'} — Quote`} author="Engstrom Wood Products">
+      <CustomerSummaryPage
+        project={project}
+        roomTotals={roomTotals}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+      />
+      {rooms.map((room, i) => (
+        <CustomerRoomPage
+          key={i}
+          project={project}
+          room={room}
+          roomIndex={i}
+          totalRooms={rooms.length}
+          rt={roomTotals[i]}
+        />
+      ))}
+    </Document>
+  )
+}
+
+// ── EXPORT FUNCTIONS ───────────────────────────────────────────────────────
+// Called from App.jsx; calc functions + PRICING are passed in.
+
+export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, pricing }, onStatus) {
+  onStatus('generating')
+  try {
+    const roomTotals = rooms.map(r => {
+      const cab  = calcCabinetry(r.cabinetry)
+      const upg  = calcUpgrades(r.upgrades)
+      const fin  = calcFinishing(r.finishing)
+      const inst = calcInstall(r.install, cab)
+      return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
+    })
+    const grandCab  = roomTotals.reduce((s, r) => s + r.cab,  0)
+    const grandUpg  = roomTotals.reduce((s, r) => s + r.upg,  0)
+    const grandFin  = roomTotals.reduce((s, r) => s + r.fin,  0)
+    const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
+    const delivery   = parseFloat(project.deliveryAmount) || 0
+    const pdfTaxRate = parseFloat(project.taxRate) || 8
+    const pdfSubtotal = grandCab + grandUpg + grandFin + grandInst + delivery
+    const pdfTaxAmt  = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+    const grandTotal = pdfSubtotal + pdfTaxAmt
+
+    const blob = await pdf(
+      <InternalPDFDoc
+        project={project}
+        rooms={rooms}
+        roomTotals={roomTotals}
+        grandCab={grandCab}
+        grandUpg={grandUpg}
+        grandFin={grandFin}
+        grandInst={grandInst}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+        pricing={pricing}
+      />
+    ).toBlob()
+
+    const safeName = (project.name || 'Estimate').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Estimate'
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${safeName} — Internal.pdf`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+    onStatus('done')
+  } catch (err) {
+    console.error('PDF generation error:', err)
+    onStatus('error', 'PDF generation failed.')
+  }
+}
+
+export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall }, onStatus) {
+  onStatus('generating')
+  try {
+    const roomTotals = rooms.map(r => {
+      const cab  = calcCabinetry(r.cabinetry)
+      const upg  = calcUpgrades(r.upgrades)
+      const fin  = calcFinishing(r.finishing)
+      const inst = calcInstall(r.install, cab)
+      return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
+    })
+    const delivery   = parseFloat(project.deliveryAmount) || 0
+    const pdfTaxRate = parseFloat(project.taxRate) || 8
+    const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
+    const pdfTaxAmt  = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+    const grandTotal = pdfSubtotal + pdfTaxAmt
+
+    const blob = await pdf(
+      <CustomerPDFDoc
+        project={project}
+        rooms={rooms}
+        roomTotals={roomTotals}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+      />
+    ).toBlob()
+
+    const safeName = (project.name || 'Quote').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Quote'
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${safeName} — Quote.pdf`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+    onStatus('done')
+  } catch (err) {
+    console.error('PDF generation error:', err)
+    onStatus('error', 'PDF generation failed.')
+  }
+}
