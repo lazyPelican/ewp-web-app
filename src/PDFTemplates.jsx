@@ -6,42 +6,12 @@ import {
   Document, Page, View, Text, Image, StyleSheet, Font, pdf
 } from '@react-pdf/renderer'
 
-// ── FONTS ──────────────────────────────────────────────────────────────────
-Font.register({
-  family: 'Cormorant',
-  fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/cormorantgaramond/v22/co3YmX5slCNuHLi8bLeY9MK7whWMhyjornFLsS6V7w.woff2',
-      fontWeight: 400,
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/cormorantgaramond/v22/co3VmX5slCNuHLi8bLeY9MK7whWMhyjYqXtC8yGe.woff2',
-      fontWeight: 600,
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/cormorantgaramond/v22/co3WmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKxy2Y.woff2',
-      fontWeight: 700,
-    },
-  ],
-})
-
-Font.register({
-  family: 'DMSans',
-  fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/dmsans/v15/rP2tp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2',
-      fontWeight: 400,
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/dmsans/v15/rP2tp2ywxg089UriI5-g4vlH9VoD8Cmcqbu6-K4.woff2',
-      fontWeight: 600,
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/dmsans/v15/rP2tp2ywxg089UriI5-g4vlH9VoD8Cmcqbu7-K4.woff2',
-      fontWeight: 700,
-    },
-  ],
-})
+// Built-in PDF standard fonts — no registration needed, no network fetch.
+// IMPORTANT: never combine these with fontWeight; use the explicit Bold variant instead.
+const FONT_SANS    = 'Helvetica'
+const FONT_SANS_BD = 'Helvetica-Bold'
+const FONT_SERIF   = 'Times-Roman'
+const FONT_SERIF_BD= 'Times-Bold'
 
 // ── COLOUR PALETTE ─────────────────────────────────────────────────────────
 const C = {
@@ -66,7 +36,7 @@ const C = {
 // ── STYLE SHEET ────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   page: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 9,
     color: C.body,
     paddingTop: 28,
@@ -92,14 +62,13 @@ const s = StyleSheet.create({
   coLogo: { width: 52, height: 52 },
   coBrand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   coName: {
-    fontFamily: 'Cormorant',
-    fontWeight: 700,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 22,
     color: C.ink,
     letterSpacing: 0.3,
   },
   coTag: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 7,
     color: C.muted,
     letterSpacing: 0.8,
@@ -107,15 +76,14 @@ const s = StyleSheet.create({
     marginTop: 3,
   },
   docType: {
-    fontFamily: 'Cormorant',
-    fontWeight: 600,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 13,
     color: C.stone,
     letterSpacing: 1.5,
     textAlign: 'right',
   },
   docId: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 7,
     color: C.muted,
     letterSpacing: 0.6,
@@ -143,8 +111,7 @@ const s = StyleSheet.create({
   },
   icEven: { borderRight: 'none' },
   icLbl: {
-    fontFamily: 'DMSans',
-    fontWeight: 600,
+    fontFamily: FONT_SANS_BD,
     fontSize: 6,
     color: C.stone,
     textTransform: 'uppercase',
@@ -152,16 +119,14 @@ const s = StyleSheet.create({
     marginBottom: 2,
   },
   icVal: {
-    fontFamily: 'DMSans',
-    fontWeight: 500,
+    fontFamily: FONT_SANS,
     fontSize: 9.5,
     color: C.ink,
   },
 
   // Section label
   sec: {
-    fontFamily: 'DMSans',
-    fontWeight: 700,
+    fontFamily: FONT_SANS_BD,
     fontSize: 7,
     color: C.ink,
     textTransform: 'uppercase',
@@ -193,7 +158,7 @@ const s = StyleSheet.create({
     borderBottom: `1 solid ${C.border}`,
   },
   tCell: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 8,
     color: C.body,
     paddingTop: 3,
@@ -202,8 +167,7 @@ const s = StyleSheet.create({
     paddingRight: 4,
   },
   tCellHdr: {
-    fontFamily: 'DMSans',
-    fontWeight: 700,
+    fontFamily: FONT_SANS_BD,
     fontSize: 6,
     color: C.tableHdr,
     textTransform: 'uppercase',
@@ -216,7 +180,6 @@ const s = StyleSheet.create({
   tCellR: { textAlign: 'right' },
   tCellAmt: {
     textAlign: 'right',
-    fontWeight: 600,
     color: C.amount,
   },
   tCellMuted: {
@@ -242,16 +205,14 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   subBarLbl: {
-    fontFamily: 'DMSans',
-    fontWeight: 600,
+    fontFamily: FONT_SANS_BD,
     fontSize: 6.5,
     color: C.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   subBarVal: {
-    fontFamily: 'Cormorant',
-    fontWeight: 700,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 11,
     color: C.ink,
   },
@@ -276,17 +237,15 @@ const s = StyleSheet.create({
   },
   tsLast: { borderRight: 'none' },
   tsLbl: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 6,
     color: C.muted,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    fontWeight: 600,
     marginBottom: 3,
   },
   tsVal: {
-    fontFamily: 'Cormorant',
-    fontWeight: 700,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 12,
     color: C.ink,
   },
@@ -319,42 +278,38 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
   gl: {
-    fontFamily: 'Cormorant',
-    fontWeight: 700,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 15,
     color: C.grandText,
     letterSpacing: 0.8,
   },
   glStandalone: { fontSize: 17 },
   glSmall: {
-    fontFamily: 'Cormorant',
-    fontWeight: 600,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 10,
     color: C.stone,
   },
   gs: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 7,
     color: C.muted,
     marginTop: 3,
   },
   gv: {
-    fontFamily: 'Cormorant',
-    fontWeight: 700,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 26,
     color: C.grandVal,
   },
   gvStandalone: { fontSize: 32 },
   gvSmall: {
-    fontFamily: 'Cormorant',
-    fontWeight: 700,
+    fontFamily: FONT_SERIF_BD,
     fontSize: 13,
     color: C.stone,
   },
 
   // Footer
   footer: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 7,
     color: C.muted,
     textAlign: 'center',
@@ -372,8 +327,7 @@ const s = StyleSheet.create({
   },
   sigBlock: { flex: 1 },
   sigTitle: {
-    fontFamily: 'DMSans',
-    fontWeight: 600,
+    fontFamily: FONT_SANS_BD,
     fontSize: 7,
     color: C.muted,
     textTransform: 'uppercase',
@@ -391,7 +345,7 @@ const s = StyleSheet.create({
     marginBottom: 3,
   },
   sigSubLbl: {
-    fontFamily: 'DMSans',
+    fontFamily: FONT_SANS,
     fontSize: 7,
     color: C.muted,
   },
