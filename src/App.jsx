@@ -1092,22 +1092,24 @@ const styles = `
 
 
 // ── PDF EXPORT (via @react-pdf/renderer in PDFTemplates.jsx) ─────────────
-function exportPDFInternal(project, rooms, onStatus) {
+function exportPDFInternal(project, rooms, preparedBy, onStatus) {
   _exportPDFInternal(project, rooms, {
     calcCabinetry,
     calcUpgrades,
     calcFinishing,
     calcInstall,
     pricing: PRICING,
+    preparedBy,
   }, onStatus);
 }
 
-function exportPDFCustomer(project, rooms, onStatus) {
+function exportPDFCustomer(project, rooms, preparedBy, onStatus) {
   _exportPDFCustomer(project, rooms, {
     calcCabinetry,
     calcUpgrades,
     calcFinishing,
     calcInstall,
+    preparedBy,
   }, onStatus);
 }
 
@@ -1858,7 +1860,7 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
 }
 
 // ── SUMMARY PAGE ───────────────────────────────────────────────
-function SummaryPage({ project, rooms, onBack, onSave }) {
+function SummaryPage({ project, rooms, onBack, onSave, preparedBy }) {
   const [pdfStatus, setPdfStatus] = useState("idle");
   const [pdfError, setPdfError]   = useState(null);
 
@@ -1879,7 +1881,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
 
   const handleExportInternal = () => {
     setPdfError(null);
-    exportPDFInternal(project, rooms, (status, errMsg) => {
+    exportPDFInternal(project, rooms, preparedBy, (status, errMsg) => {
       setPdfStatus(status);
       if (errMsg) setPdfError(errMsg);
     });
@@ -1887,7 +1889,7 @@ function SummaryPage({ project, rooms, onBack, onSave }) {
 
   const handleExportCustomer = () => {
     setPdfError2(null);
-    exportPDFCustomer(project, rooms, (status, errMsg) => {
+    exportPDFCustomer(project, rooms, preparedBy, (status, errMsg) => {
       setPdfStatus2(status);
       if (errMsg) setPdfError2(errMsg);
     });
@@ -2300,6 +2302,8 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
 
 // ── ROOT APP ───────────────────────────────────────────────────
 export default function App({ session, isAdmin, onOpenAdmin }) {
+  const preparedBy = session?.user?.user_metadata?.first_name || session?.user?.email?.split("@")[0] || "";
+
   const [view, setView] = useState("dashboard");
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
@@ -2605,12 +2609,12 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               setStep(3);
               // slight delay so component mounts, then trigger export
               setTimeout(() => {
-                exportPDFInternal(p.project, p.rooms, () => {});
+                exportPDFInternal(p.project, p.rooms, preparedBy, () => {});
               }, 400);
             }}
             onGenerateQuoteCustomer={(i) => {
               const p = projects[i];
-              exportPDFCustomer(p.project, p.rooms, () => {});
+              exportPDFCustomer(p.project, p.rooms, preparedBy, () => {});
             }}
             onEmail={(i) => {
               const p = projects[i];
@@ -2666,7 +2670,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             <FinalDetailsPage project={project} rooms={rooms} onChange={d => setProject(p => ({ ...p, ...d }))} onNext={() => setStep(3)} onBack={() => setStep(1)} />
           )}
           {view === "new" && step === 3 && (
-            <SummaryPage project={project} rooms={rooms} onBack={() => setStep(2)} onSave={saveProject} />
+            <SummaryPage project={project} rooms={rooms} onBack={() => setStep(2)} onSave={saveProject} preparedBy={preparedBy} />
           )}
         </div>
 

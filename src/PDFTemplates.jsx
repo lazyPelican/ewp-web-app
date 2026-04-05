@@ -455,10 +455,10 @@ function TotalsStrip4({ cab, upg, fin, inst }) {
   )
 }
 
-function PdfFooter() {
+function PdfFooter({ preparedBy }) {
   return (
     <Text style={s.footer}>
-      This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.  |  Engstrom Wood Products
+      {`This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.${preparedBy ? `  |  Prepared by ${preparedBy}` : ''}  |  Engstrom Wood Products`}
     </Text>
   )
 }
@@ -516,7 +516,7 @@ function EmptyRow({ colCount, label }) {
 function InternalSummaryPage({
   project, roomTotals,
   grandCab, grandUpg, grandFin, grandInst,
-  delivery, pdfTaxRate, pdfTaxAmt, grandTotal,
+  delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
 }) {
   const roomTableCols = [
     { w: '28%', label: 'Room' },
@@ -621,7 +621,7 @@ function InternalSummaryPage({
           </View>
         </View>
 
-        <PdfFooter />
+        <PdfFooter preparedBy={preparedBy} />
       </View>
     </Page>
   )
@@ -631,7 +631,7 @@ function InternalSummaryPage({
 
 const HOURLY_RATE = 'Hourly Rate'
 
-function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing }) {
+function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, preparedBy }) {
   const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
   const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
   const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
@@ -815,7 +815,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing })
           sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
           value={rt.total}
         />
-        <PdfFooter />
+        <PdfFooter preparedBy={preparedBy} />
       </View>
     </Page>
   )
@@ -823,7 +823,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing })
 
 // ── INTERNAL DOCUMENT ──────────────────────────────────────────────────────
 
-function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandFin, grandInst, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, pricing }) {
+function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandFin, grandInst, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, pricing, preparedBy }) {
   return (
     <Document title={`${project.name || 'Estimate'} — Internal`} author="Engstrom Wood Products">
       <InternalSummaryPage
@@ -837,6 +837,7 @@ function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandF
         pdfTaxRate={pdfTaxRate}
         pdfTaxAmt={pdfTaxAmt}
         grandTotal={grandTotal}
+        preparedBy={preparedBy}
       />
       {rooms.map((room, i) => (
         <InternalRoomPage
@@ -847,6 +848,7 @@ function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandF
           totalRooms={rooms.length}
           rt={roomTotals[i]}
           pricing={pricing}
+          preparedBy={preparedBy}
         />
       ))}
     </Document>
@@ -857,7 +859,7 @@ function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandF
 
 function CustomerSummaryPage({
   project, roomTotals,
-  delivery, pdfTaxRate, pdfTaxAmt, grandTotal,
+  delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
 }) {
   const roomTableCols = [
     { w: '40%', label: 'Room' },
@@ -956,7 +958,7 @@ function CustomerSummaryPage({
           </View>
         </View>
 
-        <PdfFooter />
+        <PdfFooter preparedBy={preparedBy} />
       </View>
     </Page>
   )
@@ -964,7 +966,7 @@ function CustomerSummaryPage({
 
 // ── CUSTOMER ROOM PAGE ─────────────────────────────────────────────────────
 
-function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt }) {
+function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy }) {
   const sections = [
     { label: 'Cabinetry', value: rt.cab },
     { label: 'Upgrades & Options', value: rt.upg },
@@ -1014,7 +1016,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt }) {
           value={rt.total}
           standalone
         />
-        <PdfFooter />
+        <PdfFooter preparedBy={preparedBy} />
       </View>
     </Page>
   )
@@ -1022,7 +1024,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt }) {
 
 // ── CUSTOMER DOCUMENT ──────────────────────────────────────────────────────
 
-function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal }) {
+function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy }) {
   return (
     <Document title={`${project.name || 'Quote'} — Quote`} author="Engstrom Wood Products">
       <CustomerSummaryPage
@@ -1032,6 +1034,7 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
         pdfTaxRate={pdfTaxRate}
         pdfTaxAmt={pdfTaxAmt}
         grandTotal={grandTotal}
+        preparedBy={preparedBy}
       />
       {rooms.map((room, i) => (
         <CustomerRoomPage
@@ -1041,6 +1044,7 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
           roomIndex={i}
           totalRooms={rooms.length}
           rt={roomTotals[i]}
+          preparedBy={preparedBy}
         />
       ))}
     </Document>
@@ -1050,7 +1054,7 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
 // ── EXPORT FUNCTIONS ───────────────────────────────────────────────────────
 // Called from App.jsx; calc functions + PRICING are passed in.
 
-export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, pricing }, onStatus) {
+export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
   onStatus('generating')
   try {
     const roomTotals = rooms.map(r => {
@@ -1084,6 +1088,7 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
         pdfTaxAmt={pdfTaxAmt}
         grandTotal={grandTotal}
         pricing={pricing}
+        preparedBy={preparedBy}
       />
     ).toBlob()
 
@@ -1105,7 +1110,7 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
   }
 }
 
-export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall }, onStatus) {
+export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, preparedBy }, onStatus) {
   onStatus('generating')
   try {
     const roomTotals = rooms.map(r => {
@@ -1130,6 +1135,7 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
         pdfTaxRate={pdfTaxRate}
         pdfTaxAmt={pdfTaxAmt}
         grandTotal={grandTotal}
+        preparedBy={preparedBy}
       />
     ).toBlob()
 

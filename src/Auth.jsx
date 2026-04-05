@@ -6,6 +6,8 @@ export default function Auth() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
@@ -55,17 +57,22 @@ export default function Auth() {
   }
 
   const handleSignUp = async () => {
+    if (!firstName.trim() || !lastName.trim()) { setError("Please enter your first and last name."); return }
     if (!email || !password) { setError("Please fill in all fields."); return }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return }
     if (password !== confirmPassword) { setError("Passwords do not match."); return }
     setLoading(true); reset()
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
+    })
     if (error) {
       setError(error.message)
     } else {
       setSuccess("Account created! Check your email to confirm your address, then sign in.")
       setMode("signin")
-      setPassword(""); setConfirmPassword("")
+      setPassword(""); setConfirmPassword(""); setFirstName(""); setLastName("")
     }
     setLoading(false)
   }
@@ -74,7 +81,7 @@ export default function Auth() {
     if (e.key === "Enter") mode === "signin" ? handleSignIn() : handleSignUp()
   }
 
-  const switchMode = (m) => { setMode(m); reset(); setPassword(""); setConfirmPassword("") }
+  const switchMode = (m) => { setMode(m); reset(); setPassword(""); setConfirmPassword(""); setFirstName(""); setLastName("") }
 
   return (
     <div style={{
@@ -161,11 +168,27 @@ export default function Auth() {
 
         {/* Fields */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {mode === "signup" && (
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text" placeholder="First name"
+                value={firstName} onChange={e => { setFirstName(e.target.value); reset() }}
+                onKeyDown={handleKeyDown}
+                style={{ ...inputStyle(!firstName.trim() && error?.includes("name")), flex: 1 }}
+              />
+              <input
+                type="text" placeholder="Last name"
+                value={lastName} onChange={e => { setLastName(e.target.value); reset() }}
+                onKeyDown={handleKeyDown}
+                style={{ ...inputStyle(!lastName.trim() && error?.includes("name")), flex: 1 }}
+              />
+            </div>
+          )}
           <input
             type="email" placeholder="Email address"
             value={email} onChange={e => { setEmail(e.target.value); reset() }}
             onKeyDown={handleKeyDown}
-            style={inputStyle(false)} autoFocus
+            style={inputStyle(false)} autoFocus={mode === "signin"}
           />
           <input
             type="password" placeholder="Password"
