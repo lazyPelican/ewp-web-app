@@ -227,9 +227,7 @@ const styles = `
     letter-spacing: 0.2em; text-transform: uppercase;
     margin-top: 7px; font-weight: 600;
   }
-  .topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .topbar-right-btns { display: flex; align-items: center; gap: 8px; }
-  .topbar-welcome { font-size: 11px; color: var(--muted); font-family: 'DM Sans', sans-serif; letter-spacing: 0.04em; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
 
   /* ── STEPPER (see animation block below) ── */
   .stepper {
@@ -624,6 +622,18 @@ const styles = `
   @keyframes sectionFadeUp {
     from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes welcomeIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes welcomeSubIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes welcomeLineGrow {
+    from { width: 0; opacity: 0; }
+    to   { width: 72px; opacity: 1; }
   }
 
   /* ── AUTO SCROLL-REVEAL (.sr applied by JS) ── */
@@ -2243,8 +2253,16 @@ function SummaryPage({ project, rooms, onBack, onSave, preparedBy }) {
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
-function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy }) {
+function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
   const [search, setSearch] = useState("");
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h >= 5  && h < 12) return "Good morning";
+    if (h >= 12 && h < 17) return "Good afternoon";
+    if (h >= 17 && h < 21) return "Good evening";
+    return "Welcome back";
+  })();
   const filtered = projects
     .filter(p => {
       const q = search.toLowerCase()
@@ -2278,6 +2296,43 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
 
   return (
     <div>
+      {/* ── Welcome Banner ── */}
+      {userName && (
+        <div style={{
+          textAlign: "center",
+          padding: "52px 24px 40px",
+          borderBottom: "1px solid var(--ivory3)",
+          background: "linear-gradient(180deg, var(--ivory2) 0%, transparent 100%)",
+        }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.22em",
+            textTransform: "uppercase", color: "var(--muted)",
+            fontFamily: "'DM Sans', sans-serif", marginBottom: 12,
+            animation: "welcomeSubIn 0.55s cubic-bezier(0.22,1,0.36,1) both",
+          }}>
+            {greeting}
+          </div>
+          <div style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: "clamp(40px, 6.5vw, 72px)",
+            fontWeight: 600,
+            color: "var(--gold)",
+            lineHeight: 1,
+            letterSpacing: "0.05em",
+            animation: "welcomeIn 0.75s 0.08s cubic-bezier(0.22,1,0.36,1) both",
+          }}>
+            {userName}
+          </div>
+          <div style={{
+            height: 2,
+            background: "linear-gradient(90deg, transparent, var(--gold), transparent)",
+            margin: "20px auto 0",
+            animation: "welcomeLineGrow 0.65s 0.3s cubic-bezier(0.22,1,0.36,1) both",
+            width: 72,
+          }} />
+        </div>
+      )}
+
       <div className="page-header">
         <div className="flex justify-between items-center">
           <div>
@@ -2684,59 +2739,54 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             </div>
           </div>
           <div className="topbar-right">
-            <div className="topbar-right-btns">
-              {isAdmin && (
-                <button onClick={onOpenAdmin} aria-label="Open admin panel" style={{
-                  background: "transparent",
-                  border: "1px solid rgba(73,77,77,0.25)",
-                  borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                  color: "var(--ewp-slate)", fontSize: 11,
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                  display: "flex", alignItems: "center", gap: 6,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                }}>
-                  👥 Admin
-                </button>
-              )}
-              <button
-                onClick={() => setDark(d => !d)}
-                title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-                aria-pressed={dark}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(73,77,77,0.25)",
-                  borderRadius: 3,
-                  padding: "6px 14px",
-                  cursor: "pointer",
-                  color: "var(--ewp-slate)",
-                  fontSize: 11,
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontWeight: 700,
-                  display: "flex", alignItems: "center", gap: 6,
-                  transition: "all 0.15s",
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                }}>
-                {dark ? "☀ Light" : "☾ Dark"}
+            {isAdmin && (
+              <button onClick={onOpenAdmin} aria-label="Open admin panel" style={{
+                background: "transparent",
+                border: "1px solid rgba(73,77,77,0.25)",
+                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
+                color: "var(--ewp-slate)", fontSize: 11,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                display: "flex", alignItems: "center", gap: 6,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+                👥 Admin
               </button>
-              <button
-                onClick={() => import("./supabase.js").then(m => m.supabase.auth.signOut())}
-                aria-label="Sign out"
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(73,77,77,0.25)",
-                  borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                  color: "var(--ewp-slate)", fontSize: 11,
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                  display: "flex", alignItems: "center", gap: 6,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                }}>
-                Sign Out
-              </button>
-            </div>
-            {preparedBy && (
-              <div className="topbar-welcome">Welcome, {preparedBy}</div>
             )}
+            <button
+              onClick={() => setDark(d => !d)}
+              title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-pressed={dark}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(73,77,77,0.25)",
+                borderRadius: 3,
+                padding: "6px 14px",
+                cursor: "pointer",
+                color: "var(--ewp-slate)",
+                fontSize: 11,
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 700,
+                display: "flex", alignItems: "center", gap: 6,
+                transition: "all 0.15s",
+                letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+              {dark ? "☀ Light" : "☾ Dark"}
+            </button>
+            <button
+              onClick={() => import("./supabase.js").then(m => m.supabase.auth.signOut())}
+              aria-label="Sign out"
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(73,77,77,0.25)",
+                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
+                color: "var(--ewp-slate)", fontSize: 11,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                display: "flex", alignItems: "center", gap: 6,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+              Sign Out
+            </button>
           </div>
         </div>
 
@@ -2780,6 +2830,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
         <div className="main">
           {view === "dashboard" && (
             <Dashboard
+            userName={preparedBy}
             projects={projects}
             onNew={startNew}
             onOpen={openProject}
