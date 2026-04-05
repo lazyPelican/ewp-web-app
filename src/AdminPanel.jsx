@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
+import { logError } from "./logger.js"
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
 
@@ -191,25 +192,30 @@ export default function AdminPanel({ currentUser, onBack }) {
 
   const fetchUsers = async () => {
     setUsersLoading(true)
-    const { data, error } = await supabase
-      .from("user_approvals").select("*").order("created_at", { ascending: false })
-    if (!error) setUsers(data || [])
+    try {
+      const { data, error } = await supabase
+        .from("user_approvals").select("*").order("created_at", { ascending: false })
+      if (error) logError("fetchUsers", error)
+      else setUsers(data || [])
+    } catch (err) { logError("fetchUsers", err) }
     setUsersLoading(false)
   }
 
   const fetchPricing = async () => {
-    const { data, error } = await supabase
-      .from("pricing").select("data").eq("id", "main").single()
-    if (error || !data) {
-      setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING)))
-    } else {
-      // Merge with defaults so new keys added to DEFAULT_PRICING are always present
-      const merged = {}
-      for (const key of Object.keys(DEFAULT_PRICING)) {
-        merged[key] = data.data[key] ?? DEFAULT_PRICING[key]
+    try {
+      const { data, error } = await supabase
+        .from("pricing").select("data").eq("id", "main").single()
+      if (error || !data) {
+        setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING)))
+      } else {
+        // Merge with defaults so new keys added to DEFAULT_PRICING are always present
+        const merged = {}
+        for (const key of Object.keys(DEFAULT_PRICING)) {
+          merged[key] = data.data[key] ?? DEFAULT_PRICING[key]
+        }
+        setPricing(merged)
       }
-      setPricing(merged)
-    }
+    } catch (err) { logError("fetchPricing", err); setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING))) }
   }
 
   const savePricing = async () => {
@@ -365,21 +371,25 @@ export default function AdminPanel({ currentUser, onBack }) {
   // Users helpers
   const approve = async (userId, email) => {
     setActionLoading(userId)
-    const { error } = await supabase.from("user_approvals")
-      .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
-      .eq("user_id", userId)
-    if (error) showToast("Error approving user")
-    else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "approved" } : u)); showToast(`✓ Approved ${email}`) }
+    try {
+      const { error } = await supabase.from("user_approvals")
+        .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
+        .eq("user_id", userId)
+      if (error) { logError("approveUser", error); showToast("Error approving user — try again") }
+      else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "approved" } : u)); showToast(`✓ Approved ${email}`) }
+    } catch (err) { logError("approveUser", err); showToast("Unexpected error — check connection") }
     setActionLoading(null)
   }
 
   const reject = async (userId, email) => {
     setActionLoading(userId)
-    const { error } = await supabase.from("user_approvals")
-      .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
-      .eq("user_id", userId)
-    if (error) showToast("Error rejecting user")
-    else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "rejected" } : u)); showToast(`Rejected ${email}`) }
+    try {
+      const { error } = await supabase.from("user_approvals")
+        .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
+        .eq("user_id", userId)
+      if (error) { logError("rejectUser", error); showToast("Error rejecting user — try again") }
+      else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "rejected" } : u)); showToast(`Rejected ${email}`) }
+    } catch (err) { logError("rejectUser", err); showToast("Unexpected error — check connection") }
     setActionLoading(null)
   }
 
@@ -387,29 +397,36 @@ export default function AdminPanel({ currentUser, onBack }) {
     if (ADMIN_EMAILS.includes(email?.toLowerCase())) { setRootBlockModal(true); return }
     if (!window.confirm(`Remove ${email}? They will lose access immediately and cannot sign back in.`)) return
     setActionLoading(userId)
-    // Reject instead of delete — prevents the user from creating a new pending row on next login
-    const { error } = await supabase.from("user_approvals")
-      .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
-      .eq("user_id", userId)
-    if (error) showToast("Error removing user")
-    else { setUsers(prev => prev.filter(u => u.user_id !== userId)); showToast(`✓ ${email} removed`) }
+    try {
+      // Reject instead of delete — prevents the user from creating a new pending row on next login
+      const { error } = await supabase.from("user_approvals")
+        .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
+        .eq("user_id", userId)
+      if (error) { logError("deleteUser", error); showToast("Error removing user — try again") }
+      else { setUsers(prev => prev.filter(u => u.user_id !== userId)); showToast(`✓ ${email} removed`) }
+    } catch (err) { logError("deleteUser", err); showToast("Unexpected error — check connection") }
     setActionLoading(null)
   }
 
   const sendPasswordReset = async (email) => {
     setResetSent(false)
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
-    })
-    if (error) showToast("Error sending reset email: " + error.message)
-    else { setResetSent(true); showToast(`✓ Password reset email sent to ${email}`) }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      })
+      if (error) { logError("passwordReset", error); showToast("Error sending reset email — try again") }
+      else { setResetSent(true); showToast(`✓ Password reset email sent to ${email}`) }
+    } catch (err) { logError("passwordReset", err); showToast("Unexpected error — check connection") }
   }
 
   // Pre-approved emails
   const fetchPreApproved = async () => {
     setPreApprovedLoading(true)
-    const { data, error } = await supabase.from("pre_approved_emails").select("*").order("added_at", { ascending: false })
-    if (!error) setPreApproved(data || [])
+    try {
+      const { data, error } = await supabase.from("pre_approved_emails").select("*").order("added_at", { ascending: false })
+      if (error) logError("fetchPreApproved", error)
+      else setPreApproved(data || [])
+    } catch (err) { logError("fetchPreApproved", err) }
     setPreApprovedLoading(false)
   }
 
@@ -418,25 +435,29 @@ export default function AdminPanel({ currentUser, onBack }) {
     if (!email || !isValidEmail(email)) { showToast("Enter a valid email address"); return }
     if (preApproved.some(p => p.email === email)) { showToast("Already in pre-approved list"); return }
     setAddingPreEmail(true)
-    const { error } = await supabase.from("pre_approved_emails").insert({
-      email,
-      added_by: currentUser.email,
-      added_at: new Date().toISOString(),
-    })
-    if (error) showToast("Error adding email: " + error.message)
-    else {
-      setPreApproved(prev => [{ email, added_by: currentUser.email, added_at: new Date().toISOString() }, ...prev])
-      setNewPreEmail("")
-      showToast(`✓ ${email} pre-approved`)
-    }
+    try {
+      const { error } = await supabase.from("pre_approved_emails").insert({
+        email,
+        added_by: currentUser.email,
+        added_at: new Date().toISOString(),
+      })
+      if (error) { logError("addPreApproved", error); showToast("Error adding email — try again") }
+      else {
+        setPreApproved(prev => [{ email, added_by: currentUser.email, added_at: new Date().toISOString() }, ...prev])
+        setNewPreEmail("")
+        showToast(`✓ ${email} pre-approved`)
+      }
+    } catch (err) { logError("addPreApproved", err); showToast("Unexpected error — check connection") }
     setAddingPreEmail(false)
   }
 
   const removePreApproved = async (email) => {
     if (!window.confirm(`Remove ${email} from pre-approved list?`)) return
-    const { error } = await supabase.from("pre_approved_emails").delete().eq("email", email)
-    if (error) showToast("Error removing email")
-    else { setPreApproved(prev => prev.filter(p => p.email !== email)); showToast(`Removed ${email}`) }
+    try {
+      const { error } = await supabase.from("pre_approved_emails").delete().eq("email", email)
+      if (error) { logError("removePreApproved", error); showToast("Error removing email — try again") }
+      else { setPreApproved(prev => prev.filter(p => p.email !== email)); showToast(`Removed ${email}`) }
+    } catch (err) { logError("removePreApproved", err); showToast("Unexpected error — check connection") }
   }
 
   // ── Theme tokens ───────────────────────────────────────────

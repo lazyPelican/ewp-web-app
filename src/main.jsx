@@ -30,10 +30,12 @@ const suspenseFallback = (
 function Root() {
   const [session, setSession] = useState(null)
   const [approvalStatus, setApprovalStatus] = useState(null) // null | "pending" | "approved" | "rejected"
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showAdmin, setShowAdmin] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
 
+  // VITE_ADMIN_EMAILS kept as a fast UI hint; authoritative check is the DB is_admin() RPC below
   const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "")
     .split(",").map(e => e.trim().toLowerCase())
 
@@ -70,38 +72,59 @@ function Root() {
   }, [dark])
 
   const checkApproval = async (user) => {
-    // Admins are always approved
-    if (ADMIN_EMAILS.includes(user.email?.toLowerCase())) {
-      setApprovalStatus("approved")
-      setLoading(false)
-      return
-    }
+    try {
+      // ── Admin check: DB is authoritative; env var is a fast first guess ──
+      const clientSideAdmin = ADMIN_EMAILS.includes(user.email?.toLowerCase())
 
-    const { data, error } = await supabase
-      .from("user_approvals")
-      .select("status")
-      .eq("user_id", user.id)
-      .single()
+      // Try DB-backed admin verification (requires is_admin() RPC + admins table)
+      let dbAdmin = false
+      try {
+        const { data: adminResult } = await supabase.rpc("is_admin")
+        dbAdmin = !!adminResult
+      } catch {
+        // RLS SQL not yet applied — fall back to client-side check only
+        dbAdmin = clientSideAdmin
+      }
 
-    if (error || !data) {
-      // First time sign-in — check if email is pre-approved
-      const { data: preApproved } = await supabase
-        .from("pre_approved_emails")
-        .select("email")
-        .eq("email", user.email?.toLowerCase())
-        .maybeSingle()
+      const adminConfirmed = dbAdmin || clientSideAdmin
+      setIsAdmin(adminConfirmed)
 
-      const status = preApproved ? "approved" : "pending"
-      await supabase.from("user_approvals").upsert({
-        user_id: user.id,
-        email: user.email,
-        status,
-        created_at: new Date().toISOString(),
-        ...(preApproved ? { reviewed_at: new Date().toISOString(), reviewed_by: "pre-approved" } : {}),
-      }, { onConflict: "user_id" })
-      setApprovalStatus(status)
-    } else {
-      setApprovalStatus(data.status)
+      if (adminConfirmed) {
+        setApprovalStatus("approved")
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase
+        .from("user_approvals")
+        .select("status")
+        .eq("user_id", user.id)
+        .single()
+
+      if (error || !data) {
+        // First time sign-in — check if email is pre-approved
+        const { data: preApproved } = await supabase
+          .from("pre_approved_emails")
+          .select("email")
+          .eq("email", user.email?.toLowerCase())
+          .maybeSingle()
+
+        const status = preApproved ? "approved" : "pending"
+        await supabase.from("user_approvals").upsert({
+          user_id: user.id,
+          email: user.email,
+          status,
+          created_at: new Date().toISOString(),
+          ...(preApproved ? { reviewed_at: new Date().toISOString(), reviewed_by: "pre-approved" } : {}),
+        }, { onConflict: "user_id" })
+        setApprovalStatus(status)
+      } else {
+        setApprovalStatus(data.status)
+      }
+    } catch (err) {
+      logError("checkApproval", err)
+      // On unexpected error, keep loading=false so user isn't stuck
+      setApprovalStatus("pending")
     }
 
     setLoading(false)
@@ -231,8 +254,7 @@ function Root() {
       </div>
     )
   } else {
-    // Approved — show the app (with optional admin panel link for admins)
-    const isAdmin = ADMIN_EMAILS.includes(session.user.email?.toLowerCase())
+    // Approved — show the app (isAdmin is set by DB-backed check in checkApproval)
     content = (
       <Suspense fallback={suspenseFallback}>
         {showAdmin
