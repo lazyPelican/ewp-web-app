@@ -16,6 +16,25 @@ let PRICING = DEFAULT_PRICING;
 const fmt = (n) => n == null ? "$0.00" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 const genId = () => "EWP" + new Date().toISOString().replace(/[-T:.Z]/g, "").slice(0, 14);
 
+// Generate a smart copy name: strips existing "Copy N" suffix, then assigns the next number.
+// e.g. "Kitchen" → "Kitchen Copy 2", "Kitchen Copy 2" → "Kitchen Copy 3"
+// existingNames is an array of current names to find the highest used number.
+const makeCopyName = (srcName, existingNames = []) => {
+  const base = (srcName || "")
+    .replace(/\s+Copy\s+\d+\s*$/i, "")  // strip " Copy N"
+    .replace(/\s+Copy\s*$/i, "")          // strip " Copy"
+    .replace(/\s+\(Copy(?:\s+\d+)?\)\s*$/i, "") // strip " (Copy N)" or " (Copy)"
+    .trim();
+  const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`^${escaped}\\s+Copy(?:\\s+(\\d+))?\\s*$`, "i");
+  let max = 1; // treat the original as #1
+  existingNames.forEach(name => {
+    const m = (name || "").match(re);
+    if (m) max = Math.max(max, m[1] ? parseInt(m[1]) : 1);
+  });
+  return `${base} Copy ${max + 1}`;
+};
+
 // Escape user-supplied text before inserting into PDF HTML templates
 const escHtml = (s) => String(s ?? "")
   .replace(/&/g, "&amp;")
@@ -723,6 +742,9 @@ const styles = `
     background: var(--input-focus-bg);
     transform: translateY(-1px);
   }
+  /* Native date-picker calendar follows the app's colour scheme */
+  input[type="date"] { color-scheme: light; }
+  .dark input[type="date"] { color-scheme: dark; }
 
   /* ── PROJECT ROWS ── */
   .project-list { display: flex; flex-direction: column; gap: 8px; }
@@ -2469,7 +2491,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     const src = projects[i];
     const newId = genId();
     const duped = {
-      project: { ...src.project, id: newId, name: src.project.name + " (Copy)" },
+      project: { ...src.project, id: newId, name: makeCopyName(src.project.name, projects.map(p => p.project.name)) },
       rooms: src.rooms.map(r => ({ ...r, id: Date.now() + Math.random() })),
     };
     const { error } = await supabase.from("projects").insert({
@@ -2755,7 +2777,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               onAddRoom={addRoom} onRemoveRoom={removeRoom}
               onDuplicateRoom={(i) => {
                 const src = rooms[i];
-                const duped = { ...src, id: Date.now() + Math.random(), name: src.name + " (Copy)" };
+                const duped = { ...src, id: Date.now() + Math.random(), name: makeCopyName(src.name, rooms.map(r => r.name)) };
                 setRooms(prev => { const next = [...prev]; next.splice(i + 1, 0, duped); return next; });
               }}
               onProjectChange={d => setProject(p => ({ ...p, ...d }))}
