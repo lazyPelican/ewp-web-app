@@ -2,6 +2,8 @@ import React, { useState, useEffect, Suspense, lazy } from "react"
 import ReactDOM from "react-dom/client"
 import "./global.css"
 import { supabase } from "./supabase.js"
+import ErrorBoundary from "./ErrorBoundary.jsx"
+import { logError } from "./logger.js"
 
 const Auth = lazy(() => import("./Auth.jsx"))
 const PendingApproval = lazy(() => import("./PendingApproval.jsx"))
@@ -37,7 +39,8 @@ function Root() {
 
   // Listen for auth state changes
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) logError("getSession", error)
       setSession(session)
       if (session) checkApproval(session.user)
       else setLoading(false)
@@ -266,6 +269,8 @@ function Root() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Root />
+    <ErrorBoundary>
+      <Root />
+    </ErrorBoundary>
   </React.StrictMode>
 )

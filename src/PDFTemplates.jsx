@@ -366,6 +366,12 @@ const fmtD = (d) => {
   })
 }
 
+// Truncate long strings so PDF cells never overflow their column
+const trunc = (str, max = 40) => {
+  const s = String(str ?? '')
+  return s.length > max ? s.slice(0, max - 1) + '…' : s
+}
+
 // ── SHARED LAYOUT COMPONENTS ───────────────────────────────────────────────
 
 function PageHeader({ docType, docId }) {
@@ -400,7 +406,7 @@ function InfoStrip({ cells }) {
           ]}
         >
           <Text style={s.icLbl}>{cell.label}</Text>
-          <Text style={s.icVal}>{cell.value || '—'}</Text>
+          <Text style={s.icVal}>{trunc(cell.value, 48) || '—'}</Text>
         </View>
       ))}
     </View>
@@ -552,7 +558,7 @@ function InternalSummaryPage({
             colDefs={roomTableCols}
             isEven={i % 2 === 1}
             cells={[
-              { val: r.name || `Room ${i + 1}` },
+              { val: trunc(r.name || `Room ${i + 1}`, 36) },
               { val: fmtN(r.cab), right: true },
               { val: fmtN(r.upg), right: true },
               { val: fmtN(r.fin), right: true },
@@ -572,7 +578,7 @@ function InternalSummaryPage({
         {delivery > 0 && (
           <GrandBar
             label="Delivery"
-            sub={project.deliveryNotes || undefined}
+            sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined}
             value={delivery}
             standalone
             small
@@ -689,9 +695,9 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
     const adj  = parseFloat(item.adjPct) || 0
     const tot  = sp * qty * (1 + adj / 100)
     return [
-      { val: item.product },
-      { val: item.construction === 'Not Applicable' ? '—' : (item.construction || '—') },
-      { val: item.wood === 'Not Applicable' ? '—' : (item.wood || '—') },
+      { val: trunc(item.product, 36) },
+      { val: item.construction === 'Not Applicable' ? '—' : trunc(item.construction || '—', 22) },
+      { val: item.wood === 'Not Applicable' ? '—' : trunc(item.wood || '—', 18) },
       { val: con?.premium ? `${(con.premium * 100).toFixed(0)}%` : '0%', right: true },
       { val: wood?.premium ? `${(wood.premium * 100).toFixed(0)}%` : '0%', right: true },
       { val: String(qty), right: true },
@@ -707,13 +713,13 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
     const adj = parseFloat(item.adjPct) || 0
     const tot = (upg?.price || 0) * qty * (1 + adj / 100)
     return [
-      { val: item.upgrade },
+      { val: trunc(item.upgrade, 44) },
       { val: String(qty), right: true },
       { val: fmtN(upg?.price || 0), right: true },
       { val: fmtN((upg?.price || 0) * qty), right: true },
       { val: adj ? `${adj}%` : '—', right: true },
       { val: fmtN(tot), amt: true },
-      { val: item.notes || '' },
+      { val: trunc(item.notes || '', 30) },
     ]
   })
 
@@ -724,13 +730,13 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
     const sub2 = (fin?.pricePerLF || 0) * lf
     const tot  = sub2 * (1 + adj / 100)
     return [
-      { val: item.type },
+      { val: trunc(item.type, 38) },
       { val: String(lf), right: true },
       { val: `${fmtN(fin?.pricePerLF || 0)}/LF`, right: true },
       { val: fmtN(sub2), right: true },
       { val: adj ? `${adj}%` : '—', right: true },
       { val: fmtN(tot), amt: true },
-      { val: item.notes || '' },
+      { val: trunc(item.notes || '', 30) },
     ]
   })
 
@@ -750,8 +756,8 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
   return (
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
-        docType={`QUOTE — ${room.name || `Room ${roomIndex + 1}`}`}
-        docId={`${project.id}  ·  ${project.name}  ·  ${fmtD(project.bidDate)}`}
+        docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
+        docId={`${project.id}  ·  ${trunc(project.name, 40)}  ·  ${fmtD(project.bidDate)}`}
       />
 
       <InfoStrip cells={[
@@ -812,7 +818,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
         <TotalsStrip4 cab={rt.cab} upg={rt.upg} fin={rt.fin} inst={rt.inst} />
         <GrandBar
           label="Room Grand Total"
-          sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
+          sub={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
           value={rt.total}
         />
         <PdfFooter preparedBy={preparedBy} />
@@ -892,7 +898,7 @@ function CustomerSummaryPage({
             colDefs={roomTableCols}
             isEven={i % 2 === 1}
             cells={[
-              { val: r.name || `Room ${i + 1}` },
+              { val: trunc(r.name || `Room ${i + 1}`, 50) },
               { val: fmtN(r.total), right: true },
               { val: fmtN(r.total), amt: true },
             ]}
@@ -909,7 +915,7 @@ function CustomerSummaryPage({
         {delivery > 0 && (
           <GrandBar
             label="Delivery"
-            sub={project.deliveryNotes || undefined}
+            sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined}
             value={delivery}
             standalone
             small
@@ -982,8 +988,8 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
   return (
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
-        docType={`QUOTE — ${room.name || `Room ${roomIndex + 1}`}`}
-        docId={`${project.id}  ·  ${project.name}  ·  ${fmtD(project.bidDate)}`}
+        docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
+        docId={`${project.id}  ·  ${trunc(project.name, 40)}  ·  ${fmtD(project.bidDate)}`}
       />
 
       <InfoStrip cells={[
@@ -1012,7 +1018,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
       <View wrap={false}>
         <GrandBar
           label="Room Total"
-          sub={`${room.name || `Room ${roomIndex + 1}`}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
+          sub={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
           value={rt.total}
           standalone
         />
