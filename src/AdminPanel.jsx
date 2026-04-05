@@ -376,6 +376,7 @@ export default function AdminPanel({ currentUser, onBack }) {
   }
 
   const deleteUser = async (userId, email) => {
+    if (ADMIN_EMAILS.includes(email?.toLowerCase())) { showToast("⛔ Cannot delete an admin account"); return }
     if (!window.confirm(`Remove ${email} from the system? They will lose all access immediately.`)) return
     setActionLoading(userId)
     const { error } = await supabase.from("user_approvals").delete().eq("user_id", userId)
