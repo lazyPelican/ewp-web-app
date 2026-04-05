@@ -167,6 +167,9 @@ export default function AdminPanel({ currentUser, onBack }) {
   const [resetModal, setResetModal] = useState(null) // null | { email }
   const [resetSent, setResetSent] = useState(false)
 
+  // Root-access blocked modal
+  const [rootBlockModal, setRootBlockModal] = useState(false)
+
   const [toast, setToast] = useState(null)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
 
@@ -376,10 +379,13 @@ export default function AdminPanel({ currentUser, onBack }) {
   }
 
   const deleteUser = async (userId, email) => {
-    if (ADMIN_EMAILS.includes(email?.toLowerCase())) { showToast("⛔ Cannot delete an admin account"); return }
-    if (!window.confirm(`Remove ${email} from the system? They will lose all access immediately.`)) return
+    if (ADMIN_EMAILS.includes(email?.toLowerCase())) { setRootBlockModal(true); return }
+    if (!window.confirm(`Remove ${email}? They will lose access immediately and cannot sign back in.`)) return
     setActionLoading(userId)
-    const { error } = await supabase.from("user_approvals").delete().eq("user_id", userId)
+    // Reject instead of delete — prevents the user from creating a new pending row on next login
+    const { error } = await supabase.from("user_approvals")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
+      .eq("user_id", userId)
     if (error) showToast("Error removing user")
     else { setUsers(prev => prev.filter(u => u.user_id !== userId)); showToast(`✓ ${email} removed`) }
     setActionLoading(null)
@@ -745,6 +751,25 @@ export default function AdminPanel({ currentUser, onBack }) {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── ROOT ACCESS BLOCK MODAL ── */}
+        {rootBlockModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
+            onClick={e => { if (e.target === e.currentTarget) setRootBlockModal(false) }}>
+            <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 12, padding: 32, width: 420, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.35)", textAlign: "center" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: t.text, fontFamily: serif, marginBottom: 8 }}>Root Access Required</div>
+              <div style={{ fontSize: 13, color: t.textMuted, lineHeight: 1.6, marginBottom: 24 }}>
+                This account has root-level privileges and cannot be deleted from the Admin Panel.<br /><br />
+                To remove this account, access the <strong style={{ color: t.text }}>Supabase Authentication dashboard</strong> directly using your project credentials.
+              </div>
+              <button onClick={() => setRootBlockModal(false)}
+                style={{ padding: "9px 28px", borderRadius: 7, border: "none", background: t.gold, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                Understood
+              </button>
+            </div>
           </div>
         )}
 
