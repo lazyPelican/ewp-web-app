@@ -84,10 +84,18 @@ const s = StyleSheet.create({
   },
   docId: {
     fontFamily: FONT_SANS,
+    fontSize: 10,
+    color: C.muted,
+    letterSpacing: 0.8,
+    marginTop: 4,
+    textAlign: 'right',
+  },
+  docDate: {
+    fontFamily: FONT_SANS,
     fontSize: 7,
     color: C.muted,
-    letterSpacing: 0.6,
-    marginTop: 3,
+    letterSpacing: 0.5,
+    marginTop: 2,
     textAlign: 'right',
   },
 
@@ -374,7 +382,7 @@ const trunc = (str, max = 40) => {
 
 // ── SHARED LAYOUT COMPONENTS ───────────────────────────────────────────────
 
-function PageHeader({ docType, docId }) {
+function PageHeader({ docType, docId, docDate }) {
   return (
     <View style={s.hdr} fixed>
       <View style={s.coBrand}>
@@ -387,6 +395,7 @@ function PageHeader({ docType, docId }) {
       <View>
         <Text style={s.docType}>{docType}</Text>
         <Text style={s.docId}>{docId}</Text>
+        {docDate && <Text style={s.docDate}>{docDate}</Text>}
       </View>
     </View>
   )
@@ -537,7 +546,8 @@ function InternalSummaryPage({
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType="QUOTE — INTERNAL USE"
-        docId={`${project.id}  ·  ${fmtD(project.bidDate)}`}
+        docId={project.id}
+        docDate={fmtD(project.bidDate)}
       />
 
       <InfoStrip cells={[
@@ -757,7 +767,8 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
-        docId={`${project.id}  ·  ${trunc(project.name, 40)}  ·  ${fmtD(project.bidDate)}`}
+        docId={`${project.id}  ·  ${trunc(project.name, 40)}`}
+        docDate={fmtD(project.bidDate)}
       />
 
       <InfoStrip cells={[
@@ -877,7 +888,8 @@ function CustomerSummaryPage({
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType="QUOTE"
-        docId={`${project.id}  ·  ${fmtD(project.bidDate)}`}
+        docId={project.id}
+        docDate={fmtD(project.bidDate)}
       />
 
       <InfoStrip cells={[
@@ -989,7 +1001,8 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
-        docId={`${project.id}  ·  ${trunc(project.name, 40)}  ·  ${fmtD(project.bidDate)}`}
+        docId={`${project.id}  ·  ${trunc(project.name, 40)}`}
+        docDate={fmtD(project.bidDate)}
       />
 
       <InfoStrip cells={[

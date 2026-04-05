@@ -14,7 +14,15 @@ let PRICING = DEFAULT_PRICING;
 
 // ── HELPERS ────────────────────────────────────────────────────
 const fmt = (n) => n == null ? "$0.00" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-const genId = () => "EWP" + new Date().toISOString().replace(/[-T:.Z]/g, "").slice(0, 14);
+const genId = () => {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const dy = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mn = String(d.getMinutes()).padStart(2, '0');
+  return `B-${yy}${mo}${dy}-${hh}${mn}`;
+};
 
 // Generate a smart copy name: strips existing "Copy N" suffix, then assigns the next number.
 // e.g. "Kitchen" → "Kitchen Copy 2", "Kitchen Copy 2" → "Kitchen Copy 3"
@@ -219,7 +227,9 @@ const styles = `
     letter-spacing: 0.2em; text-transform: uppercase;
     margin-top: 7px; font-weight: 600;
   }
-  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .topbar-right-btns { display: flex; align-items: center; gap: 8px; }
+  .topbar-welcome { font-size: 11px; color: var(--muted); font-family: 'DM Sans', sans-serif; letter-spacing: 0.04em; }
 
   /* ── STEPPER (see animation block below) ── */
   .stepper {
@@ -2242,14 +2252,20 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
         p.project.name.toLowerCase().includes(q) ||
         p.project.address.toLowerCase().includes(q) ||
         (p.project.contactName || '').toLowerCase().includes(q) ||
-        (p.project.contactPhone || '').toLowerCase().includes(q)
+        (p.project.contactPhone || '').toLowerCase().includes(q) ||
+        (p.project.id || '').toLowerCase().includes(q)
       )
     })
     .sort((a, b) => {
-      // Project IDs are "EWP" + YYYYMMDDHHmmss — sort descending (newest first)
-      const idA = a.project.id || ""
-      const idB = b.project.id || ""
-      return idB.localeCompare(idA)
+      // Extract a sortable date string from both ID formats:
+      //   New: B-yymmdd-hhmm  → "20" + yymmdd + hhmm
+      //   Legacy: EWPYYYYMMDDHHmmss → YYYYMMDDHHmmss
+      const getIdTime = (id = '') => {
+        if (id.startsWith('B-')) return '20' + id.slice(2).replace('-', '')
+        if (id.startsWith('EWP')) return id.slice(3)
+        return id
+      }
+      return getIdTime(b.project.id || '').localeCompare(getIdTime(a.project.id || ''))
     })
 
   const totalRevenue = projects.reduce((s, p) => {
@@ -2300,7 +2316,7 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
 
       {/* Search */}
       <div className="dashboard-search-wrap" style={{ marginBottom: 16 }}>
-        <input className="dashboard-search" placeholder="🔍  Search by project, client name, phone, or address…" value={search} onChange={e => setSearch(e.target.value)}
+        <input className="dashboard-search" placeholder="🔍  Search by project name, ID, client, phone, or address…" value={search} onChange={e => setSearch(e.target.value)}
           aria-label="Search estimates"
           style={{ background: "var(--card-bg)" }} />
       </div>
@@ -2668,54 +2684,59 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             </div>
           </div>
           <div className="topbar-right">
-            {isAdmin && (
-              <button onClick={onOpenAdmin} aria-label="Open admin panel" style={{
-                background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                color: "var(--ewp-slate)", fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 6,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-              }}>
-                👥 Admin
+            <div className="topbar-right-btns">
+              {isAdmin && (
+                <button onClick={onOpenAdmin} aria-label="Open admin panel" style={{
+                  background: "transparent",
+                  border: "1px solid rgba(73,77,77,0.25)",
+                  borderRadius: 3, padding: "6px 14px", cursor: "pointer",
+                  color: "var(--ewp-slate)", fontSize: 11,
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                  display: "flex", alignItems: "center", gap: 6,
+                  letterSpacing: "0.06em", textTransform: "uppercase",
+                }}>
+                  👥 Admin
+                </button>
+              )}
+              <button
+                onClick={() => setDark(d => !d)}
+                title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+                aria-pressed={dark}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(73,77,77,0.25)",
+                  borderRadius: 3,
+                  padding: "6px 14px",
+                  cursor: "pointer",
+                  color: "var(--ewp-slate)",
+                  fontSize: 11,
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 700,
+                  display: "flex", alignItems: "center", gap: 6,
+                  transition: "all 0.15s",
+                  letterSpacing: "0.06em", textTransform: "uppercase",
+                }}>
+                {dark ? "☀ Light" : "☾ Dark"}
               </button>
+              <button
+                onClick={() => import("./supabase.js").then(m => m.supabase.auth.signOut())}
+                aria-label="Sign out"
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(73,77,77,0.25)",
+                  borderRadius: 3, padding: "6px 14px", cursor: "pointer",
+                  color: "var(--ewp-slate)", fontSize: 11,
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                  display: "flex", alignItems: "center", gap: 6,
+                  letterSpacing: "0.06em", textTransform: "uppercase",
+                }}>
+                Sign Out
+              </button>
+            </div>
+            {preparedBy && (
+              <div className="topbar-welcome">Welcome, {preparedBy}</div>
             )}
-            <button
-              onClick={() => setDark(d => !d)}
-              title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-              aria-pressed={dark}
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3,
-                padding: "6px 14px",
-                cursor: "pointer",
-                color: "var(--ewp-slate)",
-                fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 6,
-                transition: "all 0.15s",
-                letterSpacing: "0.06em", textTransform: "uppercase",
-              }}>
-              {dark ? "☀ Light" : "☾ Dark"}
-            </button>
-            <button
-              onClick={() => import("./supabase.js").then(m => m.supabase.auth.signOut())}
-              aria-label="Sign out"
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                color: "var(--ewp-slate)", fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 6,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-              }}>
-              Sign Out
-            </button>
           </div>
         </div>
 
