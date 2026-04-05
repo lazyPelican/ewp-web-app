@@ -113,6 +113,8 @@ function Root() {
         await supabase.from("user_approvals").upsert({
           user_id: user.id,
           email: user.email,
+          first_name: user.user_metadata?.first_name || "",
+          last_name:  user.user_metadata?.last_name  || "",
           status,
           created_at: new Date().toISOString(),
           ...(preApproved ? { reviewed_at: new Date().toISOString(), reviewed_by: "pre-approved" } : {}),

@@ -716,6 +716,11 @@ export default function AdminPanel({ currentUser, onBack }) {
               ) : pending.map(u => (
                 <div key={u.user_id} className="admin-user-row" style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: "16px 20px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
+                    {(u.first_name || u.last_name) && (
+                      <div style={{ fontWeight: 700, fontSize: 15, color: t.text, marginBottom: 2 }}>
+                        {[u.first_name, u.last_name].filter(Boolean).join(" ")}
+                      </div>
+                    )}
                     <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{u.email}</div>
                     <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
                       Requested {new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -750,6 +755,11 @@ export default function AdminPanel({ currentUser, onBack }) {
                   return (
                     <div key={u.user_id} className="admin-user-row" style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: "14px 20px", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div>
+                        {(u.first_name || u.last_name) && (
+                          <div style={{ fontWeight: 600, fontSize: 14, color: t.text, marginBottom: 1 }}>
+                            {[u.first_name, u.last_name].filter(Boolean).join(" ")}
+                          </div>
+                        )}
                         <div style={{ fontWeight: 500, fontSize: 14, color: t.text }}>{u.email}</div>
                         <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
                           Reviewed by {u.reviewed_by || "admin"} · {u.reviewed_at ? new Date(u.reviewed_at).toLocaleDateString() : "—"}
