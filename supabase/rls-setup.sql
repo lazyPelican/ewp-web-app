@@ -79,9 +79,14 @@ CREATE POLICY "Authenticated users can delete projects"
 ALTER TABLE public.projects
   ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
-ALTER TABLE public.projects
-  ADD CONSTRAINT IF NOT EXISTS projects_id_not_empty   CHECK (char_length(trim(id))   > 0),
-  ADD CONSTRAINT IF NOT EXISTS projects_name_not_empty CHECK (char_length(trim(name)) > 0);
+-- Add CHECK constraints only if they don't already exist (PostgreSQL-safe)
+DO $$ BEGIN
+  ALTER TABLE public.projects ADD CONSTRAINT projects_id_not_empty   CHECK (char_length(trim(id))   > 0);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.projects ADD CONSTRAINT projects_name_not_empty CHECK (char_length(trim(name)) > 0);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Auto-update updated_at on every write
 CREATE OR REPLACE FUNCTION public.set_updated_at()
