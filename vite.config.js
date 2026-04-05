@@ -2,12 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 const buildDate = (() => {
-  const d = new Date()
-  const dd   = String(d.getDate()).padStart(2, '0')
-  const mm   = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  const hh   = String(d.getHours()).padStart(2, '0')
-  const min  = String(d.getMinutes()).padStart(2, '0')
+  // Pakistan Standard Time = UTC+5
+  const d = new Date(new Date().getTime() + 5 * 60 * 60 * 1000)
+  const dd   = String(d.getUTCDate()).padStart(2, '0')
+  const mm   = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const yyyy = d.getUTCFullYear()
+  const hh   = String(d.getUTCHours()).padStart(2, '0')
+  const min  = String(d.getUTCMinutes()).padStart(2, '0')
   return `${dd}${mm}${yyyy}_${hh}${min}`
 })()
 
