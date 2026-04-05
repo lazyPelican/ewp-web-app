@@ -6,6 +6,12 @@ import {
   Document, Page, View, Text, Image, StyleSheet, Font, pdf
 } from '@react-pdf/renderer'
 
+// Logo: must be an absolute URL so @react-pdf/image uses fetchRemoteFile (fetch API)
+// instead of fetchLocalFile (Node fs) which fails in the browser.
+const LOGO_SRC = typeof window !== 'undefined'
+  ? `${window.location.origin}/favicon-512_dark.png`
+  : '/favicon-512_dark.png'
+
 // Built-in PDF standard fonts — no registration needed, no network fetch.
 // IMPORTANT: never combine these with fontWeight; use the explicit Bold variant instead.
 const FONT_SANS    = 'Helvetica'
@@ -386,7 +392,7 @@ function PageHeader({ docType, docId, docDate }) {
   return (
     <View style={s.hdr} fixed>
       <View style={s.coBrand}>
-        <Image style={s.coLogo} src="/favicon-512_dark.png" />
+        <Image style={s.coLogo} src={LOGO_SRC} />
         <View>
           <Text style={s.coName}>Engstrom Wood Products</Text>
           <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
