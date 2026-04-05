@@ -1,15 +1,20 @@
 // Centralized error/event logger
-// To add Sentry later: import * as Sentry from "@sentry/react" and call Sentry.captureException(err)
+// Production: console output is suppressed — only Sentry (when integrated) will capture.
+// Development: full console output for debugging.
+// To add Sentry: import * as Sentry from "@sentry/react" and uncomment the Sentry lines below.
 
-const isDev = import.meta.env.DEV
+const isDev  = import.meta.env.DEV
+const isProd = import.meta.env.PROD
 
 export function logError(context, error, extra = {}) {
-  const msg = error?.message || String(error)
-  console.error(`[EWP:${context}]`, msg, extra)
   // Future: Sentry.captureException(error, { extra: { context, ...extra } })
+  if (isDev) {
+    console.error(`[EWP:${context}]`, error?.message || String(error), extra)
+  }
 }
 
 export function logWarn(context, message, extra = {}) {
+  // Future: Sentry.captureMessage(message, { level: "warning", extra: { context, ...extra } })
   if (isDev) console.warn(`[EWP:${context}]`, message, extra)
 }
 
@@ -23,6 +28,6 @@ export async function safeAsync(context, fn, onError) {
     return await fn()
   } catch (err) {
     logError(context, err)
-    onError?.(err?.message || "An unexpected error occurred.")
+    onError?.(isProd ? "An unexpected error occurred." : (err?.message || "An unexpected error occurred."))
   }
 }

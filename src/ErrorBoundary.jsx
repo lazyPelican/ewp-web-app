@@ -1,17 +1,25 @@
 import { Component } from "react"
 
+const isDev = import.meta.env?.DEV ?? true
+
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false, errorId: null }
   }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error }
+  static getDerivedStateFromError() {
+    // Generate a short reference ID so users can report it without exposing stack details
+    const errorId = Math.random().toString(36).slice(2, 8).toUpperCase()
+    return { hasError: true, errorId }
   }
 
   componentDidCatch(error, info) {
-    console.error("[ErrorBoundary] Uncaught error:", error, info)
+    // Only log to console in development; in production only Sentry (when added) should capture this
+    if (isDev) {
+      console.error("[ErrorBoundary] Uncaught error:", error, info)
+    }
+    // Future: Sentry.captureException(error, { extra: { componentStack: info.componentStack } })
   }
 
   render() {
@@ -38,9 +46,9 @@ export default class ErrorBoundary extends Component {
           <div style={{
             background: "#F5F0E8", border: "1px solid #EDE8DF", borderRadius: 6,
             padding: "10px 14px", fontSize: 11, color: "#A08060", fontFamily: "monospace",
-            textAlign: "left", marginBottom: 28, wordBreak: "break-all",
+            textAlign: "left", marginBottom: 28,
           }}>
-            {this.state.error?.message || "Unknown error"}
+            Error ref: {this.state.errorId}
           </div>
           <button
             onClick={() => window.location.reload()}

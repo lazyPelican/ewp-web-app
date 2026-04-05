@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
+import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
 
@@ -273,7 +274,11 @@ export default function AdminPanel({ currentUser, onBack }) {
   const updateCell = (tableKey, rowIdx, colKey, value) => {
     setPricing(prev => {
       const next = { ...prev, [tableKey]: prev[tableKey].map((row, i) =>
-        i === rowIdx ? { ...row, [colKey]: colKey === "name" ? value : (value === "" ? "" : Number(value)) } : row
+        i === rowIdx
+          ? { ...row, [colKey]: colKey === "name"
+              ? sanitizeName(value, 120)
+              : (value === "" ? "" : Number(sanitizeNumeric(String(value)))) }
+          : row
       )}
       return next
     })
@@ -409,8 +414,8 @@ export default function AdminPanel({ currentUser, onBack }) {
   }
 
   const addPreApproved = async () => {
-    const email = newPreEmail.trim().toLowerCase()
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast("Enter a valid email address"); return }
+    const email = sanitizeEmail(newPreEmail)
+    if (!email || !isValidEmail(email)) { showToast("Enter a valid email address"); return }
     if (preApproved.some(p => p.email === email)) { showToast("Already in pre-approved list"); return }
     setAddingPreEmail(true)
     const { error } = await supabase.from("pre_approved_emails").insert({

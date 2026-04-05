@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { supabase } from "./supabase.js"
+import { sanitizeName, sanitizeEmail, isValidEmail } from "./sanitize.js"
 
 export default function Auth() {
   const [mode, setMode] = useState("signin")
@@ -49,23 +50,29 @@ export default function Auth() {
   const reset = () => { setError(null); setSuccess(null) }
 
   const handleSignIn = async () => {
-    if (!email || !password) { setError("Please enter your email and password."); return }
+    const cleanEmail = sanitizeEmail(email)
+    if (!cleanEmail || !password) { setError("Please enter your email and password."); return }
+    if (!isValidEmail(cleanEmail)) { setError("Please enter a valid email address."); return }
     setLoading(true); reset()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password })
     if (error) setError(error.message)
     setLoading(false)
   }
 
   const handleSignUp = async () => {
-    if (!firstName.trim() || !lastName.trim()) { setError("Please enter your first and last name."); return }
-    if (!email || !password) { setError("Please fill in all fields."); return }
+    const cleanFirst = sanitizeName(firstName, 60)
+    const cleanLast  = sanitizeName(lastName, 60)
+    const cleanEmail = sanitizeEmail(email)
+    if (!cleanFirst || !cleanLast) { setError("Please enter your first and last name."); return }
+    if (!cleanEmail || !password) { setError("Please fill in all fields."); return }
+    if (!isValidEmail(cleanEmail)) { setError("Please enter a valid email address."); return }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return }
     if (password !== confirmPassword) { setError("Passwords do not match."); return }
     setLoading(true); reset()
     const { error } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
-      options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
+      options: { data: { first_name: cleanFirst, last_name: cleanLast } },
     })
     if (error) {
       setError(error.message)

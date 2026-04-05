@@ -26,14 +26,63 @@ export const isValidEmail = (str) =>
 // Sanitize an entire project object before saving
 export const sanitizeProject = (p) => ({
   ...p,
-  name:            sanitizeName(p.name, 120),
-  address:         sanitizeText(p.address, 200),
-  contactName:     sanitizeName(p.contactName, 80),
-  contactPhone:    sanitizeText(p.contactPhone, 30),
-  email:           sanitizeEmail(p.email),
-  contractorName:  sanitizeName(p.contractorName, 80),
+  name:              sanitizeName(p.name, 120),
+  address:           sanitizeText(p.address, 200),
+  contactName:       sanitizeName(p.contactName, 80),
+  contactPhone:      sanitizeText(p.contactPhone, 30),
+  email:             sanitizeEmail(p.email),
+  contractorName:    sanitizeName(p.contractorName, 80),
   contractorContact: sanitizeText(p.contractorContact, 80),
-  deliveryNotes:   sanitizeText(p.deliveryNotes, 300),
-  deliveryAmount:  sanitizeNumeric(p.deliveryAmount),
-  taxRate:         sanitizeNumeric(p.taxRate),
+  deliveryNotes:     sanitizeText(p.deliveryNotes, 300),
+  deliveryAmount:    sanitizeNumeric(p.deliveryAmount),
+  taxRate:           sanitizeNumeric(p.taxRate),
 })
+
+// Sanitize a single cabinetry line item
+const sanitizeCabItem = (item) => ({
+  ...item,
+  product:      sanitizeName(item.product, 80),
+  construction: sanitizeName(item.construction, 60),
+  wood:         sanitizeName(item.wood, 60),
+  qty:          sanitizeNumeric(item.qty),
+  adjPct:       sanitizeNumeric(item.adjPct),
+})
+
+// Sanitize a single upgrade line item
+const sanitizeUpgItem = (item) => ({
+  ...item,
+  upgrade: sanitizeName(item.upgrade, 80),
+  qty:     sanitizeNumeric(item.qty),
+  adjPct:  sanitizeNumeric(item.adjPct),
+  notes:   sanitizeText(item.notes, 200),
+})
+
+// Sanitize a single finishing line item
+const sanitizeFinItem = (item) => ({
+  ...item,
+  type:   sanitizeName(item.type, 80),
+  lf:     sanitizeNumeric(item.lf),
+  adjPct: sanitizeNumeric(item.adjPct),
+  notes:  sanitizeText(item.notes, 200),
+})
+
+// Sanitize a room's install block
+const sanitizeInstall = (inst) => ({
+  ...inst,
+  type:   sanitizeName(inst.type, 60),
+  metric: sanitizeNumeric(inst.metric),
+  adjPct: sanitizeNumeric(inst.adjPct),
+})
+
+// Sanitize an entire room object before saving
+export const sanitizeRoom = (room) => ({
+  ...room,
+  name:       sanitizeName(room.name, 80),
+  cabinetry:  (room.cabinetry  || []).map(sanitizeCabItem),
+  upgrades:   (room.upgrades   || []).map(sanitizeUpgItem),
+  finishing:  (room.finishing  || []).map(sanitizeFinItem),
+  install:    sanitizeInstall(room.install || {}),
+})
+
+// Sanitize all rooms in an array
+export const sanitizeRooms = (rooms) => (rooms || []).map(sanitizeRoom)
