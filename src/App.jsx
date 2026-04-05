@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { exportPDFInternal as _exportPDFInternal, exportPDFCustomer as _exportPDFCustomer } from "./PDFTemplates.jsx"
@@ -164,7 +164,7 @@ const styles = `
     --char:   rgb(73, 77, 77);
     --char2:  rgb(55, 58, 58);
     --mid:    rgb(120, 125, 125);
-    --muted:  rgb(160, 163, 163);
+    --muted:  rgb(105, 108, 108);
 
     --card-bg:         #FFFFFF;
     --input-bg:        #FDFBF7;
@@ -304,7 +304,7 @@ const styles = `
   /* ── BUTTONS (see animation block below) ── */
 
   /* ── ROOM TABS (see animation block below) ── */
-  .room-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+  .room-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .room-tab-add {
     border-style: dashed;
     color: var(--gold);
@@ -1065,6 +1065,7 @@ const styles = `
     .project-row-total { margin-right: 0 !important; text-align: right; width: 100%; }
 
     .section-banner { flex-wrap: wrap; gap: 8px; }
+    .room-tabs { padding-bottom: 4px; }
 
     .toast {
       left: 12px;
@@ -1095,7 +1096,8 @@ const styles = `
   @media (max-width: 480px) {
     .summary-grid { grid-template-columns: 1fr; }
     .summary-tax-grid { grid-template-columns: 1fr !important; }
-    .data-table { min-width: 460px; }
+    .data-table { min-width: 420px; font-size: 11px; }
+    .data-table th, .data-table td { padding: 4px 4px; }
     .card-body .scrollable { margin: 0 -14px; padding: 0 14px; }
     .btn-lg { padding: 12px 20px; font-size: 11px; }
   }
@@ -1144,12 +1146,33 @@ function Toast({ msg, onDone }) {
   return <div className="toast">{msg}</div>;
 }
 
-function Field({ label, error, children }) {
+function Field({ label, error, children, hint }) {
+  // Auto-generate id from label for htmlFor association
+  const fieldId = label
+    ? `f-${label.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`
+    : undefined
+
+  // Try to inject id into the single child input/select
+  let kid = children
+  try {
+    const only = React.Children.only(children)
+    if (fieldId && only && !only.props.id) kid = React.cloneElement(only, { id: fieldId })
+  } catch { /* multiple children — skip injection */ }
+
   return (
     <div className="field">
-      {label && <label className="field-label">{label}</label>}
-      {children}
-      {error && <span className="field-error">{error}</span>}
+      {label && (
+        <label className="field-label" htmlFor={fieldId}>
+          {label}
+          {hint && (
+            <abbr title={hint} aria-label={hint}
+              style={{ marginLeft: 5, fontSize: '0.82em', cursor: 'help',
+                textDecoration: 'underline dotted', color: 'var(--mid)' }}>ⓘ</abbr>
+          )}
+        </label>
+      )}
+      {kid}
+      {error && <span className="field-error" role="alert">{error}</span>}
     </div>
   );
 }
@@ -1291,8 +1314,22 @@ function CabinetrySection({ items, masterAdj, onChange }) {
     const next = items.map((it, idx) => idx === i ? { ...it, [field]: val } : it);
     onChange(next);
   };
-  const addRow    = () => onChange([...items, { ...blankCabRow(), adjPct: masterAdj != null ? String(masterAdj) : "" }]);
-  const removeRow = (i) => { if (items.length === 1) return; onChange(items.filter((_, idx) => idx !== i)); };
+  const justAddedRef = useRef(false);
+  const newRowRef = useRef(null);
+  const addRow = () => {
+    justAddedRef.current = true;
+    onChange([...items, { ...blankCabRow(), adjPct: masterAdj != null ? String(masterAdj) : "" }]);
+  };
+  const removeRow = (i) => {
+    if (items.length === 1) return;
+    onChange(items.filter((_, idx) => idx !== i));
+  };
+  useEffect(() => {
+    if (justAddedRef.current && newRowRef.current) {
+      newRowRef.current.focus();
+      justAddedRef.current = false;
+    }
+  }, [items.length]);
 
   const subTotal = calcCabinetry(items);
 
@@ -1303,17 +1340,21 @@ function CabinetrySection({ items, masterAdj, onChange }) {
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
-        <table className="data-table">
+        <table className="data-table" aria-label="Cabinetry items">
           <thead>
             <tr>
-              <th style={{ width: 220 }}>Product Type</th>
-              <th style={{ width: 140 }}>Construction</th>
-              <th style={{ width: 130 }}>Wood Type</th>
-              <th style={{ width: 70 }}>LF / Qty</th>
-              <th style={{ width: 80 }}>% Adj</th>
-              <th style={{ width: 120 }}>Line Total</th>
-              <th style={{ width: 140 }}>Notes</th>
-              <th style={{ width: 36 }} />
+              <th scope="col" style={{ width: 220 }}>Product Type</th>
+              <th scope="col" style={{ width: 140 }}>Construction</th>
+              <th scope="col" style={{ width: 130 }}>Wood Type</th>
+              <th scope="col" style={{ width: 70 }}>
+                <abbr title="Number of units to install">LF / Qty</abbr>
+              </th>
+              <th scope="col" style={{ width: 80 }}>
+                <abbr title="Price adjustment % — positive = markup, negative = discount">% Adj</abbr>
+              </th>
+              <th scope="col" style={{ width: 120 }}>Line Total</th>
+              <th scope="col" style={{ width: 140 }}>Notes</th>
+              <th scope="col" style={{ width: 36 }} aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
@@ -1332,7 +1373,11 @@ function CabinetrySection({ items, masterAdj, onChange }) {
               return (
                 <tr key={i}>
                   <td>
-                    <select value={item.product} onChange={e => update(i, "product", e.target.value)}>
+                    <select
+                      ref={i === items.length - 1 ? newRowRef : null}
+                      aria-label={`Row ${i + 1} product type`}
+                      value={item.product}
+                      onChange={e => update(i, "product", e.target.value)}>
                       <option value="">— Select —</option>
                       {PRICING.woodwork.map(w => <option key={w.name}>{w.name}</option>)}
                     </select>
@@ -1385,16 +1430,18 @@ function UpgradesSection({ items, masterAdj, onChange }) {
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
-        <table className="data-table">
+        <table className="data-table" aria-label="Upgrades and overrides">
           <thead>
             <tr>
-              <th style={{ width: 260 }}>Upgrade / Override</th>
-              <th style={{ width: 80 }}>Qty</th>
-              <th style={{ width: 110 }}>Unit Price</th>
-              <th style={{ width: 80 }}>% Adj</th>
-              <th style={{ width: 110 }}>Total</th>
-              <th style={{ width: 140 }}>Notes</th>
-              <th style={{ width: 36 }} />
+              <th scope="col" style={{ width: 260 }}>Upgrade / Override</th>
+              <th scope="col" style={{ width: 80 }}>Qty</th>
+              <th scope="col" style={{ width: 110 }}>Unit Price</th>
+              <th scope="col" style={{ width: 80 }}>
+                <abbr title="Price adjustment % — positive = markup, negative = discount">% Adj</abbr>
+              </th>
+              <th scope="col" style={{ width: 110 }}>Total</th>
+              <th scope="col" style={{ width: 140 }}>Notes</th>
+              <th scope="col" style={{ width: 36 }} aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
@@ -1488,16 +1535,18 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
       )}
 
       <div className="scrollable">
-        <table className="data-table">
+        <table className="data-table" aria-label="Finishing items">
           <thead>
             <tr>
-              <th style={{ width: 160 }}>Finishing Type</th>
-              <th style={{ width: 100 }}>Price / LF</th>
-              <th style={{ width: 100 }}>Linear Feet</th>
-              <th style={{ width: 80 }}>% Adj</th>
-              <th style={{ width: 110 }}>Total</th>
-              <th style={{ width: 140 }}>Notes</th>
-              <th style={{ width: 36 }} />
+              <th scope="col" style={{ width: 160 }}>Finishing Type</th>
+              <th scope="col" style={{ width: 100 }}>Price / LF</th>
+              <th scope="col" style={{ width: 100 }}>
+                <abbr title="Linear feet of finishing work for this type">Linear Feet</abbr>
+              </th>
+              <th scope="col" style={{ width: 80 }}>% Adj</th>
+              <th scope="col" style={{ width: 110 }}>Total</th>
+              <th scope="col" style={{ width: 140 }}>Notes</th>
+              <th scope="col" style={{ width: 36 }} aria-label="Actions" />
             </tr>
           </thead>
           <tbody>

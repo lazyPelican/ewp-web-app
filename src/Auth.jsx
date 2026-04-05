@@ -197,12 +197,48 @@ export default function Auth() {
             onKeyDown={handleKeyDown}
             style={inputStyle(false)} autoFocus={mode === "signin"}
           />
-          <input
-            type="password" placeholder="Password"
-            value={password} onChange={e => { setPassword(e.target.value); reset() }}
-            onKeyDown={handleKeyDown}
-            style={inputStyle(false)}
-          />
+          <div>
+            <input
+              type="password" placeholder="Password"
+              value={password} onChange={e => { setPassword(e.target.value); reset() }}
+              onKeyDown={handleKeyDown}
+              style={{ ...inputStyle(false), width: "100%", boxSizing: "border-box" }}
+            />
+            {mode === "signup" && password.length > 0 && (() => {
+              // Strength scoring
+              let score = 0
+              if (password.length >= 8) score++
+              if (/[A-Z]/.test(password)) score++
+              if (/[a-z]/.test(password)) score++
+              if (/[0-9]/.test(password)) score++
+              if (/[^A-Za-z0-9]/.test(password)) score++
+              // Map to 4 levels: Weak (0-1), Fair (2), Good (3), Strong (4-5)
+              const level = score <= 1 ? 0 : score === 2 ? 1 : score === 3 ? 2 : 3
+              const labels = ["Weak", "Fair", "Good", "Strong"]
+              const colors = ["#E05252", "#E8963A", "#D4B300", "#2E9E5E"]
+              const darkColors = ["#E05252", "#E8963A", "#C9A930", "#3DBF74"]
+              const segColors = dark ? darkColors : colors
+              return (
+                <div style={{ marginTop: 7, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 3, flex: 1 }}>
+                    {[0, 1, 2, 3].map(i => (
+                      <div key={i} style={{
+                        flex: 1, height: 4, borderRadius: 2,
+                        background: i <= level ? segColors[level] : (dark ? "#2A2A2A" : "#E8E2D9"),
+                        transition: "background 0.2s",
+                      }} />
+                    ))}
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, minWidth: 38, textAlign: "right",
+                    color: segColors[level], fontFamily: font,
+                  }}>
+                    {labels[level]}
+                  </span>
+                </div>
+              )
+            })()}
+          </div>
           {mode === "signup" && (
             <input
               type="password" placeholder="Confirm password"
