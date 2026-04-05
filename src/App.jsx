@@ -2253,11 +2253,8 @@ function SummaryPage({ project, rooms, onBack, onSave, preparedBy }) {
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
-function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName, onSaveName }) {
+function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
   const [search, setSearch] = useState("");
-  const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState("");
-  const nameInputRef = useRef(null);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -2266,18 +2263,6 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
     if (h >= 17 && h < 21) return "Good evening";
     return "Welcome back";
   })();
-
-  const startEditName = () => {
-    setNameInput(userName || "");
-    setEditingName(true);
-    setTimeout(() => nameInputRef.current?.focus(), 30);
-  };
-
-  const commitName = async () => {
-    const v = nameInput.trim();
-    if (v && v !== userName) await onSaveName(v);
-    setEditingName(false);
-  };
   const filtered = projects
     .filter(p => {
       const q = search.toLowerCase()
@@ -2327,64 +2312,15 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
           {greeting}
         </div>
 
-        {/* Name display or edit input */}
-        {editingName ? (
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, animation: "fadeIn 0.2s both" }}>
-            <input
-              ref={nameInputRef}
-              value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") commitName(); if (e.key === "Escape") setEditingName(false); }}
-              placeholder="Your first name"
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(28px, 4vw, 52px)",
-                fontWeight: 600, color: "var(--gold)",
-                background: "transparent",
-                border: "none", borderBottom: "2px solid var(--gold)",
-                outline: "none", textAlign: "center",
-                letterSpacing: "0.05em", lineHeight: 1,
-                width: "clamp(180px, 40vw, 380px)",
-                padding: "4px 8px",
-              }}
-            />
-            <button onClick={commitName} title="Save" style={{
-              background: "var(--gold)", color: "#fff", border: "none",
-              borderRadius: 6, padding: "6px 14px", cursor: "pointer",
-              fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
-            }}>Save</button>
-            <button onClick={() => setEditingName(false)} title="Cancel" style={{
-              background: "transparent", color: "var(--muted)", border: "1px solid var(--ivory3)",
-              borderRadius: 6, padding: "6px 10px", cursor: "pointer",
-              fontSize: 13, fontFamily: "'DM Sans', sans-serif",
-            }}>✕</button>
-          </div>
-        ) : (
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
-            <div style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "clamp(40px, 6.5vw, 72px)",
-              fontWeight: 600, color: "var(--gold)",
-              lineHeight: 1, letterSpacing: "0.05em",
-              animation: "welcomeIn 0.75s 0.08s cubic-bezier(0.22,1,0.36,1) both",
-            }}>
-              {userName || "—"}
-            </div>
-            <button
-              onClick={startEditName}
-              title="Edit your name"
-              aria-label="Edit display name"
-              style={{
-                background: "transparent", border: "none", cursor: "pointer",
-                color: "var(--muted)", fontSize: 16, padding: 4,
-                lineHeight: 1, opacity: 0.6, transition: "opacity 0.15s",
-                alignSelf: "center", marginTop: 6,
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = 1}
-              onMouseLeave={e => e.currentTarget.style.opacity = 0.6}
-            >✎</button>
-          </div>
-        )}
+        <div style={{
+          fontFamily: "'Cormorant Garamond', serif",
+          fontSize: "clamp(40px, 6.5vw, 72px)",
+          fontWeight: 600, color: "var(--gold)",
+          lineHeight: 1, letterSpacing: "0.05em",
+          animation: "welcomeIn 0.75s 0.08s cubic-bezier(0.22,1,0.36,1) both",
+        }}>
+          {userName || "—"}
+        </div>
 
         <div style={{
           height: 2,
@@ -2524,20 +2460,6 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     session?.user?.user_metadata?.first_name || ""
   );
   const preparedBy = displayName || session?.user?.email?.split("@")[0] || "";
-
-  const saveName = async (name) => {
-    const clean = (name || "").trim();
-    if (!clean) return;
-    setDisplayName(clean);
-    try {
-      await supabase.auth.updateUser({ data: { first_name: clean } });
-      await supabase.from("user_approvals")
-        .update({ first_name: clean })
-        .eq("user_id", session.user.id);
-    } catch (err) {
-      logError("saveName", err);
-    }
-  };
 
   const [view, setView] = useState("dashboard");
   const [step, setStep] = useState(0);
@@ -2910,7 +2832,6 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
           {view === "dashboard" && (
             <Dashboard
             userName={preparedBy}
-            onSaveName={saveName}
             projects={projects}
             onNew={startNew}
             onOpen={openProject}
