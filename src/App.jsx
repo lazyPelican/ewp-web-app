@@ -1193,7 +1193,7 @@ function Toast({ msg, onDone }) {
   return <div className="toast">{msg}</div>;
 }
 
-function EmailModal({ project, rooms, preparedBy, operatorEmail, onClose }) {
+function EmailModal({ project, rooms, preparedBy, operatorEmail, operatorName, onClose }) {
   const safeName   = (project.name        || 'Quote').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Quote'
   const safeClient = (project.contactName || '').replace(/[^a-zA-Z0-9_\- ]/g, '').trim()
   const defaultFilename = (safeClient ? `${safeClient} — ${safeName}` : safeName) + ' — Quote.pdf'
@@ -1244,6 +1244,7 @@ function EmailModal({ project, rooms, preparedBy, operatorEmail, onClose }) {
           pdfBase64,
           filename: defaultFilename,
           replyTo: operatorEmail || undefined,
+          fromName: operatorName ? `${operatorName} from EWP` : undefined,
         },
       })
       if (error) throw new Error(error.message || 'Send failed')
@@ -3084,6 +3085,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             rooms={emailModal.rooms}
             preparedBy={preparedBy}
             operatorEmail={session?.user?.email}
+            operatorName={displayName}
             onClose={() => setEmailModal(null)}
           />
         )}

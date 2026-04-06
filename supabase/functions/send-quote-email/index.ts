@@ -18,18 +18,20 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    const { to, subject, body, pdfBase64, filename, replyTo } = await req.json()
+    const { to, subject, body, pdfBase64, filename, replyTo, fromName } = await req.json()
 
     if (!to || !pdfBase64) throw new Error('Missing required fields: to, pdfBase64')
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY secret is not configured in Supabase')
 
-    const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'onboarding@resend.dev'
-    const FROM_NAME  = Deno.env.get('FROM_NAME')  || 'Bilal from EWP'
+    const FROM_EMAIL    = Deno.env.get('FROM_EMAIL') || 'onboarding@resend.dev'
+    const FROM_NAME_ENV = Deno.env.get('FROM_NAME')  || 'EWP'
+    // Prefer the per-request name (logged-in operator) over the secret fallback
+    const senderName = fromName || FROM_NAME_ENV
 
     const payload: Record<string, unknown> = {
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: `${senderName} <${FROM_EMAIL}>`,
       to: [to],
       subject: subject || 'Your Quote from Engstrom Wood Products',
       text: body || '',
