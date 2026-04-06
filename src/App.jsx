@@ -2019,9 +2019,15 @@ function SummaryPage({ project, rooms, onBack, onSave, preparedBy }) {
             <div className="gold-rule" />
             <div className="page-subtitle">{project.name} · {fmtDate(project.bidDate)} · ID: {project.id}</div>
           </div>
-          <div className="flex gap-8 summary-actions-row">
-            <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
-            <button className="btn btn-outline" onClick={handleExportCustomer} disabled={pdfBusy2} style={{opacity:pdfBusy2?0.6:1}}>{pdfBtnLabel2}</button>
+          <div className="flex gap-8 summary-actions-row" style={{ flexWrap: "wrap" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <button className="btn btn-outline" onClick={handleExportInternal} disabled={pdfBusy} style={{opacity:pdfBusy?0.6:1}}>{pdfBtnLabel}</button>
+              {pdfError && <span style={{ fontSize: 11, color: "var(--red, #C0392B)", maxWidth: 220 }}>{pdfError}</span>}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <button className="btn btn-outline" onClick={handleExportCustomer} disabled={pdfBusy2} style={{opacity:pdfBusy2?0.6:1}}>{pdfBtnLabel2}</button>
+              {pdfError2 && <span style={{ fontSize: 11, color: "var(--red, #C0392B)", maxWidth: 220 }}>{pdfError2}</span>}
+            </div>
             <button
               className="btn btn-gold"
               onClick={handleSave}

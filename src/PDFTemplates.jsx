@@ -1130,8 +1130,8 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
     setTimeout(() => URL.revokeObjectURL(url), 30000)
     onStatus('done')
   } catch (err) {
-    console.error('PDF generation error:', err)
-    onStatus('error', 'PDF generation failed.')
+    console.error('PDF generation error (internal):', err)
+    onStatus('error', err?.message || 'PDF generation failed.')
   }
 }
 
@@ -1177,7 +1177,7 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
     setTimeout(() => URL.revokeObjectURL(url), 30000)
     onStatus('done')
   } catch (err) {
-    console.error('PDF generation error:', err)
-    onStatus('error', 'PDF generation failed.')
+    console.error('PDF generation error (customer):', err)
+    onStatus('error', err?.message || 'PDF generation failed.')
   }
 }
