@@ -1191,3 +1191,32 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
     onStatus('error', err?.message || 'PDF generation failed.')
   }
 }
+
+// Returns the customer PDF as a Blob (no download) — used for email attachment.
+export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, preparedBy }) {
+  const roomTotals = rooms.map(r => {
+    const cab  = calcCabinetry(r.cabinetry)
+    const upg  = calcUpgrades(r.upgrades)
+    const fin  = calcFinishing(r.finishing)
+    const inst = calcInstall(r.install, cab)
+    return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
+  })
+  const delivery    = parseFloat(project.deliveryAmount) || 0
+  const pdfTaxRate  = parseFloat(project.taxRate) || 8
+  const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
+  const pdfTaxAmt   = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+  const grandTotal  = pdfSubtotal + pdfTaxAmt
+
+  return pdf(
+    <CustomerPDFDoc
+      project={project}
+      rooms={rooms}
+      roomTotals={roomTotals}
+      delivery={delivery}
+      pdfTaxRate={pdfTaxRate}
+      pdfTaxAmt={pdfTaxAmt}
+      grandTotal={grandTotal}
+      preparedBy={preparedBy}
+    />
+  ).toBlob()
+}
