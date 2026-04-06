@@ -226,7 +226,7 @@ const s = StyleSheet.create({
     paddingBottom: 4,
     paddingLeft: 8,
     paddingRight: 8,
-    marginBottom: 8,
+    marginBottom: 5,
   },
   subBarLbl: {
     fontFamily: FONT_SANS_BD,
@@ -247,13 +247,13 @@ const s = StyleSheet.create({
     backgroundColor: C.ivoryMid,
     border: `1 solid ${C.border}`,
     borderTop: `2 solid ${C.stone}`,
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: 0,
   },
   ts: {
     flex: 1,
-    paddingTop: 6,
-    paddingBottom: 6,
+    paddingTop: 4,
+    paddingBottom: 4,
     paddingLeft: 10,
     paddingRight: 10,
     alignItems: 'center',
@@ -282,8 +282,8 @@ const s = StyleSheet.create({
     backgroundColor: C.grandBg,
     border: `1 solid ${C.grandBorder}`,
     borderLeft: `5 solid ${C.grandAccent}`,
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingTop: 6,
+    paddingBottom: 6,
     paddingLeft: 14,
     paddingRight: 14,
   },
@@ -373,7 +373,7 @@ const s = StyleSheet.create({
     fontSize: 7,
     color: C.muted,
   },
-  gap: { height: 6 },
+  gap: { height: 4 },
 })
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
