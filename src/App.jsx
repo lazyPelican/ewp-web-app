@@ -24,6 +24,23 @@ const genId = () => {
   return `B-${yy}${mo}${dy}-${hh}${mn}`;
 };
 
+// Display-only: converts legacy EWPyyyymmddHHmmss IDs to B-yymmdd-hhmm format.
+// New IDs already have the correct format and pass through unchanged.
+const fmtId = (id = '') => {
+  if (!id) return id;
+  if (id.startsWith('EWP') && id.length >= 13) {
+    // EWP + YYYY(4) + MM(2) + DD(2) + HH(2) + mm(2) + ss(2)  →  B-yymmdd-hhmm
+    const s = id.slice(3);           // "20260315185238"
+    const yy = s.slice(2, 4);        // "26"
+    const mo = s.slice(4, 6);        // "03"
+    const dy = s.slice(6, 8);        // "15"
+    const hh = s.slice(8, 10);       // "18"
+    const mn = s.slice(10, 12);      // "52"
+    return `B-${yy}${mo}${dy}-${hh}${mn}`;
+  }
+  return id;
+};
+
 // Generate a smart copy name: strips existing "Copy N" suffix, then assigns the next number.
 // e.g. "Kitchen" → "Kitchen Copy 2", "Kitchen Copy 2" → "Kitchen Copy 3"
 // existingNames is an array of current names to find the highest used number.
@@ -1319,7 +1336,7 @@ function ProjectSetup({ project, onChange, onNext }) {
       </div>
 
       <div className="flex justify-between items-center mt-24">
-        <span className="text-muted">Project ID: {project.id}</span>
+        <span className="text-muted">Project ID: {fmtId(project.id)}</span>
         <button className="btn btn-gold btn-lg" onClick={handleNext}>
           Continue to Rooms →
         </button>
@@ -2017,7 +2034,7 @@ function SummaryPage({ project, rooms, onBack, onSave, preparedBy }) {
           <div>
             <div className="page-title">Estimate Summary</div>
             <div className="gold-rule" />
-            <div className="page-subtitle">{project.name} · {fmtDate(project.bidDate)} · ID: {project.id}</div>
+            <div className="page-subtitle">{project.name} · {fmtDate(project.bidDate)} · ID: {fmtId(project.id)}</div>
           </div>
           <div className="flex gap-8 summary-actions-row" style={{ flexWrap: "wrap" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -2231,7 +2248,7 @@ function SummaryPage({ project, rooms, onBack, onSave, preparedBy }) {
           <span style={{ fontSize: 22 }}>✅</span>
           <div>
             <div style={{ fontWeight: 600, color: "#2e7d32", fontSize: 14 }}>Estimate saved successfully</div>
-            <div style={{ color: "#4caf50", fontSize: 12, marginTop: 2 }}>{project.name} · {project.id}</div>
+            <div style={{ color: "#4caf50", fontSize: 12, marginTop: 2 }}>{project.name} · {fmtId(project.id)}</div>
           </div>
         </div>
       )}
@@ -2871,7 +2888,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                 "",
                 "Project Address: " + p.project.address,
                 "Bid Date: " + fmtDate(p.project.bidDate || ""),
-                "Quote ID: " + p.project.id,
+                "Quote ID: " + fmtId(p.project.id),
                 "",
                 "Please don't hesitate to reach out with any questions.",
                 "",

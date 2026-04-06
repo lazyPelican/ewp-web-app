@@ -6,6 +6,16 @@ import {
   Document, Page, View, Text, Image, StyleSheet, Font, pdf
 } from '@react-pdf/renderer'
 
+// Display-only ID formatter — converts legacy EWPyyyymmddHHmmss → B-yymmdd-hhmm
+const fmtId = (id = '') => {
+  if (!id) return id
+  if (id.startsWith('EWP') && id.length >= 13) {
+    const s = id.slice(3)
+    return `B-${s.slice(2,4)}${s.slice(4,6)}${s.slice(6,8)}-${s.slice(8,10)}${s.slice(10,12)}`
+  }
+  return id
+}
+
 // Logo: must be an absolute URL so @react-pdf/image uses fetchRemoteFile (fetch API)
 // instead of fetchLocalFile (Node fs) which fails in the browser.
 const LOGO_SRC = typeof window !== 'undefined'
@@ -552,7 +562,7 @@ function InternalSummaryPage({
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType="QUOTE — INTERNAL USE"
-        docId={project.id}
+        docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
       />
 
@@ -773,7 +783,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
-        docId={`${project.id}  ·  ${trunc(project.name, 40)}`}
+        docId={`${fmtId(project.id)}  ·  ${trunc(project.name, 40)}`}
         docDate={fmtD(project.bidDate)}
       />
 
@@ -894,7 +904,7 @@ function CustomerSummaryPage({
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType="QUOTE"
-        docId={project.id}
+        docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
       />
 
@@ -1007,7 +1017,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
     <Page size="LETTER" orientation="landscape" style={s.page}>
       <PageHeader
         docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
-        docId={`${project.id}  ·  ${trunc(project.name, 40)}`}
+        docId={`${fmtId(project.id)}  ·  ${trunc(project.name, 40)}`}
         docDate={fmtD(project.bidDate)}
       />
 
