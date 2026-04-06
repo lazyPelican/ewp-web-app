@@ -1247,7 +1247,11 @@ function EmailModal({ project, rooms, preparedBy, operatorEmail, operatorName, o
           fromName: operatorName ? `${operatorName} from EWP` : undefined,
         },
       })
-      if (error) throw new Error(error.message || 'Send failed')
+      if (error) {
+        let msg = error.message || 'Send failed'
+        try { const b = await error.context?.json?.(); if (b?.error) msg = b.error } catch {}
+        throw new Error(msg)
+      }
       setStatus('done')
     } catch (err) {
       setErrMsg(err.message || 'Something went wrong.')
