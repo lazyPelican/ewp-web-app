@@ -2427,7 +2427,7 @@ function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) {
       busy: pdfStatus === "generating",
       err: pdfError,
       onClick: handleInternal,
-      btnClass: "btn-primary",
+      btnClass: "btn-gold",
     },
     {
       icon: "📋",
@@ -2447,7 +2447,7 @@ function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) {
       busy: false,
       err: null,
       onClick: onEmail,
-      btnClass: "btn-outline",
+      btnClass: "btn-gold",
     },
   ];
 
@@ -2981,7 +2981,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
         {/* TOPBAR + STEPPER sticky wrapper */}
         <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}`}>
-          <div className="topbar-logo">
+          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => setView("dashboard")}>
             <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
@@ -3049,8 +3049,9 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             allRoomsComplete && (step > 1 || saved),
             (step > 2 || saved),
             saved,
+            saved,
           ];
-          const reachable = [true, projectValid, projectValid && allRoomsComplete, projectValid && allRoomsComplete];
+          const reachable = [true, projectValid, projectValid && allRoomsComplete, projectValid && allRoomsComplete, saved];
           return (
             <div className="stepper">
               <button className="btn btn-ghost btn-sm"
