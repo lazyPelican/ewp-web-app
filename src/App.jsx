@@ -2149,8 +2149,6 @@ function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
     await handleSave();
     onNext();
   };
-  const pdfBusy = pdfStatus === "generating";
-  const pdfBusy2 = pdfStatus2 === "generating";
   const roomTotals = rooms.map(r => {
     const cab = calcCabinetry(r.cabinetry);
     const upg = calcUpgrades(r.upgrades);
