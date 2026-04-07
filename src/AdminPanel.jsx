@@ -143,7 +143,7 @@ const TABLE_CONFIG = [
   },
 ]
 
-export default function AdminPanel({ currentUser, onBack }) {
+export default function AdminPanel({ currentUser, isAdmin, onBack }) {
   const [tab, setTab] = useState("users")         // "users" | "pricing"
   const [activeTable, setActiveTable] = useState("woodwork")
   const [pricing, setPricing] = useState(null)    // null = loading
@@ -174,8 +174,6 @@ export default function AdminPanel({ currentUser, onBack }) {
 
   const [toast, setToast] = useState(null)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
-
-  const isAdmin = ADMIN_EMAILS.includes(currentUser.email?.toLowerCase())
 
   useEffect(() => {
     const handler = () => setDark(localStorage.getItem("ewp-theme") === "dark")

@@ -260,7 +260,7 @@ function Root() {
     content = (
       <Suspense fallback={suspenseFallback}>
         {showAdmin
-          ? <AdminPanel currentUser={session.user} onBack={() => setShowAdmin(false)} />
+          ? <AdminPanel currentUser={session.user} isAdmin={isAdmin} onBack={() => setShowAdmin(false)} />
           : <App session={session} isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />}
       </Suspense>
     )
