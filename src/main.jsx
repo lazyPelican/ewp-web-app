@@ -35,6 +35,17 @@ function Root() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
 
+  // Browser back closes admin panel
+  useEffect(() => {
+    if (approvalStatus !== "approved") return
+    window.history.pushState({ showAdmin }, "")
+  }, [showAdmin, approvalStatus])
+  useEffect(() => {
+    const onPop = () => { if (showAdmin) setShowAdmin(false) }
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [showAdmin])
+
   // VITE_ADMIN_EMAILS kept as a fast UI hint; authoritative check is the DB is_admin() RPC below
   const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "")
     .split(",").map(e => e.trim().toLowerCase())

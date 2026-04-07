@@ -204,7 +204,9 @@ const styles = `
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: var(--ivory2);
+    background-color: var(--ivory2);
+    background-image: radial-gradient(circle, rgba(139,106,55,0.22) 2px, transparent 2px);
+    background-size: 32px 32px;
   }
 
   /* ── TOPBAR ── */
@@ -526,7 +528,11 @@ const styles = `
     --red:   #D05050;
   }
   .dark body { background: #201E18; }
-  .dark .app { background: #201E18; }
+  .dark .app {
+    background-color: #201E18;
+    background-image: radial-gradient(circle, rgba(201,169,110,0.15) 2px, transparent 2px);
+    background-size: 32px 32px;
+  }
   .dark .stepper { background: var(--header-bg); border-bottom-color: var(--header-border); }
   .dark .step:hover { background: #323028; }
   .dark .step-num { background: #323028; border-color: #484030; }
@@ -2176,20 +2182,6 @@ function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
             <div className="gold-rule" />
             <div className="page-subtitle">{project.name} · {fmtDate(project.bidDate)} · ID: {fmtId(project.id)}</div>
           </div>
-          <div className="flex gap-8 summary-actions-row" style={{ flexWrap: "wrap" }}>
-            <button
-              className="btn btn-gold"
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                opacity: saving ? 0.7 : 1,
-                background: saveConfirmed ? "var(--green)" : undefined,
-                transition: "background 0.3s ease",
-              }}
-            >
-              {saving ? "⏳ Saving…" : saveConfirmed ? "✅ Saved!" : "💾 Save Estimate"}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -2437,16 +2429,6 @@ function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) {
       busy: pdfStatus2 === "generating",
       err: pdfError2,
       onClick: handleCustomer,
-      btnClass: "btn-gold",
-    },
-    {
-      icon: "✉",
-      title: "Email to Client",
-      desc: "Send the customer quote directly to the client with the PDF attached.",
-      btnLabel: "Open Email",
-      busy: false,
-      err: null,
-      onClick: onEmail,
       btnClass: "btn-gold",
     },
   ];
@@ -2711,6 +2693,23 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const [view, setView] = useState("dashboard");
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
+
+  // ── Browser back/forward button support ────────────────────────
+  const _historyPop = useRef(false);
+  useEffect(() => {
+    if (_historyPop.current) { _historyPop.current = false; return; }
+    window.history.pushState({ view, step }, "");
+  }, [view, step]);
+  useEffect(() => {
+    const onPop = (e) => {
+      _historyPop.current = true;
+      const s = e.state;
+      if (s?.view === "new") { setView("new"); setStep(s.step ?? 0); }
+      else { setView("dashboard"); }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editIdx, setEditIdx] = useState(null);
@@ -3075,6 +3074,15 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             </div>
           );
         })()}
+        {view === "new" && project.id && (
+          <div style={{
+            textAlign: "center", padding: "7px 24px",
+            background: "rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            fontSize: 13, letterSpacing: "0.04em",
+          }}>
+            Project ID: <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span>
+          </div>
+        )}
         </div>{/* end sticky wrapper */}
 
         {/* MAIN */}

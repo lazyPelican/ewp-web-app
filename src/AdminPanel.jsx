@@ -396,10 +396,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack }) {
     if (!window.confirm(`Remove ${email}? They will lose access immediately and cannot sign back in.`)) return
     setActionLoading(userId)
     try {
-      // Reject instead of delete — prevents the user from creating a new pending row on next login
-      const { error } = await supabase.from("user_approvals")
-        .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
-        .eq("user_id", userId)
+      const { error } = await supabase.from("user_approvals").delete().eq("user_id", userId)
       if (error) { logError("deleteUser", error); showToast("Error removing user — try again") }
       else { setUsers(prev => prev.filter(u => u.user_id !== userId)); showToast(`✓ ${email} removed`) }
     } catch (err) { logError("deleteUser", err); showToast("Unexpected error — check connection") }
@@ -603,10 +600,10 @@ export default function AdminPanel({ currentUser, isAdmin, onBack }) {
             }
           }
         `}</style>
-        <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-          <img 
-            src="/ewp-logo.png" 
-            alt="Engstrom Wood Products" 
+        <div style={{ display: "flex", alignItems: "center", gap: 22, cursor: "pointer" }} onClick={() => confirmIfDirty(onBack)}>
+          <img
+            src="/ewp-logo.png"
+            alt="Engstrom Wood Products"
             style={{ height: 100, width: "auto", flexShrink: 0 }}
             className="admin-header-logo"
           />
