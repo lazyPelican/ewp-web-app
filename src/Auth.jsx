@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { supabase } from "./supabase.js"
 import { sanitizeName, sanitizeEmail, isValidEmail } from "./sanitize.js"
+import BgDots from "./BgDots.jsx"
 
 export default function Auth() {
   const [mode, setMode] = useState("signin")
@@ -98,6 +99,7 @@ export default function Auth() {
       padding: "max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))",
       boxSizing: "border-box",
     }}>
+      <BgDots dark={dark} />
       {/* Dark mode toggle — top right corner */}
       <button
         onClick={toggleDark}
@@ -121,7 +123,10 @@ export default function Auth() {
         width: "100%",
         maxWidth: 360,
         boxSizing: "border-box",
-        boxShadow: dark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.08)",
+        position: "relative", zIndex: 1,
+        boxShadow: dark
+          ? "0 2px 4px rgba(0,0,0,0.28), 0 8px 20px rgba(0,0,0,0.38), 0 20px 48px rgba(0,0,0,0.32)"
+          : "0 2px 4px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.10), 0 20px 48px rgba(0,0,0,0.08)",
         textAlign: "center", transition: "background 0.2s, border-color 0.2s",
       }}>
         {/* Logo */}

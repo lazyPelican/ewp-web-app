@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
+import BgDots from "./BgDots.jsx"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { exportPDFInternal as _exportPDFInternal, exportPDFCustomer as _exportPDFCustomer, buildCustomerPDFBlob as _buildCustomerPDFBlob } from "./PDFTemplates.jsx"
@@ -205,8 +206,6 @@ const styles = `
     display: flex;
     flex-direction: column;
     background-color: var(--ivory2);
-    background-image: radial-gradient(circle, rgba(139,106,55,0.22) 2px, transparent 2px);
-    background-size: 32px 32px;
   }
 
   /* ── TOPBAR ── */
@@ -530,8 +529,6 @@ const styles = `
   .dark body { background: #201E18; }
   .dark .app {
     background-color: #201E18;
-    background-image: radial-gradient(circle, rgba(201,169,110,0.15) 2px, transparent 2px);
-    background-size: 32px 32px;
   }
   .dark .stepper { background: var(--header-bg); border-bottom-color: var(--header-border); }
   .dark .step:hover { background: #323028; }
@@ -1157,6 +1154,9 @@ const styles = `
     pointer-events: none;
     z-index: 50;
   }
+  @media (max-width: 768px) {
+    .version-footer { display: none; }
+  }
 `;
 
 
@@ -1504,7 +1504,6 @@ function ProjectSetup({ project, onChange, onNext }) {
       </div>
 
       <div className="flex justify-between items-center mt-24">
-        <span className="text-muted">Project ID: {fmtId(project.id)}</span>
         <button className="btn btn-gold btn-lg" onClick={handleNext}>
           Continue to Rooms →
         </button>
@@ -1586,6 +1585,9 @@ function CabinetrySection({ items, masterAdj, onChange }) {
                       <option value="">— Select —</option>
                       {PRICING.woodwork.map(w => <option key={w.name}>{w.name}</option>)}
                     </select>
+                    {item.product && stdPrice > 0 && (
+                      <div style={{ fontSize: 10, color: "var(--gold)", marginTop: 3, fontWeight: 600 }}>{fmt(stdPrice)}/unit</div>
+                    )}
                   </td>
                   <td>
                     <select value={item.construction} onChange={e => update(i, "construction", e.target.value)}>
@@ -1988,9 +1990,9 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
   const roomsSubtotal = roomTotals.reduce((s, v) => s + v, 0);
   const delivery   = parseFloat(project.deliveryAmount) || 0;
   const subtotal   = roomsSubtotal + delivery;
-  const parsedTaxRate = parseFloat(project.taxRate)
-  const taxRate    = Number.isFinite(parsedTaxRate) ? parsedTaxRate : 8
-  const taxAmt     = project.taxEnabled ? subtotal * (taxRate / 100) : 0;
+  const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
+  const taxRate    = project.installationType ? 8.53 : (Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8);
+  const taxAmt     = taxEnabled ? subtotal * (taxRate / 100) : 0;
   const grandTotal = subtotal + taxAmt;
 
   return (
@@ -2020,73 +2022,28 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
         </div>
       </div>
 
-      {/* Tax */}
+      {/* Installation & Tax */}
       <div className="card">
-        <div className="card-header">
-          <span className="card-title">ESTIMATED TAX</span>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <span style={{ fontSize: 12, color: "var(--gold-light)", fontWeight: 500 }}>
-              {project.taxEnabled ? "Enabled" : "Disabled"}
-            </span>
-            <div
-              onClick={() => onChange({ taxEnabled: !project.taxEnabled })}
-              style={{
-                width: 40, height: 22, borderRadius: 11,
-                background: project.taxEnabled ? "var(--gold)" : "var(--ivory3)",
-                position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0,
-              }}>
-              <div style={{
-                position: "absolute", top: 3, left: project.taxEnabled ? 21 : 3,
-                width: 16, height: 16, borderRadius: "50%",
-                background: "#fff", transition: "left 0.2s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-              }} />
-            </div>
-          </label>
-        </div>
+        <div className="card-header"><span className="card-title">INSTALLATION</span></div>
         <div className="card-body">
-          {project.taxEnabled ? (
-            <div className="form-grid form-grid-2">
-              <Field label="Tax Rate (%)">
-                <input
-                  type="number"
-                  min="0.1"
-                  max="30"
-                  step="0.1"
-                  value={project.taxRate}
-                  placeholder="8"
-                  onChange={e => {
-                    const raw = e.target.value
-                    if (raw === "" || raw === "." || raw === "0" || raw === "0.") {
-                      onChange({ taxRate: raw })
-                      return
-                    }
-                    const n = parseFloat(raw)
-                    onChange({ taxRate: Number.isFinite(n) ? raw : "" })
-                  }}
-                  onBlur={e => {
-                    const n = parseFloat(project.taxRate)
-                    if (!Number.isFinite(n) || n < 0.1) onChange({ taxRate: "8" })
-                  }}
-                />
-              </Field>
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingBottom: 2 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--gold)", marginBottom: 4 }}>
-                  Estimated Tax Amount
-                </div>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 700, color: "var(--gold)" }}>
-                  {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(taxAmt)}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                  {taxRate}% of {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(subtotal)} subtotal
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
-              Toggle on to include an estimated tax in the quote. The default rate is 8% — you can adjust it as needed. Tax is applied to the full project subtotal including delivery.
-            </p>
-          )}
+          <Field label="Who is doing the installation?">
+            <select
+              value={project.installationType || "ewp"}
+              onChange={e => onChange({ installationType: e.target.value })}>
+              <option value="ewp">EWP doing installation</option>
+              <option value="contractor">Contractor / Retailer doing installation</option>
+            </select>
+          </Field>
+          <div style={{
+            marginTop: 14, padding: "10px 14px", borderRadius: 6,
+            background: taxEnabled ? "rgba(184,59,46,0.06)" : "rgba(42,107,64,0.06)",
+            border: `1px solid ${taxEnabled ? "rgba(184,59,46,0.2)" : "rgba(42,107,64,0.2)"}`,
+            fontSize: 13, color: "var(--char)", lineHeight: 1.5,
+          }}>
+            {taxEnabled
+              ? <span>⚠️ <strong>8.53% estimated sales tax</strong> will be applied — contractor/retailer is installing.</span>
+              : <span>✅ <strong>No sales tax</strong> — EWP is doing the installation.</span>}
+          </div>
         </div>
       </div>
 
@@ -2096,7 +2053,7 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
           const items = [
             ["Rooms Subtotal", roomsSubtotal],
             ["Delivery", delivery],
-            ...(project.taxEnabled && taxAmt > 0 ? [["Tax" + ` (${taxRate}%)`, taxAmt]] : []),
+            ...(taxEnabled && taxAmt > 0 ? [["Tax" + ` (${taxRate}%)`, taxAmt]] : []),
             ["Grand Total", grandTotal],
           ]
 
@@ -2169,8 +2126,9 @@ function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0);
   const delivery  = parseFloat(project.deliveryAmount) || 0;
   const subtotalBeforeTax = grandCab + grandUpg + grandFin + grandInst + delivery;
-  const taxRate   = parseFloat(project.taxRate) || 8;
-  const taxAmt    = project.taxEnabled ? subtotalBeforeTax * (taxRate / 100) : 0;
+  const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
+  const taxRate    = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8);
+  const taxAmt     = taxEnabled ? subtotalBeforeTax * (taxRate / 100) : 0;
   const grandTotal = subtotalBeforeTax + taxAmt;
 
   return (
@@ -2244,7 +2202,7 @@ function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
                   <td className="num-cell">{fmt(delivery)}</td>
                 </tr>
               )}
-              {project.taxEnabled && (
+              {taxEnabled && (
                 <tr className="total-row">
                   <td colSpan={5} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
                     Estimated Tax ({taxRate}%)
@@ -2693,6 +2651,9 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const [view, setView] = useState("dashboard");
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
+  const [quickSaving, setQuickSaving] = useState(false);
+  const [quickSaved, setQuickSaved] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   // ── Browser back/forward button support ────────────────────────
   const _historyPop = useRef(false);
@@ -2828,7 +2789,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     setProject({ id, name: "", address: "", contactName: "", contactPhone: "", email: "",
       bidDate: new Date().toISOString().slice(0, 10), contractorYN: "No",
       contractorName: "", contractorContact: "", rooms: 1, masterAdj: 0,
-      deliveryAmount: "", deliveryNotes: "", taxEnabled: false, taxRate: 8 });
+      deliveryAmount: "", deliveryNotes: "", taxEnabled: false, taxRate: 8, installationType: "ewp" });
     setRooms([blankRoom(0)]);
     setStep(0); setSaved(false); setEditIdx(null); setView("new");
   };
@@ -2886,6 +2847,20 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     setSaved(true);
     showToast("Estimate saved successfully");
   };
+
+  const handleQuickSave = async () => {
+    setQuickSaving(true);
+    await saveProject();
+    setQuickSaving(false);
+    setQuickSaved(true);
+    setTimeout(() => setQuickSaved(false), 3000);
+  };
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    supabase.from("user_approvals").select("user_id", { count: "exact", head: true }).eq("status", "pending")
+      .then(({ count }) => setPendingCount(count || 0));
+  }, [isAdmin]);
 
   const stepConfig = [
     { label: "Project Details" },
@@ -2977,6 +2952,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     <>
       <style>{styles}</style>
       <div className={`app${dark ? " dark" : ""}`}>
+        <BgDots dark={dark} />
         {/* TOPBAR + STEPPER sticky wrapper */}
         <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}`}>
@@ -2999,6 +2975,11 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                 letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
                 👥 Admin
+                {pendingCount > 0 && (
+                  <span style={{ background: "#C0392B", color: "#fff", borderRadius: "50%", minWidth: 16, height: 16, fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
+                    {pendingCount}
+                  </span>
+                )}
               </button>
             )}
             <button
@@ -3076,11 +3057,20 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
         })()}
         {view === "new" && project.id && (
           <div style={{
-            textAlign: "center", padding: "7px 24px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 16,
+            padding: "6px 24px",
             background: "rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             fontSize: 13, letterSpacing: "0.04em",
           }}>
-            Project ID: <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span>
+            <span>Project ID: <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span></span>
+            <button
+              className="btn btn-gold"
+              style={{ padding: "3px 14px", fontSize: 11, background: quickSaved ? "var(--green)" : undefined, transition: "background 0.3s" }}
+              disabled={quickSaving}
+              onClick={handleQuickSave}
+            >
+              {quickSaving ? "⏳ Saving…" : quickSaved ? "✅ Saved!" : "💾 Save"}
+            </button>
           </div>
         )}
         </div>{/* end sticky wrapper */}
