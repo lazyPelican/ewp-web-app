@@ -611,7 +611,7 @@ function InternalSummaryPage({
           />
         )}
 
-        {project.taxEnabled && (
+        {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
           <GrandBar
             label={`Estimated Tax (${pdfTaxRate}%)`}
             sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
@@ -627,7 +627,7 @@ function InternalSummaryPage({
             `All rooms · ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
             fmtD(project.bidDate),
             delivery > 0 ? 'incl. delivery' : '',
-            project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
+            (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
           standalone
@@ -950,7 +950,7 @@ function CustomerSummaryPage({
           />
         )}
 
-        {project.taxEnabled && (
+        {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
           <GrandBar
             label={`Estimated Tax (${pdfTaxRate}%)`}
             sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
@@ -966,7 +966,7 @@ function CustomerSummaryPage({
             `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
             fmtD(project.bidDate),
             delivery > 0 ? 'incl. delivery' : '',
-            project.taxEnabled ? `incl. ${pdfTaxRate}% tax` : '',
+            (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
           standalone
@@ -1104,9 +1104,10 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
     const grandFin  = roomTotals.reduce((s, r) => s + r.fin,  0)
     const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
     const delivery   = parseFloat(project.deliveryAmount) || 0
-    const pdfTaxRate = parseFloat(project.taxRate) || 8
+    const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+    const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
     const pdfSubtotal = grandCab + grandUpg + grandFin + grandInst + delivery
-    const pdfTaxAmt  = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+    const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
     const grandTotal = pdfSubtotal + pdfTaxAmt
 
     const blob = await pdf(
@@ -1156,9 +1157,10 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
       return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
     })
     const delivery   = parseFloat(project.deliveryAmount) || 0
-    const pdfTaxRate = parseFloat(project.taxRate) || 8
+    const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+    const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
     const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
-    const pdfTaxAmt  = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+    const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
     const grandTotal = pdfSubtotal + pdfTaxAmt
 
     const blob = await pdf(
@@ -1202,9 +1204,10 @@ export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calc
     return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
   })
   const delivery    = parseFloat(project.deliveryAmount) || 0
-  const pdfTaxRate  = parseFloat(project.taxRate) || 8
+  const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+  const pdfTaxRate  = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
   const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
-  const pdfTaxAmt   = project.taxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+  const pdfTaxAmt   = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
   const grandTotal  = pdfSubtotal + pdfTaxAmt
 
   return pdf(

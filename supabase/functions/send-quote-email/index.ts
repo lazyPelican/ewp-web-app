@@ -18,7 +18,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    const { to, subject, body, pdfBase64, filename, replyTo, fromName } = await req.json()
+    const raw = await req.text()
+    console.log('Request body size (bytes):', raw.length)
+    const { to, subject, body, pdfBase64, filename, replyTo, fromName } = JSON.parse(raw)
 
     if (!to || !pdfBase64) throw new Error('Missing required fields: to, pdfBase64')
 
@@ -49,6 +51,7 @@ serve(async (req) => {
     })
 
     const data = await res.json()
+    console.log('Resend response', res.status, JSON.stringify(data))
     if (!res.ok) throw new Error(data?.message || `Resend error ${res.status}`)
 
     return new Response(JSON.stringify({ success: true, id: data.id }), {
@@ -56,6 +59,7 @@ serve(async (req) => {
       status: 200,
     })
   } catch (err) {
+    console.error('send-quote-email error:', (err as Error).message, (err as Error).stack)
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
       status: 400,

@@ -396,7 +396,7 @@ const styles = `
   }
 
   /* ── SUMMARY CARDS (see animation block below) ── */
-  .summary-card-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 6px; text-align: center; }
+  .summary-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 6px; text-align: center; }
 
   /* ── GRAND TOTAL (see animation block below) ── */
   .grand-total-label {
@@ -866,7 +866,7 @@ const styles = `
   }
   .summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(138,106,56,0.12); }
   .summary-card-value {
-    font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--char); text-align: center;
+    font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--char); text-align: center;
     animation: countUp 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
@@ -1540,7 +1540,9 @@ function CabinetrySection({ items, masterAdj, onChange }) {
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>CABINETRY</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 12 }}>CABINETRY
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--gold)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+        </span>
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
@@ -1586,7 +1588,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
                       {PRICING.woodwork.map(w => <option key={w.name}>{w.name}</option>)}
                     </select>
                     {item.product && stdPrice > 0 && (
-                      <div style={{ fontSize: 10, color: "var(--gold)", marginTop: 3, fontWeight: 600 }}>{fmt(stdPrice)}/unit</div>
+                      <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 4, fontWeight: 700 }}>{fmt(stdPrice)}/unit</div>
                     )}
                   </td>
                   <td>
@@ -1633,7 +1635,9 @@ function UpgradesSection({ items, masterAdj, onChange }) {
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>UPGRADES / OVERRIDES</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 12 }}>UPGRADES / OVERRIDES
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--gold)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+        </span>
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
@@ -1642,7 +1646,6 @@ function UpgradesSection({ items, masterAdj, onChange }) {
             <tr>
               <th scope="col" style={{ width: 260 }}>Upgrade / Override</th>
               <th scope="col" style={{ width: 80 }}>Qty</th>
-              <th scope="col" style={{ width: 110 }}>Unit Price</th>
               <th scope="col" style={{ width: 80 }}>
                 <abbr title="Price adjustment % — positive = markup, negative = discount">% Adj</abbr>
               </th>
@@ -1664,9 +1667,11 @@ function UpgradesSection({ items, masterAdj, onChange }) {
                       <option value="">— Select —</option>
                       {PRICING.upgrades.map(u => <option key={u.name}>{u.name}</option>)}
                     </select>
+                    {upg && (
+                      <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 4, fontWeight: 700 }}>{fmt(upg.price)}/unit</div>
+                    )}
                   </td>
                   <td><input type="number" min="0" value={item.qty} onChange={e => update(i, "qty", e.target.value)} /></td>
-                  <td className="num-cell" style={{ color: "var(--mid)", fontSize: 12 }}>{upg ? fmt(upg.price) : "—"}</td>
                   <td><input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} /></td>
                   <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.upgrade && qty > 0 ? "var(--gold)" : "var(--muted)" }}>
                     {item.upgrade && qty > 0 ? fmt(total) : "—"}
@@ -1677,7 +1682,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
               );
             })}
             <tr className="total-row">
-              <td colSpan={4} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Upgrades Total</td>
+              <td colSpan={3} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Upgrades Total</td>
               <td className="num-cell">{fmt(subTotal)}</td>
               <td /><td />
             </tr>
@@ -1701,7 +1706,9 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>FINISHING</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 12 }}>FINISHING
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--gold)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+        </span>
         <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
       </div>
 
@@ -1746,7 +1753,6 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
           <thead>
             <tr>
               <th scope="col" style={{ width: 160 }}>Finishing Type</th>
-              <th scope="col" style={{ width: 100 }}>Price / LF</th>
               <th scope="col" style={{ width: 100 }}>
                 <abbr title="Linear feet of finishing work for this type">Linear Feet</abbr>
               </th>
@@ -1769,8 +1775,10 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
                       <option value="">— Select —</option>
                       {PRICING.finishing.map(f => <option key={f.name}>{f.name}</option>)}
                     </select>
+                    {fin && (
+                      <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 4, fontWeight: 700 }}>{fmt(fin.pricePerLF)}/LF</div>
+                    )}
                   </td>
-                  <td className="num-cell" style={{ color: "var(--mid)", fontSize: 12 }}>{fin ? fmt(fin.pricePerLF) + "/LF" : "—"}</td>
                   <td><input type="number" min="0" step="0.5" value={item.lf} onChange={e => update(i, "lf", e.target.value)} /></td>
                   <td><input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} /></td>
                   <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.type && lf > 0 ? "var(--gold)" : "var(--muted)" }}>
@@ -1782,7 +1790,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
               );
             })}
             <tr className="total-row">
-              <td colSpan={4} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Finishing Total</td>
+              <td colSpan={3} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Finishing Total</td>
               <td className="num-cell">{fmt(subTotal)}</td>
               <td /><td />
             </tr>
@@ -1798,7 +1806,11 @@ function InstallSection({ data, cabTotal, onChange }) {
   const instTotal = calcInstall(data, cabTotal);
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
-      <div className="section-banner">INSTALLATION</div>
+      <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 12 }}>INSTALLATION
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--gold)", letterSpacing: 0 }}>{fmt(instTotal)}</span>
+        </span>
+      </div>
       <div className="card-body">
         <div className="form-grid form-grid-4">
           <Field label="Install Type">
@@ -1806,6 +1818,14 @@ function InstallSection({ data, cabTotal, onChange }) {
               <option value="">— Select —</option>
               {PRICING.installType.map(i => <option key={i.name}>{i.name}</option>)}
             </select>
+            {data.type && (() => {
+              const inst = PRICING.installType.find(i => i.name === data.type);
+              return inst ? (
+                <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 4, fontWeight: 700 }}>
+                  {data.type === HOURLY_RATE ? `${fmt(inst.rate)}/hr` : `${(inst.rate * 100).toFixed(0)}% of cabinetry`}
+                </div>
+              ) : null;
+            })()}
           </Field>
           {data.type === HOURLY_RATE && (
             <Field label="Total Hours">
