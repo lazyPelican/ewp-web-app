@@ -534,9 +534,9 @@ const styles = `
   .dark .step:hover { background: #323028; }
   .dark .step-num { background: #323028; border-color: #484030; }
   .dark .step.active .step-label { color: var(--gold-light); }
-  .dark .card-header { background: #1e1e1a; border-left-color: var(--gold); border-bottom-color: var(--ivory3); }
-  .dark .card-title { color: #ffffff; }
-  .dark .section-banner { background: #1e1e1a; color: #ffffff; border-left-color: var(--gold); }
+  .dark .card-header { background: #3a3a38; border-left-color: var(--gold); border-bottom-color: var(--ivory3); }
+  .dark .card-title { color: #e8e2d9; }
+  .dark .section-banner { background: #3a3a38; color: #e8e2d9; border-left-color: var(--gold); }
   .dark .grand-total { background: #181610; }
   .dark .data-table th { background: #2A2820; color: var(--mid); border-bottom-color: var(--ivory3); }
   .dark .data-table td { border-bottom-color: var(--ivory3); }
