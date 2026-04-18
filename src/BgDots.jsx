@@ -1,11 +1,16 @@
 import { useEffect, useRef } from "react"
 
+/**
+ * Floating particle background with cursor repulsion (antigravity effect).
+ * Dots drift freely with organic motion; the cursor pushes them away,
+ * leaving a clear bubble of space around the mouse.
+ */
 export default function BgDots({ dark }) {
   const canvasRef   = useRef(null)
   const mouseRef    = useRef({ x: -9999, y: -9999 })
   const lastMoveRef = useRef(0)
   const rafRef      = useRef(null)
-  const dotR        = useRef([])
+  const dotsRef     = useRef(null)   // particle array, init once
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -32,92 +37,103 @@ export default function BgDots({ dark }) {
     window.addEventListener("mousemove", onMove)
     document.addEventListener("mouseleave", onLeave)
 
-    const GRID      = 32
-    const BASE_R    = 1.4   // resting dot radius
-    const MAX_R     = 4.0   // subtle peak — just a gentle swell
-    const INFLUENCE = 72    // small zone, tight around cursor
-    const LERP      = 0.12
-    const IDLE_MS   = 1800
+    // ── constants ────────────────────────────────────────────────────────
+    const COUNT       = Math.floor((window.innerWidth * window.innerHeight) / 8000)
+    const BASE_R      = 2.0       // dot radius (logical px)
+    const REPEL_R     = 130       // how far cursor repels
+    const REPEL_FORCE = 0.55      // push strength
+    const MAX_SPEED   = 1.1
+    const DRIFT       = 0.012     // random drift per frame
+    const FRICTION    = 0.985     // velocity damping
+    const IDLE_MS     = 2000
+
+    // Build particle list once
+    if (!dotsRef.current) {
+      dotsRef.current = Array.from({ length: COUNT }, () => ({
+        x:  Math.random() * window.innerWidth,
+        y:  Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        // individual oscillation for organic feel
+        phase: Math.random() * Math.PI * 2,
+        freq:  0.004 + Math.random() * 0.006,
+        amp:   0.08  + Math.random() * 0.10,
+      }))
+    }
 
     let running = true
+    let frame   = 0
 
     const draw = () => {
       if (!running) return
+      frame++
       const ctx = canvas.getContext("2d")
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       const idle = Date.now() - lastMoveRef.current > IDLE_MS
-      const { x: rawMx, y: rawMy } = mouseRef.current
-      const mx = idle ? -9999 : rawMx
-      const my = idle ? -9999 : rawMy
+      const mx   = idle ? -9999 : mouseRef.current.x
+      const my   = idle ? -9999 : mouseRef.current.y
 
-      const cols  = Math.ceil(window.innerWidth  / GRID) + 1
-      const rows  = Math.ceil(window.innerHeight / GRID) + 1
-      const total = cols * rows
-      while (dotR.current.length < total) dotR.current.push(BASE_R)
+      const dots = dotsRef.current
+      const W    = window.innerWidth
+      const H    = window.innerHeight
 
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const idx = row * cols + col
-          const lx  = col * GRID
-          const ly  = row * GRID
+      // dot color
+      const baseColor = dark ? "201,169,110" : "139,106,55"
 
-          const dx   = lx - mx
-          const dy   = ly - my
+      for (const d of dots) {
+        // ── organic drift using sine oscillation ──────────────────────────
+        d.vx += Math.sin(d.phase + frame * d.freq) * d.amp * DRIFT
+        d.vy += Math.cos(d.phase + frame * d.freq * 0.7) * d.amp * DRIFT
+
+        // ── cursor repulsion ──────────────────────────────────────────────
+        if (mx > -1000) {
+          const dx   = d.x - mx
+          const dy   = d.y - my
           const dist = Math.sqrt(dx * dx + dy * dy)
-
-          // Hemisphere profile for a clean dome shape
-          const nd      = dist / INFLUENCE
-          const zHeight = nd < 1 ? Math.sqrt(Math.max(0, 1 - nd * nd)) : 0
-          const targetR = BASE_R + (MAX_R - BASE_R) * zHeight
-
-          const prev = dotR.current[idx]
-          const r    = prev + (targetR - prev) * LERP
-          dotR.current[idx] = r
-
-          const elevated = (r - BASE_R) / (MAX_R - BASE_R)
-          const px = lx * dpr
-          const py = ly * dpr
-          const rp = r  * dpr
-
-          ctx.save()
-
-          // Subtle radial shadow pointing away from push centre
-          if (elevated > 0.05) {
-            const angle = dist > 1 ? Math.atan2(dy, dx) : 0
-            ctx.shadowColor   = dark
-              ? `rgba(0,0,0,${0.45 * elevated})`
-              : `rgba(50,28,5,${0.25 * elevated})`
-            ctx.shadowBlur    = rp * 1.4 * elevated
-            ctx.shadowOffsetX = Math.cos(angle) * rp * 0.5 * elevated
-            ctx.shadowOffsetY = Math.sin(angle) * rp * 0.6 * elevated
+          if (dist < REPEL_R && dist > 0.1) {
+            const force = (1 - dist / REPEL_R) * REPEL_FORCE
+            d.vx += (dx / dist) * force
+            d.vy += (dy / dist) * force
           }
-
-          // Sphere gradient with upper-left highlight
-          const hx   = px - rp * 0.30
-          const hy   = py - rp * 0.30
-          const grad = ctx.createRadialGradient(hx, hy, rp * 0.04, px, py, rp)
-
-          if (dark) {
-            const op = 0.18 + 0.55 * elevated
-            grad.addColorStop(0.00, `rgba(255,238,175,${Math.min(op * 1.9, 0.88)})`)
-            grad.addColorStop(0.28, `rgba(210,175,105,${op})`)
-            grad.addColorStop(0.68, `rgba(168,132,62,${op * 0.75})`)
-            grad.addColorStop(1.00, `rgba(55,34,8,${op * 0.55 + 0.05})`)
-          } else {
-            const op = 0.22 + 0.48 * elevated
-            grad.addColorStop(0.00, `rgba(240,205,138,${Math.min(op * 2.0, 0.90)})`)
-            grad.addColorStop(0.28, `rgba(168,128,60,${op})`)
-            grad.addColorStop(0.68, `rgba(125,94,36,${op * 0.72})`)
-            grad.addColorStop(1.00, `rgba(42,24,4,${op * 0.48 + 0.04})`)
-          }
-
-          ctx.beginPath()
-          ctx.arc(px, py, Math.max(rp, 0.5), 0, Math.PI * 2)
-          ctx.fillStyle = grad
-          ctx.fill()
-          ctx.restore()
         }
+
+        // ── friction + speed cap ──────────────────────────────────────────
+        d.vx *= FRICTION
+        d.vy *= FRICTION
+        const speed = Math.sqrt(d.vx * d.vx + d.vy * d.vy)
+        if (speed > MAX_SPEED) {
+          d.vx = (d.vx / speed) * MAX_SPEED
+          d.vy = (d.vy / speed) * MAX_SPEED
+        }
+
+        // ── move + wrap ───────────────────────────────────────────────────
+        d.x += d.vx
+        d.y += d.vy
+        if (d.x < -10) d.x = W + 10
+        if (d.x > W + 10) d.x = -10
+        if (d.y < -10) d.y = H + 10
+        if (d.y > H + 10) d.y = -10
+
+        // ── draw dot with soft glow ───────────────────────────────────────
+        const px = d.x * dpr
+        const py = d.y * dpr
+        const rp = BASE_R * dpr
+
+        // glow layer (larger, very transparent)
+        const glow = ctx.createRadialGradient(px, py, 0, px, py, rp * 3.5)
+        glow.addColorStop(0,   `rgba(${baseColor},${dark ? 0.18 : 0.14})`)
+        glow.addColorStop(1,   `rgba(${baseColor},0)`)
+        ctx.beginPath()
+        ctx.arc(px, py, rp * 3.5, 0, Math.PI * 2)
+        ctx.fillStyle = glow
+        ctx.fill()
+
+        // core dot
+        ctx.beginPath()
+        ctx.arc(px, py, rp, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${baseColor},${dark ? 0.55 : 0.45})`
+        ctx.fill()
       }
 
       rafRef.current = requestAnimationFrame(draw)

@@ -383,15 +383,15 @@ const styles = `
 
   /* ── SECTION LABEL ── */
   .section-banner {
-    background: var(--ivory2);
-    color: var(--ewp-slate);
+    background: #3a3d3d;
+    color: #ffffff;
     font-family: 'DM Sans', sans-serif;
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.16em;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 10px 16px;
+    padding: 11px 18px;
     border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--ewp-slate);
+    border-left: 4px solid var(--gold);
     display: flex; align-items: center; justify-content: space-between;
   }
 
@@ -536,7 +536,7 @@ const styles = `
   .dark .step.active .step-label { color: var(--gold-light); }
   .dark .card-header { background: #2A2820; border-left-color: var(--ewp-slate); border-bottom-color: var(--ivory3); }
   .dark .card-title { color: var(--ewp-slate); }
-  .dark .section-banner { background: #2A2820; color: var(--ewp-slate); border-left-color: var(--ewp-slate); }
+  .dark .section-banner { background: #1e1e1a; color: #ffffff; border-left-color: var(--gold); }
   .dark .grand-total { background: #181610; }
   .dark .data-table th { background: #2A2820; color: var(--mid); border-bottom-color: var(--ivory3); }
   .dark .data-table td { border-bottom-color: var(--ivory3); }
@@ -926,15 +926,15 @@ const styles = `
 
   /* ── SECTION BANNER ── */
   .section-banner {
-    background: var(--ivory2);
-    color: var(--ewp-slate);
+    background: #3a3d3d;
+    color: #ffffff;
     font-family: 'DM Sans', sans-serif;
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.16em;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 10px 16px;
+    padding: 11px 18px;
     border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--ewp-slate);
+    border-left: 4px solid var(--gold);
     display: flex; align-items: center; justify-content: space-between;
     transition: border-left-color 0.2s ease;
   }
