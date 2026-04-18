@@ -2644,16 +2644,6 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
                     onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
                     📄 Client
                   </button>
-                  {/* Email to Client */}
-                  <button
-                    className={`btn ${allComplete ? "btn-outline" : "btn-outline"}`}
-                    style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
-                    title={allComplete ? "Email quote to client" : "Complete all rooms to email quote"}
-                    aria-label={`Email quote to client for ${p.project.name}`}
-                    aria-disabled={!allComplete}
-                    onClick={() => allComplete && onEmail(realIdx)}>
-                    ✉ Email
-                  </button>
                   {/* Duplicate */}
                   <button
                     className="btn btn-outline"
