@@ -1500,10 +1500,28 @@ function ProjectSetup({ project, onChange, onNext }) {
         <div className="card-header"><span className="card-title">SCOPE</span></div>
         <div className="card-body">
           <div className="form-grid form-grid-2">
+            <Field label="Installation done by EWP?">
+              <select
+                value={project.installationType === "contractor" ? "No" : "Yes"}
+                onChange={e => onChange({ installationType: e.target.value === "Yes" ? "ewp" : "contractor" })}>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </Field>
             <Field label="Master Adjustment %">
               <input type="number" step="0.1" value={project.masterAdj} placeholder="0"
                 onChange={e => onChange({ masterAdj: e.target.value })} />
             </Field>
+          </div>
+          <div style={{
+            marginTop: 12, padding: "9px 14px", borderRadius: 6,
+            background: project.installationType === "contractor" ? "rgba(184,59,46,0.06)" : "rgba(42,107,64,0.06)",
+            border: `1px solid ${project.installationType === "contractor" ? "rgba(184,59,46,0.2)" : "rgba(42,107,64,0.2)"}`,
+            fontSize: 13, color: "var(--char)", lineHeight: 1.5,
+          }}>
+            {project.installationType === "contractor"
+              ? <span>⚠️ <strong>8.53% estimated sales tax</strong> will be applied — EWP is not installing.</span>
+              : <span>✅ <strong>No sales tax</strong> — EWP is doing the installation.</span>}
           </div>
         </div>
       </div>
