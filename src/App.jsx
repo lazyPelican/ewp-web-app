@@ -192,7 +192,7 @@ const styles = `
     --mid:    rgb(120, 125, 125);
     --muted:  rgb(105, 108, 108);
 
-    --card-bg:         #FFFFFF;
+    --card-bg:         rgba(255, 255, 255, 0.82);
     --input-bg:        #FDFBF7;
     --input-focus-bg:  #FFFDF8;
 
@@ -520,7 +520,7 @@ const styles = `
     --char2:   rgb(230, 232, 230);
     --mid:     #B0A090;
     --muted:   #b8b0a5;
-    --card-bg:         #222018;
+    --card-bg:         rgba(34, 32, 24, 0.82);
     --input-bg:        #2A2820;
     --input-focus-bg:  #2E2C22;
     --green: #4A9B65;
@@ -716,12 +716,14 @@ const styles = `
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 20px;
-    box-shadow: 0 1px 8px rgba(20,15,5,0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
     transition: box-shadow 0.25s ease, transform 0.25s ease;
   }
   .card:hover {
-    box-shadow: 0 4px 20px rgba(20,15,5,0.09);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
   }
 
   /* ── BUTTONS ── */
@@ -862,9 +864,12 @@ const styles = `
     border-radius: 4px;
     padding: 14px 16px;
     border-top: 2px solid var(--gold);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
   }
-  .summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(138,106,56,0.12); }
+  .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 4px 12px rgba(138,106,56,0.15); }
   .summary-card-value {
     font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--char); text-align: center;
     animation: countUp 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -2671,6 +2676,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const [view, setView] = useState("dashboard");
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
+  const [maxStep, setMaxStep] = useState(0);
   const [quickSaving, setQuickSaving] = useState(false);
   const [quickSaved, setQuickSaved] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -2811,13 +2817,13 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
       contractorName: "", contractorContact: "", rooms: 1, masterAdj: 0,
       deliveryAmount: "", deliveryNotes: "", taxEnabled: false, taxRate: 8, installationType: "ewp" });
     setRooms([blankRoom(0)]);
-    setStep(0); setSaved(false); setEditIdx(null); setView("new");
+    setStep(0); setSaved(false); setEditIdx(null); setView("new"); setMaxStep(0);
   };
 
   const openProject = (i) => {
     const p = projects[i];
     setProject(p.project); setRooms(p.rooms);
-    setStep(0); setEditIdx(i); setSaved(true); setView("new");
+    setStep(0); setEditIdx(i); setSaved(true); setView("new"); setMaxStep(4);
   };
 
   const deleteProject = (i) => setDeletePendingIdx(i);
@@ -3045,13 +3051,13 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
           const projectValid = !!(project.name && project.address && project.bidDate);
           const allRoomsComplete = rooms.every(isRoomComplete);
           const done = [
-            projectValid && (step > 0 || saved),
-            allRoomsComplete && (step > 1 || saved),
-            (step > 2 || saved),
-            saved,
-            saved,
+            maxStep >= 1,
+            maxStep >= 2,
+            maxStep >= 3,
+            maxStep >= 4,
+            maxStep >= 4 && saved,
           ];
-          const reachable = [true, projectValid, projectValid && allRoomsComplete, projectValid && allRoomsComplete, saved];
+          const reachable = [true, maxStep >= 1, maxStep >= 2, maxStep >= 3, maxStep >= 4];
           return (
             <div className="stepper">
               <button className="btn btn-ghost btn-sm"
@@ -3114,6 +3120,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               setSaved(true);
               setView("new");
               setStep(3);
+              setMaxStep(4);
               // slight delay so component mounts, then trigger export
               setTimeout(() => {
                 exportPDFInternal(p.project, p.rooms, preparedBy, () => {});
@@ -3143,7 +3150,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                   install:   { ...room.install, adjPct: adj },
                 })))
               }
-            }} onNext={() => setStep(1)} />
+            }} onNext={() => { setStep(1); setMaxStep(p => Math.max(p, 1)); }} />
           )}
           {view === "new" && step === 1 && (
             <RoomsPage project={project} rooms={rooms} onRoomsChange={setRooms}
@@ -3154,13 +3161,13 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                 setRooms(prev => { const next = [...prev]; next.splice(i + 1, 0, duped); return next; });
               }}
               onProjectChange={d => setProject(p => ({ ...p, ...d }))}
-              onNext={() => setStep(2)} onBack={() => setStep(0)} />
+              onNext={() => { setStep(2); setMaxStep(p => Math.max(p, 2)); }} onBack={() => setStep(0)} />
           )}
           {view === "new" && step === 2 && (
-            <FinalDetailsPage project={project} rooms={rooms} onChange={d => setProject(p => ({ ...p, ...d }))} onNext={() => setStep(3)} onBack={() => setStep(1)} />
+            <FinalDetailsPage project={project} rooms={rooms} onChange={d => setProject(p => ({ ...p, ...d }))} onNext={() => { setStep(3); setMaxStep(p => Math.max(p, 3)); }} onBack={() => setStep(1)} />
           )}
           {view === "new" && step === 3 && (
-            <SummaryPage project={project} rooms={rooms} onBack={() => setStep(2)} onSave={saveProject} onNext={() => setStep(4)} preparedBy={preparedBy} />
+            <SummaryPage project={project} rooms={rooms} onBack={() => setStep(2)} onSave={saveProject} onNext={() => { setStep(4); setMaxStep(p => Math.max(p, 4)); }} preparedBy={preparedBy} />
           )}
           {view === "new" && step === 4 && (
             <PrintEmailPage
