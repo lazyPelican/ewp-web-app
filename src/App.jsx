@@ -2823,7 +2823,10 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const openProject = (i) => {
     const p = projects[i];
     setProject(p.project); setRooms(p.rooms);
-    setStep(0); setEditIdx(i); setSaved(true); setView("new"); setMaxStep(4);
+    setStep(0); setEditIdx(i); setSaved(true); setView("new");
+    const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
+    const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
+    setMaxStep(pValid && rComplete ? 4 : pValid ? 1 : 0);
   };
 
   const deleteProject = (i) => setDeletePendingIdx(i);
