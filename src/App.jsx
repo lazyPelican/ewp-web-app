@@ -283,16 +283,16 @@ const styles = `
 
   /* ── CARD (see animation block below) ── */
   .card-header {
-    background: var(--ivory2);
+    background: #3a3d3d;
     padding: 12px 20px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--ewp-slate);
+    border-left: 4px solid var(--gold);
   }
   .card-title {
     font-family: 'DM Sans', sans-serif;
-    font-size: 10px; font-weight: 700;
-    color: var(--ewp-slate); letter-spacing: 0.14em;
+    font-size: 11px; font-weight: 700;
+    color: #ffffff; letter-spacing: 0.16em;
     text-transform: uppercase;
   }
   .card-body { padding: 20px; }
@@ -534,8 +534,8 @@ const styles = `
   .dark .step:hover { background: #323028; }
   .dark .step-num { background: #323028; border-color: #484030; }
   .dark .step.active .step-label { color: var(--gold-light); }
-  .dark .card-header { background: #2A2820; border-left-color: var(--ewp-slate); border-bottom-color: var(--ivory3); }
-  .dark .card-title { color: var(--ewp-slate); }
+  .dark .card-header { background: #1e1e1a; border-left-color: var(--gold); border-bottom-color: var(--ivory3); }
+  .dark .card-title { color: #ffffff; }
   .dark .section-banner { background: #1e1e1a; color: #ffffff; border-left-color: var(--gold); }
   .dark .grand-total { background: #181610; }
   .dark .data-table th { background: #2A2820; color: var(--mid); border-bottom-color: var(--ivory3); }
