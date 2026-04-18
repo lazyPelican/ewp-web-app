@@ -3081,7 +3081,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             </div>
           );
         })()}
-        {view === "new" && project.id && (
+        {view === "new" && project.id && project.name.trim() && (
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 16,
             padding: "6px 24px",
