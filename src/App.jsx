@@ -2674,6 +2674,29 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
   );
 }
 
+// ── ATTACHMENT PREVIEW ─────────────────────────────────────────
+function AttachmentPreview({ url }) {
+  if (!url) return null;
+  const lower = url.toLowerCase().split("?")[0];
+  const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lower);
+  const isVideo = /\.(mp4|webm|mov|ogg)$/i.test(lower);
+  if (isImage) {
+    return (
+      <a href={url} target="_blank" rel="noreferrer" style={{ display: "inline-block", maxWidth: "85%" }}>
+        <img src={url} alt="attachment" style={{ maxWidth: "100%", maxHeight: 240, borderRadius: 6, border: "1px solid var(--ivory3)", display: "block" }} />
+      </a>
+    );
+  }
+  if (isVideo) {
+    return (
+      <video src={url} controls style={{ maxWidth: "85%", maxHeight: 280, borderRadius: 6, border: "1px solid var(--ivory3)" }} />
+    );
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--gold)" }}>📎 View Attachment</a>
+  );
+}
+
 // ── BUG REPORT MODAL ───────────────────────────────────────────
 // Requires Supabase tables:
 //   bug_reports (id uuid pk default gen_random_uuid(), created_at timestamptz default now(),
@@ -2705,7 +2728,10 @@ function BugReportModal({ session, onClose }) {
       const ext = attachment.name.split(".").pop();
       const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
       const { data: upData, error: upErr } = await supabase.storage.from("bug-attachments").upload(path, attachment);
-      if (!upErr && upData) {
+      if (upErr) {
+        console.error("Storage upload error:", upErr);
+        alert("Attachment upload failed:\n" + (upErr.message || JSON.stringify(upErr)) + "\n\nReport will be submitted without attachment.");
+      } else if (upData) {
         const { data: urlData } = supabase.storage.from("bug-attachments").getPublicUrl(path);
         attachmentUrl = urlData?.publicUrl || null;
       }
@@ -2843,7 +2869,10 @@ function BugThreadModal({ report, session, isAdmin, onClose, onStatusChange }) {
       const ext = attachment.name.split(".").pop();
       const path = `${report.id}/${Date.now()}.${ext}`;
       const { data: upData, error: upErr } = await supabase.storage.from("bug-attachments").upload(path, attachment);
-      if (!upErr && upData) {
+      if (upErr) {
+        console.error("Storage upload error:", upErr);
+        alert("Attachment upload failed:\n" + (upErr.message || JSON.stringify(upErr)));
+      } else if (upData) {
         const { data: urlData } = supabase.storage.from("bug-attachments").getPublicUrl(path);
         attachmentUrl = urlData?.publicUrl || null;
       }
@@ -2910,7 +2939,7 @@ function BugThreadModal({ report, session, isAdmin, onClose, onStatusChange }) {
               {report.description}
             </div>
             {report.attachment_url && (
-              <a href={report.attachment_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--gold)" }}>📎 View Attachment</a>
+              <AttachmentPreview url={report.attachment_url} />
             )}
           </div>
 
@@ -2931,7 +2960,7 @@ function BugThreadModal({ report, session, isAdmin, onClose, onStatusChange }) {
                       padding: "10px 14px", fontSize: 13, color: "var(--char)", lineHeight: 1.65, maxWidth: "85%", whiteSpace: "pre-wrap",
                     }}>{msg.message}</div>
                     {msg.attachment_url && (
-                      <a href={msg.attachment_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--gold)" }}>📎 View Attachment</a>
+                      <AttachmentPreview url={msg.attachment_url} />
                     )}
                   </div>
                 );
