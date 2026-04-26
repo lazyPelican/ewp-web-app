@@ -4,6 +4,7 @@ import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
 import { logError } from "./logger.js"
+import { BugReportsTab } from "./BugReports.jsx"
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
 
@@ -144,7 +145,7 @@ const TABLE_CONFIG = [
   },
 ]
 
-export default function AdminPanel({ currentUser, isAdmin, onBack }) {
+export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   const [tab, setTab] = useState("users")         // "users" | "pricing"
   const [activeTable, setActiveTable] = useState("woodwork")
   const [pricing, setPricing] = useState(null)    // null = loading
@@ -623,7 +624,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack }) {
 
       {/* Main tab bar */}
       <div className="admin-tab-bar" style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0 }}>
-        {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"]].map(([key, label]) => (
+        {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"], ["bugs", "🐛 Bug Reports"]].map(([key, label]) => (
           <button key={key} onClick={() => confirmIfDirty(() => setTab(key))} style={{
             padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === key ? t.gold : "transparent"}`,
             background: "transparent", color: tab === key ? t.text : t.textMuted,
@@ -1025,6 +1026,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack }) {
               )}
             </div>
           </div>
+        )}
+
+        {/* ── BUG REPORTS TAB ── */}
+        {tab === "bugs" && (
+          <BugReportsTab session={session} isAdmin={isAdmin} />
         )}
       </div>
 
