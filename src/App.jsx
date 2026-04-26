@@ -2715,7 +2715,7 @@ function BugReportModal({ session, onClose }) {
       user_id: session?.user?.id, description: desc.trim(),
       status: "open", attachment_url: attachmentUrl,
     });
-    if (error) { alert("Failed to submit — please try again."); setSubmitting(false); return; }
+    if (error) { console.error("Bug report insert error:", error); alert("Failed to submit:\n" + (error.message || JSON.stringify(error))); setSubmitting(false); return; }
     setDone(true); setSubmitting(false);
   };
 
