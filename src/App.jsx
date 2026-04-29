@@ -947,11 +947,11 @@ const styles = `
 
   /* ── TOAST ── */
   .toast {
-    position: fixed; bottom: 24px; right: 24px;
+    position: fixed; bottom: 56px; right: 24px;
     background: var(--char); color: #fff;
     padding: 12px 20px; border-radius: 3px;
     font-size: 13px; border-left: 3px solid var(--gold);
-    z-index: 999; animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 1000; animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow: 0 8px 32px rgba(20,15,5,0.25);
   }
 
@@ -1497,36 +1497,6 @@ function ProjectSetup({ project, onChange, onNext }) {
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header"><span className="card-title">SCOPE</span></div>
-        <div className="card-body">
-          <div className="form-grid form-grid-2">
-            <Field label="Installation done by EWP?">
-              <select
-                value={project.installationType === "contractor" ? "No" : "Yes"}
-                onChange={e => onChange({ installationType: e.target.value === "Yes" ? "ewp" : "contractor" })}>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </Field>
-            <Field label="Master Adjustment %">
-              <input type="number" step="0.1" value={project.masterAdj} placeholder="0"
-                onChange={e => onChange({ masterAdj: e.target.value })} />
-            </Field>
-          </div>
-          <div style={{
-            marginTop: 12, padding: "9px 14px", borderRadius: 6,
-            background: project.installationType === "contractor" ? "rgba(184,59,46,0.06)" : "rgba(42,107,64,0.06)",
-            border: `1px solid ${project.installationType === "contractor" ? "rgba(184,59,46,0.2)" : "rgba(42,107,64,0.2)"}`,
-            fontSize: 13, color: "var(--char)", lineHeight: 1.5,
-          }}>
-            {project.installationType === "contractor"
-              ? <span>⚠️ <strong>8.53% estimated sales tax</strong> will be applied — EWP is not installing.</span>
-              : <span>✅ <strong>No sales tax</strong> — EWP is doing the installation.</span>}
-          </div>
-        </div>
-      </div>
-
       <div className="flex justify-between items-center mt-24">
         <button className="btn btn-gold btn-lg" onClick={handleNext}>
           Continue to Rooms →
@@ -1880,7 +1850,7 @@ function InstallSection({ data, cabTotal, onChange }) {
 }
 
 // ── ROOMS PAGE ─────────────────────────────────────────────────
-function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onDuplicateRoom, onNext, onBack }) {
+function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onDuplicateRoom, onProjectChange, onNext, onBack }) {
   const [activeRoom, setActiveRoom] = useState(0);
   const room = rooms[Math.min(activeRoom, rooms.length - 1)];
   const safeActiveRoom = Math.min(activeRoom, rooms.length - 1);
@@ -1909,6 +1879,24 @@ function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onD
             <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "var(--gold)" }}>{fmt(roomTotal)}</div>
           </div>
         </div>
+      </div>
+
+      {/* Master Adjust */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 14, marginBottom: 14,
+        padding: "12px 16px", borderRadius: 6,
+        background: "var(--card-bg)", border: "1px solid var(--ivory3)",
+        backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+      }}>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--char)", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>
+          Master Adjustment %
+        </label>
+        <input type="number" step="0.1" value={project.masterAdj} placeholder="0"
+          onChange={e => onProjectChange?.({ masterAdj: e.target.value })}
+          style={{ width: 90, padding: "6px 10px", borderRadius: 4, border: "1px solid var(--ivory3)", background: "var(--input-bg)", fontSize: 13, color: "var(--char)" }} />
+        <span style={{ fontSize: 11, color: "var(--muted)" }}>
+          Applies to all line items across every room.
+        </span>
       </div>
 
       {/* Room Tabs */}
@@ -3129,19 +3117,25 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
         })()}
         {view === "new" && project.id && project.name.trim() && (
           <div style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 16,
-            padding: "6px 24px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
+            padding: "8px 32px",
             background: "rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             fontSize: 13, letterSpacing: "0.04em",
           }}>
             <span>Project ID: <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span></span>
             <button
-              className="btn btn-gold"
-              style={{ padding: "3px 14px", fontSize: 11, background: quickSaved ? "var(--green)" : undefined, transition: "background 0.3s" }}
+              className="btn btn-gold btn-lg"
+              style={{
+                padding: "10px 28px", fontSize: 13, fontWeight: 800,
+                background: quickSaved ? "var(--green)" : undefined,
+                boxShadow: quickSaved ? "0 4px 14px rgba(42,107,64,0.45)" : "0 4px 14px rgba(138,106,56,0.4)",
+                transition: "background 0.3s, transform 0.15s",
+                letterSpacing: "0.1em",
+              }}
               disabled={quickSaving}
               onClick={handleQuickSave}
             >
-              {quickSaving ? "⏳ Saving…" : quickSaved ? "✅ Saved!" : "💾 Save"}
+              {quickSaving ? "⏳ Saving…" : quickSaved ? "✅ Saved!" : "💾 Save Estimate"}
             </button>
           </div>
         )}
@@ -3183,20 +3177,8 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
           />
           )}
           {view === "new" && step === 0 && (
-            <ProjectSetup project={project} onChange={d => {
-              setProject(p => ({ ...p, ...d }))
-              // If masterAdj changed, apply it to all adjPct fields across all rooms
-              if ('masterAdj' in d) {
-                const adj = String(d.masterAdj)
-                setRooms(prev => prev.map(room => ({
-                  ...room,
-                  cabinetry: room.cabinetry.map(r => ({ ...r, adjPct: adj })),
-                  upgrades:  room.upgrades.map(r => ({ ...r, adjPct: adj })),
-                  finishing: room.finishing.map(r => ({ ...r, adjPct: adj })),
-                  install:   { ...room.install, adjPct: adj },
-                })))
-              }
-            }} onNext={() => { setStep(1); setMaxStep(p => Math.max(p, 1)); }} />
+            <ProjectSetup project={project} onChange={d => setProject(p => ({ ...p, ...d }))}
+              onNext={() => { setStep(1); setMaxStep(p => Math.max(p, 1)); }} />
           )}
           {view === "new" && step === 1 && (
             <RoomsPage project={project} rooms={rooms} onRoomsChange={setRooms}
@@ -3206,7 +3188,20 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                 const duped = { ...src, id: Date.now() + Math.random(), name: makeCopyName(src.name, rooms.map(r => r.name)) };
                 setRooms(prev => { const next = [...prev]; next.splice(i + 1, 0, duped); return next; });
               }}
-              onProjectChange={d => setProject(p => ({ ...p, ...d }))}
+              onProjectChange={d => {
+                setProject(p => ({ ...p, ...d }))
+                // If masterAdj changed, apply to all adjPct fields across all rooms
+                if ('masterAdj' in d) {
+                  const adj = String(d.masterAdj)
+                  setRooms(prev => prev.map(room => ({
+                    ...room,
+                    cabinetry: room.cabinetry.map(r => ({ ...r, adjPct: adj })),
+                    upgrades:  room.upgrades.map(r => ({ ...r, adjPct: adj })),
+                    finishing: room.finishing.map(r => ({ ...r, adjPct: adj })),
+                    install:   { ...room.install, adjPct: adj },
+                  })))
+                }
+              }}
               onNext={() => { setStep(2); setMaxStep(p => Math.max(p, 2)); }} onBack={() => setStep(0)} />
           )}
           {view === "new" && step === 2 && (
