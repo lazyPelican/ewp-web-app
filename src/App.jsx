@@ -170,35 +170,35 @@ const blankRoom = (n, masterAdj) => ({
 
 // ── STYLES ─────────────────────────────────────────────────────
 const styles = `
-  /* ── CSS VARIABLE OVERRIDES — Warm Craftsman Light Theme ── */
+  /* ── CSS VARIABLE OVERRIDES — Charcoal & Burnished Brass ── */
   :root {
-    --ewp-slate:   rgb(73, 77, 77);
-    --ewp-slate2:  rgb(55, 58, 58);
+    --ewp-slate:   #1F242E;
+    --ewp-slate2:  #15171C;
 
-    --header-bg:      rgba(253, 250, 245, 0.65);
-    --header-border:  #E4D9C8;
-    --header-text:    rgb(73, 77, 77);
-    --header-subtext: rgb(140, 145, 145);
+    --header-bg:      rgba(242, 241, 237, 0.65);
+    --header-border:  #A88147;
+    --header-text:    #1F242E;
+    --header-subtext: #5A6068;
 
-    --gold:        #8A6A38;
-    --gold-light:  #B8924F;
-    --gold-bg:     #FAF3E6;
+    --gold:        #A88147;
+    --gold-light:  #C99E64;
+    --gold-bg:     #F5EFE3;
 
-    --ivory2:  #F6F1E8;
-    --ivory3:  #EDE4D4;
-    --rule:    #D8CEBA;
+    --ivory2:  #EAE8E2;
+    --ivory3:  #DCDAD2;
+    --rule:    #C8C5BC;
 
-    --char:   rgb(73, 77, 77);
-    --char2:  rgb(55, 58, 58);
-    --mid:    rgb(120, 125, 125);
-    --muted:  rgb(105, 108, 108);
+    --char:   #15171C;
+    --char2:  #1F242E;
+    --mid:    #5A6068;
+    --muted:  #6E7480;
 
-    --card-bg:         rgba(255, 255, 255, 0.82);
-    --input-bg:        #FDFBF7;
-    --input-focus-bg:  #FFFDF8;
+    --card-bg:         rgba(255, 255, 255, 0.85);
+    --input-bg:        #F8F8F4;
+    --input-focus-bg:  #FFFFFF;
 
-    --green: #2A6B40;
-    --red:   #B83B2E;
+    --green: #357056;
+    --red:   #A93629;
   }
 
   /* ── LAYOUT ── */
@@ -284,7 +284,7 @@ const styles = `
 
   /* ── CARD (see animation block below) ── */
   .card-header {
-    background: #3a3d3d;
+    background: #1F242E;
     padding: 12px 20px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--ivory3);
@@ -384,7 +384,7 @@ const styles = `
 
   /* ── SECTION LABEL ── */
   .section-banner {
-    background: #3a3d3d;
+    background: #1F242E;
     color: #ffffff;
     font-family: 'DM Sans', sans-serif;
     font-size: 15px; font-weight: 700;
@@ -502,42 +502,42 @@ const styles = `
     border-bottom: 1px solid var(--gold);
   }
 
-  /* ── DARK MODE OVERRIDES ── */
+  /* ── DARK MODE OVERRIDES — Charcoal & Burnished Brass ── */
   .dark {
-    --ewp-slate:   rgb(195, 200, 200);
-    --ewp-slate2:  rgb(220, 223, 223);
+    --ewp-slate:   #C8CDD5;
+    --ewp-slate2:  #DCDFE5;
 
-    --header-bg:      rgba(42, 40, 32, 0.65);
-    --header-border:  #3A3628;
-    --header-text:    rgb(210, 213, 210);
-    --header-subtext: #A09580;
-    --gold:        #B8904A;
-    --gold-light:  #D4AA72;
-    --gold-bg:     #2E2A1A;
-    --ivory2:  #272420;
-    --ivory3:  #323028;
-    --rule:    #484030;
-    --char:    rgb(210, 213, 210);
-    --char2:   rgb(230, 232, 230);
-    --mid:     #B0A090;
-    --muted:   #b8b0a5;
-    --card-bg:         rgba(34, 32, 24, 0.82);
-    --input-bg:        #2A2820;
-    --input-focus-bg:  #2E2C22;
-    --green: #4A9B65;
-    --red:   #D05050;
+    --header-bg:      rgba(14, 16, 20, 0.72);
+    --header-border:  #C99E64;
+    --header-text:    #E8E4D9;
+    --header-subtext: #9BA4B6;
+    --gold:        #C99E64;
+    --gold-light:  #DCB47C;
+    --gold-bg:     #2E2418;
+    --ivory2:  #1A1E25;
+    --ivory3:  #262A33;
+    --rule:    #353A45;
+    --char:    #E8E4D9;
+    --char2:   #F0EDE5;
+    --mid:     #9BA4B6;
+    --muted:   #7A8290;
+    --card-bg:         rgba(25, 29, 36, 0.82);
+    --input-bg:        #1A1E25;
+    --input-focus-bg:  #1F242E;
+    --green: #4A9B7E;
+    --red:   #C5594D;
   }
-  .dark body { background: #201E18; }
+  .dark body { background: #0E1014; }
   .dark .app {
-    background-color: #201E18;
+    background-color: #0E1014;
   }
   .dark .stepper { background: var(--header-bg); border-bottom-color: var(--header-border); }
   .dark .step:hover { background: #323028; }
   .dark .step-num { background: #323028; border-color: #484030; }
   .dark .step.active .step-label { color: var(--gold-light); }
-  .dark .card-header { background: #3a3a38; border-left-color: var(--gold); border-bottom-color: var(--ivory3); }
+  .dark .card-header { background: #262A33; border-left-color: var(--gold); border-bottom-color: var(--ivory3); }
   .dark .card-title { color: #e8e2d9; }
-  .dark .section-banner { background: #3a3a38; color: #e8e2d9; border-left-color: var(--gold); }
+  .dark .section-banner { background: #262A33; color: #E8E4D9; border-left-color: var(--gold); }
   .dark .grand-total { background: #181610; }
   .dark .data-table th { background: #2A2820; color: var(--mid); border-bottom-color: var(--ivory3); }
   .dark .data-table td { border-bottom-color: var(--ivory3); }
@@ -548,9 +548,9 @@ const styles = `
   .dark .modal-header { background: #2A2820; }
   .dark .modal { background: var(--card-bg); border-color: var(--ivory3); }
   /* Buttons in dark mode */
-  .dark .btn-primary { background: var(--ewp-slate); color: #201E18; }
+  .dark .btn-primary { background: var(--ewp-slate); color: #0E1014; }
   .dark .btn-primary:hover { background: var(--ewp-slate2); }
-  .dark .btn-gold { background: #B8904A; color: #201E18; }
+  .dark .btn-gold { background: #C99E64; color: #0E1014; }
   .dark .btn-gold:hover { background: #D4AA72; }
   .dark .btn-outline { color: #D5D0C8; border-color: #484030; background: transparent; }
   .dark .btn-outline:hover { background: #2E2A1A; border-color: var(--gold); color: var(--gold-light); }
@@ -572,7 +572,7 @@ const styles = `
   /* Room tabs in dark mode */
   .dark .room-tab { background: var(--card-bg); border-color: var(--ivory3); color: var(--mid); }
   .dark .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); }
-  .dark .room-tab.active { background: var(--gold); color: #201E18; border-color: var(--gold); }
+  .dark .room-tab.active { background: var(--gold); color: #0E1014; border-color: var(--gold); }
 
   /* ── KEYFRAMES ── */
   @keyframes fadeUp {
@@ -932,7 +932,7 @@ const styles = `
 
   /* ── SECTION BANNER ── */
   .section-banner {
-    background: #3a3d3d;
+    background: #1F242E;
     color: #ffffff;
     font-family: 'DM Sans', sans-serif;
     font-size: 15px; font-weight: 700;
@@ -1293,7 +1293,7 @@ function EmailModal({ project, rooms, preparedBy, operatorEmail, operatorName, o
     width: '100%', boxSizing: 'border-box',
     border: '1px solid var(--border, #DDD5C8)', borderRadius: 7,
     padding: '8px 10px', fontSize: 13, fontFamily: 'inherit',
-    background: 'var(--input-bg, #FDFAF5)', color: 'var(--text, #2A2118)',
+    background: 'var(--input-bg, #F8F8F4)', color: 'var(--text, #15171C)',
     outline: 'none',
   }
 
@@ -2962,10 +2962,10 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
       borderRadius: 4,
     }
     return (
-      <div style={{ minHeight:"100vh", background:"#F6F1E8", fontFamily:"'DM Sans',sans-serif" }}>
+      <div style={{ minHeight:"100vh", background:"#F2F1ED", fontFamily:"'DM Sans',sans-serif" }}>
         <style>{`@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}`}</style>
         {/* Skeleton topbar */}
-        <div style={{ background:"#2A2118", padding:"12px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ background:"#1F242E", padding:"12px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <div style={{ ...skStyle, width:36, height:36, borderRadius:"50%", background:"rgba(255,255,255,0.1)", backgroundImage:"none", animation:"none" }} />
             <div>

@@ -79,7 +79,7 @@ export default function BgDots({ dark }) {
       const H    = window.innerHeight
 
       // dot color
-      const baseColor = dark ? "201,169,110" : "139,106,55"
+      const baseColor = dark ? "201,158,100" : "168,129,71"
 
       for (const d of dots) {
         // ── organic drift using sine oscillation ──────────────────────────

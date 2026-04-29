@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EWP — Slate & Brass Variations</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f6f6f4;
+    color: #1f1f1f;
+    padding: 32px 24px 64px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 36px; font-weight: 600;
+    margin: 0 0 6px;
+  }
+  h1 .accent { color: #B89968; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 36px; }
+
+  .palette {
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden; margin-bottom: 36px;
+    border: 1px solid #ececea;
+  }
+  .palette-head { padding: 22px 28px 16px; border-bottom: 1px solid #ececea; }
+  .palette-name {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 26px; font-weight: 700; margin: 0 0 4px;
+  }
+  .palette-tag { font-size: 13px; color: #777; margin: 0; }
+
+  .swatch-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+  }
+  @media (max-width: 600px) { .swatch-row { grid-template-columns: repeat(2, 1fr); } }
+  .swatch {
+    height: 110px; display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  }
+  .swatch .role { text-transform: uppercase; font-size: 10px; letter-spacing: 0.12em; opacity: 0.85; margin-bottom: 2px; }
+  .swatch .hex { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11px; opacity: 0.95; }
+
+  .preview {
+    padding: 28px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  @media (max-width: 700px) { .preview { grid-template-columns: 1fr; } }
+
+  .mock {
+    border-radius: 10px; padding: 22px 22px 18px;
+    position: relative; overflow: hidden; min-height: 220px;
+  }
+  .mock-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 14px; margin-bottom: 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 18px; font-weight: 700;
+  }
+  .mock-card { border-radius: 6px; padding: 14px 16px 10px; margin-bottom: 10px; border: 1px solid; }
+  .mock-card-head { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+  .mock-card-body { font-size: 13px; line-height: 1.55; }
+  .mock-btn {
+    display: inline-block; padding: 8px 18px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: default; margin-right: 8px; margin-top: 4px;
+    border: 1px solid transparent;
+  }
+  .mock-total {
+    margin-top: 12px; padding: 10px 14px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .mock-total-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .mock-total-value { font-size: 22px; font-weight: 700; }
+  .mode-label { position: absolute; top: 10px; right: 14px; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<h1><span class="accent">Slate &amp; Brass</span> — Variations</h1>
+<p class="subtitle">Same family. Different moods. Pick the one that lands and I'll wire it into the app.</p>
+
+<!-- ============= 2A: CHARCOAL & BURNISHED BRASS ============= -->
+<section class="palette">
+  <div class="palette-head">
+    <p class="palette-name">2A. Charcoal &amp; Burnished Brass</p>
+    <p class="palette-tag">Deeper, more dramatic. Near-black slate with a richer, warmer brass — feels editorial, expensive, confident.</p>
+  </div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:#F2F1ED;color:#15171C"><span class="role">Background</span><span class="hex">#F2F1ED</span></div>
+    <div class="swatch" style="background:#FFFFFF;color:#15171C;border-right:1px solid #eee"><span class="role">Surface</span><span class="hex">#FFFFFF</span></div>
+    <div class="swatch" style="background:#1F242E;color:#fff"><span class="role">Primary</span><span class="hex">#1F242E</span></div>
+    <div class="swatch" style="background:#A88147;color:#fff"><span class="role">Accent</span><span class="hex">#A88147</span></div>
+    <div class="swatch" style="background:#15171C;color:#fff"><span class="role">Text</span><span class="hex">#15171C</span></div>
+    <div class="swatch" style="background:#357056;color:#fff"><span class="role">Success</span><span class="hex">#357056</span></div>
+    <div class="swatch" style="background:#A93629;color:#fff"><span class="role">Error</span><span class="hex">#A93629</span></div>
+  </div>
+  <div class="preview">
+    <div class="mock" style="background:#F2F1ED;color:#15171C">
+      <span class="mode-label">Light</span>
+      <div class="mock-header">Estimate Summary</div>
+      <div class="mock-card" style="background:#fff;border-color:#e3e1da">
+        <div class="mock-card-head" style="color:#1F242E">Cabinetry</div>
+        <div class="mock-card-body">Walnut · Inset · Painted Finish</div>
+      </div>
+      <div class="mock-btn" style="background:#1F242E;color:#fff">Continue</div>
+      <div class="mock-btn" style="background:transparent;color:#1F242E;border-color:#1F242E">Back</div>
+      <div class="mock-total" style="background:#1F242E;color:#fff;border-left:4px solid #A88147">
+        <span class="mock-total-label">Grand Total</span><span class="mock-total-value">$24,580</span>
+      </div>
+    </div>
+    <div class="mock" style="background:#0E1014;color:#E8E4D9">
+      <span class="mode-label" style="color:#E8E4D9">Dark</span>
+      <div class="mock-header" style="border-bottom-color:rgba(255,255,255,0.1)">Estimate Summary</div>
+      <div class="mock-card" style="background:#191D24;border-color:#262A33">
+        <div class="mock-card-head" style="color:#C99E64">Cabinetry</div>
+        <div class="mock-card-body">Walnut · Inset · Painted Finish</div>
+      </div>
+      <div class="mock-btn" style="background:#C99E64;color:#0E1014">Continue</div>
+      <div class="mock-btn" style="background:transparent;color:#9BA4B6;border-color:#9BA4B6">Back</div>
+      <div class="mock-total" style="background:#191D24;color:#E8E4D9;border-left:4px solid #C99E64">
+        <span class="mock-total-label">Grand Total</span><span class="mock-total-value" style="color:#C99E64">$24,580</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= 2B: STEEL BLUE & BRONZE ============= -->
+<section class="palette">
+  <div class="palette-head">
+    <p class="palette-name">2B. Steel Blue &amp; Bronze</p>
+    <p class="palette-tag">Cooler slate with subtle blue undertones; bronze accent rather than yellow brass — feels architectural, technical, trustworthy.</p>
+  </div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:#F1F3F4;color:#1A1F26"><span class="role">Background</span><span class="hex">#F1F3F4</span></div>
+    <div class="swatch" style="background:#FFFFFF;color:#1A1F26;border-right:1px solid #eee"><span class="role">Surface</span><span class="hex">#FFFFFF</span></div>
+    <div class="swatch" style="background:#2E3D4F;color:#fff"><span class="role">Primary</span><span class="hex">#2E3D4F</span></div>
+    <div class="swatch" style="background:#9C7B4A;color:#fff"><span class="role">Accent</span><span class="hex">#9C7B4A</span></div>
+    <div class="swatch" style="background:#1A1F26;color:#fff"><span class="role">Text</span><span class="hex">#1A1F26</span></div>
+    <div class="swatch" style="background:#3A7B6A;color:#fff"><span class="role">Success</span><span class="hex">#3A7B6A</span></div>
+    <div class="swatch" style="background:#B53D32;color:#fff"><span class="role">Error</span><span class="hex">#B53D32</span></div>
+  </div>
+  <div class="preview">
+    <div class="mock" style="background:#F1F3F4;color:#1A1F26">
+      <span class="mode-label">Light</span>
+      <div class="mock-header">Estimate Summary</div>
+      <div class="mock-card" style="background:#fff;border-color:#dfe3e5">
+        <div class="mock-card-head" style="color:#2E3D4F">Cabinetry</div>
+        <div class="mock-card-body">Walnut · Inset · Painted Finish</div>
+      </div>
+      <div class="mock-btn" style="background:#2E3D4F;color:#fff">Continue</div>
+      <div class="mock-btn" style="background:transparent;color:#2E3D4F;border-color:#2E3D4F">Back</div>
+      <div class="mock-total" style="background:#2E3D4F;color:#fff;border-left:4px solid #9C7B4A">
+        <span class="mock-total-label">Grand Total</span><span class="mock-total-value">$24,580</span>
+      </div>
+    </div>
+    <div class="mock" style="background:#141821;color:#E0E5EC">
+      <span class="mode-label" style="color:#E0E5EC">Dark</span>
+      <div class="mock-header" style="border-bottom-color:rgba(255,255,255,0.1)">Estimate Summary</div>
+      <div class="mock-card" style="background:#1F2530;border-color:#2C3340">
+        <div class="mock-card-head" style="color:#BC9966">Cabinetry</div>
+        <div class="mock-card-body">Walnut · Inset · Painted Finish</div>
+      </div>
+      <div class="mock-btn" style="background:#BC9966;color:#141821">Continue</div>
+      <div class="mock-btn" style="background:transparent;color:#7E91A8;border-color:#7E91A8">Back</div>
+      <div class="mock-total" style="background:#1F2530;color:#E0E5EC;border-left:4px solid #BC9966">
+        <span class="mock-total-label">Grand Total</span><span class="mock-total-value" style="color:#BC9966">$24,580</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= 2C: GRAPHITE & CHAMPAGNE ============= -->
+<section class="palette">
+  <div class="palette-head">
+    <p class="palette-name">2C. Graphite &amp; Champagne</p>
+    <p class="palette-tag">Lighter & more refined. Soft graphite primary, paler champagne accent — feels minimal, gallery-quality, modern boutique.</p>
+  </div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:#F7F6F2;color:#22252A"><span class="role">Background</span><span class="hex">#F7F6F2</span></div>
+    <div class="swatch" style="background:#FFFFFF;color:#22252A;border-right:1px solid #eee"><span class="role">Surface</span><span class="hex">#FFFFFF</span></div>
+    <div class="swatch" style="background:#3A4250;color:#fff"><span class="role">Primary</span><span class="hex">#3A4250</span></div>
+    <div class="swatch" style="background:#CDB084;color:#3A2F1F"><span class="role">Accent</span><span class="hex">#CDB084</span></div>
+    <div class="swatch" style="background:#22252A;color:#fff"><span class="role">Text</span><span class="hex">#22252A</span></div>
+    <div class="swatch" style="background:#4F8C72;color:#fff"><span class="role">Success</span><span class="hex">#4F8C72</span></div>
+    <div class="swatch" style="background:#C04A3D;color:#fff"><span class="role">Error</span><span class="hex">#C04A3D</span></div>
+  </div>
+  <div class="preview">
+    <div class="mock" style="background:#F7F6F2;color:#22252A">
+      <span class="mode-label">Light</span>
+      <div class="mock-header">Estimate Summary</div>
+      <div class="mock-card" style="background:#fff;border-color:#e8e6df">
+        <div class="mock-card-head" style="color:#3A4250">Cabinetry</div>
+        <div class="mock-card-body">Walnut · Inset · Painted Finish</div>
+      </div>
+      <div class="mock-btn" style="background:#3A4250;color:#fff">Continue</div>
+      <div class="mock-btn" style="background:transparent;color:#3A4250;border-color:#3A4250">Back</div>
+      <div class="mock-total" style="background:#3A4250;color:#fff;border-left:4px solid #CDB084">
+        <span class="mock-total-label">Grand Total</span><span class="mock-total-value">$24,580</span>
+      </div>
+    </div>
+    <div class="mock" style="background:#1B1E23;color:#EAE7DE">
+      <span class="mode-label" style="color:#EAE7DE">Dark</span>
+      <div class="mock-header" style="border-bottom-color:rgba(255,255,255,0.1)">Estimate Summary</div>
+      <div class="mock-card" style="background:#262A31;border-color:#33373F">
+        <div class="mock-card-head" style="color:#E1C898">Cabinetry</div>
+        <div class="mock-card-body">Walnut · Inset · Painted Finish</div>
+      </div>
+      <div class="mock-btn" style="background:#E1C898;color:#1B1E23">Continue</div>
+      <div class="mock-btn" style="background:transparent;color:#8C95A4;border-color:#8C95A4">Back</div>
+      <div class="mock-total" style="background:#262A31;color:#EAE7DE;border-left:4px solid #E1C898">
+        <span class="mock-total-label">Grand Total</span><span class="mock-total-value" style="color:#E1C898">$24,580</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
