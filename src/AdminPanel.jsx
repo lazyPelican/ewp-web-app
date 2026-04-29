@@ -624,7 +624,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
 
       {/* Main tab bar */}
       <div className="admin-tab-bar" style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0 }}>
-        {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"], ["bugs", "🐛 Bug Reports"]].map(([key, label]) => (
+        {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"], ["contractors", "🏢 Contractors"], ["bugs", "🐛 Bug Reports"]].map(([key, label]) => (
           <button key={key} onClick={() => confirmIfDirty(() => setTab(key))} style={{
             padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === key ? t.gold : "transparent"}`,
             background: "transparent", color: tab === key ? t.text : t.textMuted,
@@ -1028,6 +1028,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           </div>
         )}
 
+        {/* ── CONTRACTORS TAB ── */}
+        {tab === "contractors" && (
+          <ContractorsTab />
+        )}
+
         {/* ── BUG REPORTS TAB ── */}
         {tab === "bugs" && (
           <BugReportsTab session={session} isAdmin={isAdmin} />
@@ -1047,4 +1052,132 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
       )}
     </div>
   )
+}
+
+// ── CONTRACTORS TAB ───────────────────────────────────────────
+function ContractorsTab() {
+  const [list, setList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [savingId, setSavingId] = useState(null)
+  const [newRow, setNewRow] = useState({ name: "", contact: "", email: "" })
+  const [adding, setAdding] = useState(false)
+  const [err, setErr] = useState("")
+
+  const formatPhone = (raw) => {
+    const isPhone = /^[\d\s()\-+]*$/.test(raw) && /\d/.test(raw)
+    if (!isPhone) return raw
+    const digits = raw.replace(/\D/g, "").slice(0, 10)
+    if (digits.length === 0) return ""
+    if (digits.length <= 3) return `(${digits}`
+    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
+    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
+  }
+
+  const load = async () => {
+    setLoading(true)
+    const { data, error } = await supabase.from("contractors").select("*").order("name", { ascending: true })
+    if (error) { setErr(error.message); }
+    else { setList(data || []); setErr(""); }
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  const addContractor = async () => {
+    if (!newRow.name.trim()) return
+    setAdding(true); setErr("")
+    const { error } = await supabase.from("contractors").insert({
+      name: newRow.name.trim(),
+      contact: newRow.contact.trim() || null,
+      email: newRow.email.trim() || null,
+    })
+    setAdding(false)
+    if (error) { setErr(error.message); return }
+    setNewRow({ name: "", contact: "", email: "" })
+    load()
+  }
+
+  const updateField = async (id, field, val) => {
+    setSavingId(id)
+    const { error } = await supabase.from("contractors").update({ [field]: val || null }).eq("id", id)
+    setSavingId(null)
+    if (error) { setErr(error.message); return }
+    setList(prev => prev.map(c => c.id === id ? { ...c, [field]: val } : c))
+  }
+
+  const removeContractor = async (id) => {
+    if (!confirm("Remove this contractor? Existing projects keep their saved name.")) return
+    const { error } = await supabase.from("contractors").delete().eq("id", id)
+    if (error) { setErr(error.message); return }
+    setList(prev => prev.filter(c => c.id !== id))
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--char)", fontFamily: "'Cormorant Garamond', serif" }}>Contractors</div>
+        <div style={{ fontSize: 13, color: "var(--mid)", marginTop: 4 }}>Manage the contractor list shown in the Project Details dropdown</div>
+        <div style={{ height: 2, background: "var(--gold)", width: 48, marginTop: 12 }} />
+      </div>
+
+      {err && <div style={{ background: "rgba(184,59,46,0.08)", border: "1px solid rgba(184,59,46,0.25)", color: "#B83B2E", padding: "8px 12px", borderRadius: 4, fontSize: 13, marginBottom: 12 }}>{err}</div>}
+
+      {/* Add new */}
+      <div style={{ background: "var(--card-bg)", border: "1px solid var(--ivory3)", borderRadius: 6, padding: 16, marginBottom: 16 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", marginBottom: 10 }}>Add Contractor</div>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1.5fr auto", gap: 10, alignItems: "center" }}>
+          <input placeholder="Company name" value={newRow.name}
+            onChange={e => setNewRow(r => ({ ...r, name: e.target.value }))}
+            style={inputStyle} />
+          <input placeholder="Phone (optional)" value={newRow.contact}
+            onChange={e => setNewRow(r => ({ ...r, contact: formatPhone(e.target.value) }))}
+            style={inputStyle} />
+          <input placeholder="Email (optional)" type="email" value={newRow.email}
+            onChange={e => setNewRow(r => ({ ...r, email: e.target.value }))}
+            style={inputStyle} />
+          <button className="btn btn-gold" onClick={addContractor} disabled={!newRow.name.trim() || adding}
+            style={{ whiteSpace: "nowrap" }}>
+            {adding ? "Adding…" : "+ Add"}
+          </button>
+        </div>
+      </div>
+
+      {/* List */}
+      <div style={{ background: "var(--card-bg)", border: "1px solid var(--ivory3)", borderRadius: 6, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1.5fr auto", gap: 10, padding: "10px 16px", background: "var(--ivory2)", borderBottom: "1px solid var(--ivory3)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>
+          <span>Name</span><span>Phone</span><span>Email</span><span></span>
+        </div>
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "30px", color: "var(--muted)", fontSize: 13 }}>Loading…</div>
+        ) : list.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "30px", color: "var(--muted)", fontSize: 13 }}>No contractors yet — add one above.</div>
+        ) : list.map(c => (
+          <div key={c.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1.5fr auto", gap: 10, padding: "10px 16px", borderBottom: "1px solid var(--ivory3)", alignItems: "center" }}>
+            <input defaultValue={c.name}
+              onBlur={e => e.target.value !== c.name && updateField(c.id, "name", e.target.value.trim())}
+              style={inputStyle} />
+            <input defaultValue={c.contact || ""}
+              onBlur={e => { const v = formatPhone(e.target.value); e.target.value = v; if (v !== (c.contact||"")) updateField(c.id, "contact", v) }}
+              style={inputStyle} />
+            <input defaultValue={c.email || ""} type="email"
+              onBlur={e => e.target.value !== (c.email||"") && updateField(c.id, "email", e.target.value.trim())}
+              style={inputStyle} />
+            <button onClick={() => removeContractor(c.id)} title="Delete"
+              style={{ background: "transparent", border: "1px solid rgba(184,59,46,0.3)", color: "#B83B2E", padding: "5px 10px", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
+              {savingId === c.id ? "…" : "🗑"}
+            </button>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 10 }}>
+        Edits save automatically when you click outside a field.
+      </div>
+    </div>
+  )
+}
+
+const inputStyle = {
+  padding: "7px 10px", borderRadius: 4, border: "1px solid var(--ivory3)",
+  background: "var(--input-bg)", fontSize: 13, color: "var(--char)",
+  fontFamily: "'DM Sans', sans-serif",
 }

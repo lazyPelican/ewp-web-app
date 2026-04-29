@@ -387,10 +387,10 @@ const styles = `
     background: #3a3d3d;
     color: #ffffff;
     font-family: 'DM Sans', sans-serif;
-    font-size: 11px; font-weight: 700;
+    font-size: 15px; font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 11px 18px;
+    padding: 14px 20px;
     border-bottom: 1px solid var(--ivory3);
     border-left: 4px solid var(--gold);
     display: flex; align-items: center; justify-content: space-between;
@@ -935,10 +935,10 @@ const styles = `
     background: #3a3d3d;
     color: #ffffff;
     font-family: 'DM Sans', sans-serif;
-    font-size: 11px; font-weight: 700;
+    font-size: 15px; font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 11px 18px;
+    padding: 14px 20px;
     border-bottom: 1px solid var(--ivory3);
     border-left: 4px solid var(--gold);
     display: flex; align-items: center; justify-content: space-between;
@@ -1389,7 +1389,7 @@ function Field({ label, error, children, hint }) {
 }
 
 // ── PROJECT SETUP PAGE ─────────────────────────────────────────
-function ProjectSetup({ project, onChange, onNext }) {
+function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
   const [errors, setErrors] = useState({});
 
   const validate = () => {
@@ -1470,8 +1470,26 @@ function ProjectSetup({ project, onChange, onNext }) {
             </Field>
             {project.contractorYN === "Yes" && <>
               <Field label="Contractor Name">
-                <input value={project.contractorName} placeholder="Company name"
-                  onChange={e => onChange({ contractorName: e.target.value })} />
+                <select
+                  value={contractors.some(c => c.name === project.contractorName) ? project.contractorName : (project.contractorName ? "__custom__" : "")}
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (v === "" || v === "__custom__") {
+                      onChange({ contractorName: v === "__custom__" ? (project.contractorName || "") : "" });
+                    } else {
+                      const c = contractors.find(c => c.name === v);
+                      onChange({ contractorName: v, contractorContact: c?.contact || project.contractorContact || "" });
+                    }
+                  }}>
+                  <option value="">— Select contractor —</option>
+                  {contractors.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  <option value="__custom__">Other (enter manually)</option>
+                </select>
+                {(!contractors.some(c => c.name === project.contractorName) && project.contractorName !== undefined) && (
+                  <input value={project.contractorName} placeholder="Type contractor name"
+                    onChange={e => onChange({ contractorName: e.target.value })}
+                    style={{ marginTop: 6 }} />
+                )}
               </Field>
               <Field label="Contractor Contact">
                 <input value={project.contractorContact} placeholder="Phone or email"
@@ -2023,7 +2041,7 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
   const delivery   = parseFloat(project.deliveryAmount) || 0;
   const subtotal   = roomsSubtotal + delivery;
   const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
-  const taxRate    = project.installationType ? 8.53 : (Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8);
+  const taxRate    = Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8.53;
   const taxAmt     = taxEnabled ? subtotal * (taxRate / 100) : 0;
   const grandTotal = subtotal + taxAmt;
 
@@ -2067,14 +2085,31 @@ function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
             </select>
           </Field>
           <div style={{
-            marginTop: 14, padding: "10px 14px", borderRadius: 6,
+            marginTop: 14, padding: "12px 14px", borderRadius: 6,
             background: taxEnabled ? "rgba(184,59,46,0.06)" : "rgba(42,107,64,0.06)",
             border: `1px solid ${taxEnabled ? "rgba(184,59,46,0.2)" : "rgba(42,107,64,0.2)"}`,
             fontSize: 13, color: "var(--char)", lineHeight: 1.5,
           }}>
-            {taxEnabled
-              ? <span>⚠️ <strong>8.53% estimated sales tax</strong> will be applied — contractor/retailer is installing.</span>
-              : <span>✅ <strong>No sales tax</strong> — EWP is doing the installation.</span>}
+            {taxEnabled ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span>⚠️ Estimated sales tax</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={project.taxRate ?? 8.53}
+                  onChange={e => onChange({ taxRate: e.target.value })}
+                  style={{
+                    width: 80, padding: "5px 8px", borderRadius: 4,
+                    border: "1px solid rgba(184,59,46,0.35)", background: "var(--input-bg)",
+                    fontSize: 13, fontWeight: 700, color: "var(--char)", textAlign: "right",
+                  }}
+                />
+                <span>% will be applied — contractor/retailer is installing.</span>
+              </div>
+            ) : (
+              <span>✅ <strong>No sales tax</strong> — EWP is doing the installation.</span>
+            )}
           </div>
         </div>
       </div>
@@ -2137,8 +2172,14 @@ function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
     await onSave();
     setSaving(false);
     setSaveConfirmed(true);
-    setTimeout(() => setSaveConfirmed(false), 4000);
   };
+
+  // Reset saved confirmation when user edits project or rooms after saving
+  const _initialSaveRef = useRef(true);
+  useEffect(() => {
+    if (_initialSaveRef.current) { _initialSaveRef.current = false; return; }
+    setSaveConfirmed(false);
+  }, [project, rooms]);
 
   const handleSaveAndNext = async () => {
     await handleSave();
@@ -2159,7 +2200,7 @@ function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
   const delivery  = parseFloat(project.deliveryAmount) || 0;
   const subtotalBeforeTax = grandCab + grandUpg + grandFin + grandInst + delivery;
   const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
-  const taxRate    = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8);
+  const taxRate    = Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8.53;
   const taxAmt     = taxEnabled ? subtotalBeforeTax * (taxRate / 100) : 0;
   const grandTotal = subtotalBeforeTax + taxAmt;
 
@@ -2336,7 +2377,7 @@ function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
       <div className="grand-total grand-total-float">
         <div className="grand-total-label">GRAND TOTAL</div>
         {(delivery > 0 || taxAmt > 0) && (
-          <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "0 8px", justifyContent: "center" }}>
+          <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "0 10px", justifyContent: "center" }}>
             <span>Rooms {fmt(grandCab + grandUpg + grandFin + grandInst)}</span>
             {delivery > 0 && <span>+ Delivery {fmt(delivery)}</span>}
             {taxAmt > 0 && <span>+ Tax ({taxRate}%) {fmt(taxAmt)}</span>}
@@ -2699,6 +2740,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
   const [projects, setProjects] = useState([]);
+  const [contractors, setContractors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editIdx, setEditIdx] = useState(null);
   const [toast, setToast] = useState(null);
@@ -2763,7 +2805,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     contractorYN: "No", contractorName: "", contractorContact: "",
     rooms: 1, masterAdj: 0,
     deliveryAmount: "", deliveryNotes: "",
-    taxEnabled: false, taxRate: 8,
+    taxEnabled: false, taxRate: 8.53,
   });
   const [rooms, setRooms] = useState([blankRoom(0)]);
 
@@ -2772,10 +2814,12 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const loadData = useCallback(async () => {
     setLoading(true); setLoadError(false);
     try {
-      const [pricingRes, projectsRes] = await Promise.all([
+      const [pricingRes, projectsRes, contractorsRes] = await Promise.all([
         supabase.from("pricing").select("data").eq("id", "main").single(),
         supabase.from("projects").select("*").order("updated_at", { ascending: false }),
+        supabase.from("contractors").select("*").order("name", { ascending: true }),
       ]);
+      if (!contractorsRes.error) setContractors(contractorsRes.data || []);
       if (pricingRes.data?.data) {
         const merged = { ...DEFAULT_PRICING }
         for (const key of Object.keys(DEFAULT_PRICING)) {
@@ -2816,7 +2860,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     setProject({ id, name: "", address: "", contactName: "", contactPhone: "", email: "",
       bidDate: new Date().toISOString().slice(0, 10), contractorYN: "No",
       contractorName: "", contractorContact: "", rooms: 1, masterAdj: 0,
-      deliveryAmount: "", deliveryNotes: "", taxEnabled: false, taxRate: 8, installationType: "ewp" });
+      deliveryAmount: "", deliveryNotes: "", taxEnabled: false, taxRate: 8.53, installationType: "ewp" });
     setRooms([blankRoom(0)]);
     setStep(0); setSaved(false); setEditIdx(null); setView("new"); setMaxStep(0);
   };
@@ -2883,8 +2927,15 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     await saveProject();
     setQuickSaving(false);
     setQuickSaved(true);
-    setTimeout(() => setQuickSaved(false), 3000);
   };
+
+  // Reset saved indicator whenever the user edits project or rooms.
+  // Skip the very first render so opening a saved project doesn't immediately flip it.
+  const _initialEditRef = useRef(true);
+  useEffect(() => {
+    if (_initialEditRef.current) { _initialEditRef.current = false; return; }
+    setQuickSaved(false);
+  }, [project, rooms]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -3177,7 +3228,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
           />
           )}
           {view === "new" && step === 0 && (
-            <ProjectSetup project={project} onChange={d => setProject(p => ({ ...p, ...d }))}
+            <ProjectSetup project={project} contractors={contractors} onChange={d => setProject(p => ({ ...p, ...d }))}
               onNext={() => { setStep(1); setMaxStep(p => Math.max(p, 1)); }} />
           )}
           {view === "new" && step === 1 && (
