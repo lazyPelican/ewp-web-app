@@ -175,10 +175,10 @@ const styles = `
     --ewp-slate:   #1F242E;
     --ewp-slate2:  #15171C;
 
-    --header-bg:      rgba(242, 241, 237, 0.65);
-    --header-border:  #A88147;
+    --header-bg:      rgba(255, 255, 255, 0.92);
+    --header-border:  #E8E5DC;
     --header-text:    #1F242E;
-    --header-subtext: #5A6068;
+    --header-subtext: #6E7480;
 
     --gold:        #A88147;
     --gold-light:  #C99E64;
@@ -214,37 +214,42 @@ const styles = `
     background: var(--header-bg);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    padding: 0 48px;
-    height: 130px;
+    padding: 0 40px;
+    height: 110px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--header-border);
-    box-shadow: 0 2px 24px rgba(20,15,5,0.08);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
   }
   .topbar.scrolled {
-    box-shadow: 0 2px 20px rgba(20,15,5,0.13);
+    box-shadow: 0 2px 14px rgba(20,15,5,0.06);
   }
   .topbar-logo {
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 18px;
   }
   .header-logo {
-    height: 100px;
+    height: 78px;
     width: auto;
     flex-shrink: 0;
   }
   .topbar-name {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 44px; font-weight: 600;
-    color: var(--ewp-slate); letter-spacing: 0.04em;
-    line-height: 1;
+    font-size: 32px; font-weight: 600;
+    color: var(--header-text); letter-spacing: 0.02em;
+    line-height: 1.1;
   }
   .topbar-sub {
-    font-size: 11px; color: rgb(140, 145, 145);
-    letter-spacing: 0.2em; text-transform: uppercase;
-    margin-top: 7px; font-weight: 600;
+    font-size: 10px; color: var(--gold);
+    letter-spacing: 0.28em; text-transform: uppercase;
+    margin-top: 6px; font-weight: 700;
+  }
+  .topbar-tag-divider {
+    display: inline-block; width: 5px; height: 5px;
+    background: var(--gold); border-radius: 50%;
+    margin: 0 8px; vertical-align: middle; opacity: 0.6;
   }
   .topbar-right { display: flex; align-items: center; gap: 8px; }
 
@@ -507,9 +512,9 @@ const styles = `
     --ewp-slate:   #C8CDD5;
     --ewp-slate2:  #DCDFE5;
 
-    --header-bg:      rgba(14, 16, 20, 0.72);
-    --header-border:  #C99E64;
-    --header-text:    #E8E4D9;
+    --header-bg:      rgba(14, 16, 20, 0.92);
+    --header-border:  #2A2F38;
+    --header-text:    #F0EDE5;
     --header-subtext: #9BA4B6;
     --gold:        #C99E64;
     --gold-light:  #DCB47C;
@@ -3043,7 +3048,9 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
             <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
-              <div className="topbar-sub">Estimate Manager</div>
+              <div className="topbar-sub">
+                New Age Technology<span className="topbar-tag-divider"></span>Old World Craftsmanship
+              </div>
             </div>
           </div>
           <div className="topbar-right">
