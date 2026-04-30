@@ -1,0 +1,38 @@
+FOLLOW-UP TEMPLATE
+Use this 4-5 business days after the first email if no reply.
+Replace [Company] and [original subject] before sending.
+
+─────────────────────────────────────────────────
+
+TO: [same email as first outreach]
+SUBJECT: Re: [paste your original subject line here]
+
+Hi,
+
+Floating this back up in case it landed at a busy time.
+
+Did you get a chance to think about it? Even "no thanks, our process works fine" is a totally useful answer — saves us both time.
+
+If you do want to see it, I'll send the walkthrough video right away.
+
+Cheers,
+[Your name]
+
+─────────────────────────────────────────────────
+
+SENDING TIPS:
+- Send Tue–Thu, 8–10am Central — highest open rates
+- Space out sends, don't blast all 17 at once
+- Plain text only — no HTML, no tracking pixels, no footer
+- Send from your own domain (you@yourstudio.com), not Gmail
+- Don't follow up more than twice — if two emails get no reply, move on
+- The bracketed personalization line in each email is the most important
+  sentence — spend 60 seconds on each company's site to make it specific
+
+COMPANIES WITH NO EMAIL (use contact form or call):
+  05 - Steven Cabinets         → form: stevencabinets.com  | 612-378-1812
+  09 - Northwood Outdoor       → form: northwoodoutdoorservices.net/contact/  | 763-272-7627
+  11 - Pine Ridge Landscape    → form: pineridgelawnandlandscape.com
+  12 - Finaltone Painting      → form: finaltonepainting.com  | 763-497-6973
+  14 - That 1 Painter          → form: that1painter.com/twin-cities/  | 763-280-3736
+  15 - Nicholas Metalworks     → no email found — try LinkedIn or directory

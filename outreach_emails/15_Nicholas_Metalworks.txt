@@ -1,0 +1,18 @@
+TO: NO EMAIL FOUND — website currently has errors
+    Try: searching LinkedIn for Nicholas Metalworks Twin Cities
+    Or: calling directory listings for nicholasmetalworks.com
+SUBJECT: Built this for a shop near you
+
+Hi there,
+
+Came across Nicholas Metalworks while looking at custom metal shops in the Twin Cities. The fact that every job is a complete one-off is exactly why I'm writing.
+
+I just finished a custom quoting app for a woodshop in Rogers (Engstrom Wood Products) — they were quoting custom millwork in spreadsheets and losing hours every week. Now: itemized line items for material, fabrication, finishing, and install — branded PDF out the door, all in a browser.
+
+One-time custom build. Your pricing logic, your branding, your data. Not a monthly SaaS.
+
+Mind if I send a short video showing how the Engstrom version works? Takes about 5 minutes and I think you'd see the parallel right away.
+
+Thanks,
+[Your name]
+[your.email@domain.com]
