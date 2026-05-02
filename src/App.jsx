@@ -2711,11 +2711,11 @@ function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQ
 
 
 // ── ROOT APP ───────────────────────────────────────────────────
-export default function App({ session, isAdmin, onOpenAdmin }) {
+export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, onGuestExit }) {
   const [displayName, setDisplayName] = useState(
-    session?.user?.user_metadata?.first_name || ""
+    isGuest ? "Guest" : (session?.user?.user_metadata?.first_name || "")
   );
-  const preparedBy = displayName || session?.user?.email?.split("@")[0] || "";
+  const preparedBy = isGuest ? "Guest" : (displayName || session?.user?.email?.split("@")[0] || "");
 
   const [view, setView] = useState("dashboard");
   const [step, setStep] = useState(0);
@@ -2819,25 +2819,38 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
   const loadData = useCallback(async () => {
     setLoading(true); setLoadError(false);
     try {
-      const [pricingRes, projectsRes, contractorsRes] = await Promise.all([
-        supabase.from("pricing").select("data").eq("id", "main").single(),
-        supabase.from("projects").select("*").order("updated_at", { ascending: false }),
-        supabase.from("contractors").select("*").order("name", { ascending: true }),
-      ]);
-      if (!contractorsRes.error) setContractors(contractorsRes.data || []);
-      if (pricingRes.data?.data) {
-        const merged = { ...DEFAULT_PRICING }
-        for (const key of Object.keys(DEFAULT_PRICING)) {
-          if (pricingRes.data.data[key]) merged[key] = pricingRes.data.data[key]
+      if (isGuest) {
+        // Guest: only load shared pricing tables (read-only, no auth needed)
+        const pricingRes = await supabase.from("pricing").select("data").eq("id", "main").single();
+        if (pricingRes.data?.data) {
+          const merged = { ...DEFAULT_PRICING }
+          for (const key of Object.keys(DEFAULT_PRICING)) {
+            if (pricingRes.data.data[key]) merged[key] = pricingRes.data.data[key]
+          }
+          PRICING = merged
         }
-        PRICING = merged
-      }
-      if (projectsRes.error) {
-        logError("loadProjects", projectsRes.error)
-        setLoadError(true)
-        showToast("Failed to load estimates — check your connection")
+        // Guests start with empty projects — nothing loaded from DB
       } else {
-        setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id })))
+        const [pricingRes, projectsRes, contractorsRes] = await Promise.all([
+          supabase.from("pricing").select("data").eq("id", "main").single(),
+          supabase.from("projects").select("*").order("updated_at", { ascending: false }),
+          supabase.from("contractors").select("*").order("name", { ascending: true }),
+        ]);
+        if (!contractorsRes.error) setContractors(contractorsRes.data || []);
+        if (pricingRes.data?.data) {
+          const merged = { ...DEFAULT_PRICING }
+          for (const key of Object.keys(DEFAULT_PRICING)) {
+            if (pricingRes.data.data[key]) merged[key] = pricingRes.data.data[key]
+          }
+          PRICING = merged
+        }
+        if (projectsRes.error) {
+          logError("loadProjects", projectsRes.error)
+          setLoadError(true)
+          showToast("Failed to load estimates — check your connection")
+        } else {
+          setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id })))
+        }
       }
     } catch (err) {
       logError("loadInit", err)
@@ -2845,7 +2858,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
       showToast("Failed to connect — check your internet connection")
     }
     setLoading(false)
-  }, []);
+  }, [isGuest]);
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -2885,6 +2898,11 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     if (actionBusy) return;
     const i = deletePendingIdx;
     setDeletePendingIdx(null);
+    if (isGuest) {
+      setProjects(prev => prev.filter((_, idx) => idx !== i));
+      showToast("Estimate deleted");
+      return;
+    }
     setActionBusy(true);
     const p = projects[i];
     const { error } = await supabase.from("projects").delete().eq("id", p.project.id);
@@ -2895,13 +2913,18 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
 
   const duplicateProject = async (i) => {
     if (actionBusy) return;
-    setActionBusy(true);
     const src = projects[i];
     const newId = genId();
     const duped = {
       project: { ...src.project, id: newId, name: makeCopyName(src.project.name, projects.map(p => p.project.name)) },
       rooms: src.rooms.map(r => ({ ...r, id: Date.now() + Math.random() })),
     };
+    if (isGuest) {
+      setProjects(prev => [duped, ...prev]);
+      showToast("Duplicated with new ID: " + newId);
+      return;
+    }
+    setActionBusy(true);
     const { error } = await supabase.from("projects").insert({
       id: newId, name: duped.project.name, address: duped.project.address, data: duped
     });
@@ -2914,6 +2937,18 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
     const cleanProject = sanitizeProject(project);
     const cleanRooms   = sanitizeRooms(rooms);
     const entry = { project: cleanProject, rooms: cleanRooms };
+    if (isGuest) {
+      // Guest: store in session memory only, never touch Supabase
+      if (editIdx !== null) {
+        setProjects(prev => prev.map((p, i) => i === editIdx ? entry : p));
+      } else {
+        setProjects(prev => [entry, ...prev]);
+        setEditIdx(0);
+      }
+      setSaved(true);
+      showToast("Saved for this session — sign in to keep estimates permanently");
+      return;
+    }
     const payload = { id: cleanProject.id, name: cleanProject.name, address: cleanProject.address, data: entry };
     const { error } = await supabase.from("projects").upsert(payload, { onConflict: "id" });
     if (error) { logError("saveProject", error); showToast("Error saving — check connection"); return; }
@@ -3072,7 +3107,7 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                 )}
               </button>
             )}
-            <button
+            {!isGuest && <button
               onClick={() => setBugReportOpen(true)}
               title="Report an error or bug"
               style={{
@@ -3084,8 +3119,8 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                 letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
               🐛 Report Error
-            </button>
-            {!isAdmin && (
+            </button>}
+            {!isAdmin && !isGuest && (
               <button
                 onClick={() => setMyReportsOpen(true)}
                 title="View my submitted reports"
@@ -3122,8 +3157,8 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
               {dark ? "☀ Light" : "☾ Dark"}
             </button>
             <button
-              onClick={() => import("./supabase.js").then(m => m.supabase.auth.signOut())}
-              aria-label="Sign out"
+              onClick={isGuest ? onGuestExit : () => import("./supabase.js").then(m => m.supabase.auth.signOut())}
+              aria-label={isGuest ? "Exit guest mode" : "Sign out"}
               style={{
                 background: "transparent",
                 border: "1px solid rgba(73,77,77,0.25)",
@@ -3133,10 +3168,41 @@ export default function App({ session, isAdmin, onOpenAdmin }) {
                 display: "flex", alignItems: "center", gap: 6,
                 letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
-              Sign Out
+              {isGuest ? "Exit Guest" : "Sign Out"}
             </button>
           </div>
         </div>
+
+        {/* GUEST BANNER */}
+        {isGuest && (
+          <div style={{
+            background: dark ? "rgba(168,129,71,0.13)" : "rgba(168,129,71,0.10)",
+            borderBottom: "1px solid rgba(168,129,71,0.28)",
+            padding: "7px 20px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 12, flexWrap: "wrap",
+          }}>
+            <div style={{
+              fontSize: 12, color: dark ? "#C99E64" : "#8C6A37",
+              fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <span style={{ fontSize: 14 }}>👤</span>
+              <span><strong>Guest mode</strong> — estimates exist only for this session and will be deleted when you leave.</span>
+            </div>
+            <button
+              onClick={onGuestExit}
+              style={{
+                background: "transparent", border: "1px solid rgba(168,129,71,0.45)",
+                borderRadius: 4, padding: "4px 12px", cursor: "pointer",
+                color: dark ? "#C99E64" : "#8C6A37", fontSize: 11,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+                letterSpacing: "0.04em", whiteSpace: "nowrap",
+              }}
+            >
+              Sign in to save →
+            </button>
+          </div>
+        )}
 
         {/* STEPPER */}
         {view === "new" && (() => {

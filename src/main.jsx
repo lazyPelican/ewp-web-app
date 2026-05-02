@@ -33,6 +33,7 @@ function Root() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [isGuest, setIsGuest] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
 
   // Browser back closes admin panel
@@ -220,10 +221,22 @@ function Root() {
         Loading…
       </div>
     )
+  } else if (isGuest) {
+    content = (
+      <Suspense fallback={suspenseFallback}>
+        <App
+          session={null}
+          isAdmin={false}
+          isGuest={true}
+          onGuestExit={() => setIsGuest(false)}
+          onOpenAdmin={() => {}}
+        />
+      </Suspense>
+    )
   } else if (!session) {
     content = (
       <Suspense fallback={suspenseFallback}>
-        <Auth />
+        <Auth onGuestLogin={() => setIsGuest(true)} />
       </Suspense>
     )
   } else if (approvalStatus === "pending") {

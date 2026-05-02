@@ -3,7 +3,7 @@ import { supabase } from "./supabase.js"
 import { sanitizeName, sanitizeEmail, isValidEmail } from "./sanitize.js"
 import BgDots from "./BgDots.jsx"
 
-export default function Auth() {
+export default function Auth({ onGuestLogin }) {
   const [mode, setMode] = useState("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -309,6 +309,31 @@ export default function Auth() {
             ? "New accounts require admin approval before access is granted."
             : "Access is restricted to approved team members."}
         </div>
+
+        {/* Guest access */}
+        {mode === "signin" && onGuestLogin && (
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${t.border}` }}>
+            <button
+              onClick={onGuestLogin}
+              style={{
+                width: "100%", padding: "10px 0", borderRadius: 7,
+                border: `1px solid ${t.border}`,
+                background: "transparent",
+                color: t.muted,
+                fontWeight: 500, fontSize: 13, cursor: "pointer",
+                fontFamily: font, transition: "all 0.15s",
+                letterSpacing: "0.01em",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = t.gold; e.currentTarget.style.color = t.gold }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.muted }}
+            >
+              Continue as Guest
+            </button>
+            <div style={{ fontSize: 11, color: t.muted, marginTop: 7, lineHeight: 1.5, textAlign: "center" }}>
+              Try the app without an account — estimates won't be saved permanently.
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
