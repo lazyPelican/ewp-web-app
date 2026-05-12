@@ -880,7 +880,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
               {pricing === null ? (
                 <div style={{ color: t.textMuted, fontSize: 14, padding: 20 }}>Loading prices…</div>
               ) : (
-                <>
+                <div key={activeTable} className="admin-pricing-table-shell">
                   <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                     <div>
                       <div style={{ fontSize: 20, fontWeight: 700, color: t.text, fontFamily: serif }}>{activeCfg.label}</div>
@@ -933,7 +933,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                   </div>
 
                   {/* Table */}
-                  <div className="admin-pricing-table-shell" style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8 }}>
+                  <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8 }}>
                     {/* Header */}
                     <div style={{ display: "flex", background: t.headerBg, padding: "10px 16px", gap: 8 }}>
                       {activeCfg.columns.map(col => {
@@ -1022,7 +1022,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                     Changes take effect for all users after saving. Existing estimates are not affected.
                     {" "}Import expects columns: <em>{activeCfg.columns.map(c => c.label).join(", ")}</em>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>

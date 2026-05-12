@@ -1416,7 +1416,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                 display: "flex", alignItems: "center", gap: 6,
                 letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
-                ðŸ‘¥ Admin
+                👥 Admin
                 {(pendingCount + openBugCount) > 0 && (
                   <span style={{ background: "#C0392B", color: "#fff", borderRadius: "50%", minWidth: 16, height: 16, fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
                     {pendingCount + openBugCount}
@@ -1435,7 +1435,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                 display: "flex", alignItems: "center", gap: 6,
                 letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
-              ðŸ› Report Error
+              🐛 Report Error
             </button>}
             {!isAdmin && !isGuest && (
               <button
@@ -1449,7 +1449,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                   display: "flex", alignItems: "center", gap: 6,
                   letterSpacing: "0.06em", textTransform: "uppercase",
                 }}>
-                ðŸ“‹ My Reports
+                📋 My Reports
               </button>
             )}
             <button
@@ -1471,7 +1471,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                 transition: "all 0.15s",
                 letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
-              {dark ? "â˜€ Light" : "â˜¾ Dark"}
+              {dark ? "☀ Light" : "☾ Dark"}
             </button>
             <button
               onClick={isGuest ? onGuestExit : () => import("./supabase.js").then(m => m.supabase.auth.signOut())}
