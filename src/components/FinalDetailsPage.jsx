@@ -42,6 +42,32 @@ export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
                 onChange={e => onChange({ deliveryNotes: e.target.value })} />
             </Field>
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!!project.showDeliveryOnPdf}
+              onClick={() => onChange({ showDeliveryOnPdf: !project.showDeliveryOnPdf })}
+              style={{
+                position: "relative",
+                width: 44, height: 24, borderRadius: 12, border: "none",
+                background: project.showDeliveryOnPdf ? "var(--gold)" : "var(--ivory3)",
+                cursor: "pointer", flexShrink: 0,
+                transition: "background 0.2s",
+              }}
+            >
+              <span style={{
+                position: "absolute", top: 3, left: project.showDeliveryOnPdf ? 23 : 3,
+                width: 18, height: 18, borderRadius: "50%",
+                background: "#fff",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                transition: "left 0.2s",
+              }} />
+            </button>
+            <span style={{ fontSize: 13, color: "var(--char)", userSelect: "none" }}>
+              Show "Delivery" line on per-room PDF pages
+            </span>
+          </div>
         </div>
       </div>
 

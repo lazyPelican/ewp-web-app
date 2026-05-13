@@ -1006,7 +1006,8 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
     { label: 'Upgrades & Options', value: rt.upg },
     { label: 'Finishing', value: rt.fin },
     { label: 'Installation', value: rt.inst },
-  ].filter(sec => sec.value > 0)
+    ...(project.showDeliveryOnPdf ? [{ label: 'Delivery', value: null }] : []),
+  ].filter(sec => sec.value > 0 || sec.value === null)
 
   const secCols = [
     { w: '60%', label: 'Section' },
@@ -1038,7 +1039,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
             isEven={i % 2 === 1}
             cells={[
               { val: sec.label },
-              { val: fmtN(sec.value), amt: true },
+              { val: sec.value === null ? '$___' : fmtN(sec.value), amt: true },
             ]}
           />
         ))}
