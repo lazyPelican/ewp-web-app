@@ -1538,7 +1538,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
               <button className="btn btn-ghost btn-sm"
                 style={{ color:"var(--mid)", borderRight:"1px solid var(--ivory3)", borderRadius:0, padding:"16px 20px", marginRight:4, whiteSpace:"nowrap", flexShrink:0 }}
                 onClick={() => setView("dashboard")}>
-                â† All Projects
+                ← All Projects
               </button>
               {stepConfig.map((s, i) => {
                 const canClick = reachable[i] && i !== step;
