@@ -189,7 +189,7 @@ function Root() {
             background: dark ? "rgba(55, 51, 38, 0.6)" : "rgba(255, 255, 255, 0.65)",
           }}
         >
-          <span>Created by Bilal Ahmed</span>
+          <span style={{ textDecoration: "underline" }}>Created by Bilal Ahmed</span>
           <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
           <span style={{ fontWeight: 600, letterSpacing: "0.02em" }}>NextGen Sheets</span>
           <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
