@@ -33,6 +33,8 @@ export const sanitizeProject = (p) => ({
   email:             sanitizeEmail(p.email),
   contractorName:    sanitizeName(p.contractorName, 80),
   contractorContact: sanitizeText(p.contractorContact, 80),
+  billingName:       sanitizeName(p.billingName, 80),
+  billingEmail:      sanitizeEmail(p.billingEmail),
   deliveryNotes:     sanitizeText(p.deliveryNotes, 300),
   deliveryAmount:    sanitizeNumeric(p.deliveryAmount),
   taxRate:           sanitizeNumeric(p.taxRate),

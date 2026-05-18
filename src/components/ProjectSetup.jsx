@@ -72,6 +72,22 @@ export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
       </div>
 
       <div className="card">
+        <div className="card-header"><span className="card-title">BILLING CONTACT</span><span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 400, marginLeft: 8 }}>Optional</span></div>
+        <div className="card-body">
+          <div className="form-grid form-grid-2">
+            <Field label="Billing Name">
+              <input value={project.billingName || ""} placeholder="Same as contact if left blank"
+                onChange={e => onChange({ billingName: e.target.value })} />
+            </Field>
+            <Field label="Billing Email">
+              <input type="email" value={project.billingEmail || ""} placeholder="billing@email.com"
+                onChange={e => onChange({ billingEmail: e.target.value })} />
+            </Field>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
         <div className="card-header"><span className="card-title">CONTRACTOR DETAILS</span></div>
         <div className="card-body">
           <div className="form-grid form-grid-3">

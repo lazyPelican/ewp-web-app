@@ -1125,6 +1125,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     id: genId(), name: "", address: "", contactName: "", contactPhone: "",
     email: "", bidDate: new Date().toISOString().slice(0, 10),
     contractorYN: "No", contractorName: "", contractorContact: "",
+    billingName: "", billingEmail: "",
     rooms: 1, masterAdj: 0,
     deliveryAmount: "", deliveryNotes: "", showDeliveryOnPdf: false,
     taxEnabled: false, taxRate: 8.53,
@@ -1194,7 +1195,9 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     const id = genId();
     setProject({ id, name: "", address: "", contactName: "", contactPhone: "", email: "",
       bidDate: new Date().toISOString().slice(0, 10), contractorYN: "No",
-      contractorName: "", contractorContact: "", rooms: 1, masterAdj: 0,
+      contractorName: "", contractorContact: "",
+      billingName: "", billingEmail: "",
+      rooms: 1, masterAdj: 0,
       deliveryAmount: "", deliveryNotes: "", showDeliveryOnPdf: false, taxEnabled: false, taxRate: 8.53, installationType: "ewp" });
     setRooms([blankRoom(0)]);
     setStep(0); setSaved(false); setEditIdx(null); setView("new"); setMaxStep(0);
@@ -1269,6 +1272,18 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     const payload = { id: cleanProject.id, name: cleanProject.name, address: cleanProject.address, data: entry };
     const { error } = await supabase.from("projects").upsert(payload, { onConflict: "id" });
     if (error) { logError("saveProject", error); showToast("Error saving — check connection"); return; }
+
+    // Auto-save new contractor name to the contractors table
+    if (cleanProject.contractorYN === "Yes" && cleanProject.contractorName?.trim()) {
+      const cName = cleanProject.contractorName.trim();
+      if (!contractors.some(c => c.name.toLowerCase() === cName.toLowerCase())) {
+        const { data: newC, error: cErr } = await supabase.from("contractors").insert({
+          name: cName,
+          contact: cleanProject.contractorContact?.trim() || null,
+        }).select().single();
+        if (!cErr && newC) setContractors(prev => [...prev, newC].sort((a, b) => a.name.localeCompare(b.name)));
+      }
+    }
     if (editIdx !== null) {
       setProjects(prev => prev.map((p, i) => i === editIdx ? entry : p));
     } else {
