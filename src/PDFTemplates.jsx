@@ -1001,17 +1001,35 @@ function CustomerSummaryPage({
 // ── CUSTOMER ROOM PAGE ─────────────────────────────────────────────────────
 
 function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy }) {
-  const sections = [
+  const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
+  const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
+  const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
+  const hasInstall = room.install.type
+
+  // Cabinetry detail columns: Description | Qty | Notes (no pricing)
+  const cabCols = [
+    { w: '50%', label: 'Description' },
+    { w: '20%', label: 'Qty', right: true },
+    { w: '30%', label: 'Notes' },
+  ]
+
+  // Upgrades detail columns: Description | Notes (no pricing)
+  const upgCols = [
+    { w: '50%', label: 'Description' },
+    { w: '50%', label: 'Notes' },
+  ]
+
+  // Room Investment Summary
+  const summaryItems = [
     { label: 'Cabinetry', value: rt.cab },
-    { label: 'Upgrades & Options', value: rt.upg },
     { label: 'Finishing', value: rt.fin },
     { label: 'Installation', value: rt.inst },
     ...(project.showDeliveryOnPdf ? [{ label: 'Delivery', value: null }] : []),
   ].filter(sec => sec.value > 0 || sec.value === null)
 
-  const secCols = [
-    { w: '60%', label: 'Section' },
-    { w: '40%', label: 'Amount', right: true },
+  const sumCols = [
+    { w: '60%', label: 'Category' },
+    { w: '40%', label: 'Total', right: true },
   ]
 
   return (
@@ -1029,17 +1047,100 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
         { label: 'Contact', value: project.contactName },
       ]} />
 
-      <SectionLabel label="Room Cost Summary" />
+      {/* Cabinetry detail — no pricing */}
+      {cabItems.length > 0 && (
+        <>
+          <SectionLabel label="Cabinetry Included" />
+          <View style={s.tblWrap}>
+            <TableHeader colDefs={cabCols} />
+            {cabItems.map((item, i) => {
+              const notes = [item.construction, item.wood]
+                .filter(v => v && v !== 'Not Applicable')
+                .join(' · ') || ''
+              return (
+                <TableRow
+                  key={i}
+                  colDefs={cabCols}
+                  isEven={i % 2 === 1}
+                  cells={[
+                    { val: trunc(item.product, 50) },
+                    { val: String(parseFloat(item.qty) || 0), right: true },
+                    { val: trunc(notes, 40) },
+                  ]}
+                />
+              )
+            })}
+          </View>
+          <View style={s.gap} />
+        </>
+      )}
+
+      {/* Upgrades detail — no pricing */}
+      {upgItems.length > 0 && (
+        <>
+          <SectionLabel label="Upgrades / Special Features" />
+          <View style={s.tblWrap}>
+            <TableHeader colDefs={upgCols} />
+            {upgItems.map((item, i) => (
+              <TableRow
+                key={i}
+                colDefs={upgCols}
+                isEven={i % 2 === 1}
+                cells={[
+                  { val: trunc(item.upgrade, 50) },
+                  { val: trunc(item.notes || '', 50) },
+                ]}
+              />
+            ))}
+          </View>
+          <View style={s.gap} />
+        </>
+      )}
+
+      {/* Finishing — just type names, no LF pricing */}
+      {finItems.length > 0 && (
+        <>
+          <SectionLabel label="Finishing Included" />
+          <View style={s.tblWrap}>
+            {finItems.map((item, i) => (
+              <View key={i} style={[s.tRow, i % 2 === 1 ? s.tRowAlt : {}]}>
+                <View style={{ width: '100%' }}>
+                  <Text style={s.tCell}>{trunc(item.type, 60)}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+          <View style={s.gap} />
+        </>
+      )}
+
+      {/* Installation — just type, no rates or percentages */}
+      {hasInstall && (
+        <>
+          <SectionLabel label="Installation Included" />
+          <View style={s.tblWrap}>
+            <View style={s.tRow}>
+              <View style={{ width: '100%' }}>
+                <Text style={s.tCell}>Professional installation — {room.install.type}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={s.gap} />
+        </>
+      )}
+
+      {/* Room Investment Summary */}
+      <SectionLabel label="Room Investment Summary" />
       <View style={s.tblWrap}>
-        <TableHeader colDefs={secCols} />
-        {sections.map((sec, i) => (
+        <TableHeader colDefs={sumCols} />
+        {summaryItems.map((sec, i) => (
           <TableRow
             key={i}
-            colDefs={secCols}
+            colDefs={sumCols}
             isEven={i % 2 === 1}
             cells={[
               { val: sec.label },
-              { val: sec.value === null ? '$___' : fmtN(sec.value), amt: true },
+              { val: sec.value === null ? 'Included' : fmtN(sec.value), amt: sec.value !== null },
             ]}
           />
         ))}
