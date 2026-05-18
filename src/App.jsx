@@ -1189,6 +1189,15 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     setRooms(prev => prev.filter((_, idx) => idx !== i));
   };
 
+  const moveRoom = (from, to) => {
+    setRooms(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
   const showToast = (msg) => setToast(msg);
 
   const startNew = () => {
@@ -1638,7 +1647,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           )}
           {view === "new" && step === 1 && (
             <RoomsPage project={project} rooms={rooms} onRoomsChange={setRooms}
-              onAddRoom={addRoom} onRemoveRoom={removeRoom}
+              onAddRoom={addRoom} onRemoveRoom={removeRoom} onMoveRoom={moveRoom}
               onDuplicateRoom={(i) => {
                 const src = rooms[i];
                 const duped = { ...src, id: Date.now() + Math.random(), name: makeCopyName(src.name, rooms.map(r => r.name)) };

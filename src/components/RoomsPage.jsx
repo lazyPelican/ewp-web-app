@@ -360,7 +360,7 @@ function InstallSection({ data, cabTotal, onChange }) {
 }
 
 // ── RoomsPage ─────────────────────────────────────────────────────────────────
-export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onDuplicateRoom, onProjectChange, onNext, onBack }) {
+export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onMoveRoom, onDuplicateRoom, onProjectChange, onNext, onBack }) {
   const [activeRoom, setActiveRoom] = useState(0);
   const room = rooms[Math.min(activeRoom, rooms.length - 1)];
   const safeActiveRoom = Math.min(activeRoom, rooms.length - 1);
@@ -422,8 +422,34 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
                 display: "flex", alignItems: "center", gap: 6, paddingRight: 6,
               }}
               onClick={() => setActiveRoom(i)}>
+              {rooms.length > 1 && i > 0 && (
+                <button
+                  onClick={e => { e.stopPropagation(); onMoveRoom(i, i - 1); setActiveRoom(i - 1); }}
+                  title="Move left"
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: isActive ? "var(--gold)" : "var(--muted)",
+                    fontSize: 11, lineHeight: 1, padding: "0 1px",
+                    display: "flex", alignItems: "center",
+                  }}>
+                  ◀
+                </button>
+              )}
               {done && !isActive && <span style={{ fontSize: 11 }}>✓</span>}
               <span>{r.name || `Room ${i + 1}`}</span>
+              {rooms.length > 1 && i < rooms.length - 1 && (
+                <button
+                  onClick={e => { e.stopPropagation(); onMoveRoom(i, i + 1); setActiveRoom(i + 1); }}
+                  title="Move right"
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: isActive ? "var(--gold)" : "var(--muted)",
+                    fontSize: 11, lineHeight: 1, padding: "0 1px",
+                    display: "flex", alignItems: "center",
+                  }}>
+                  ▶
+                </button>
+              )}
               {rooms.length > 1 && (
                 <button
                   onClick={e => {
