@@ -9,6 +9,7 @@ import {
   PRICING, setPRICING,
   genId, makeCopyName, fmtId, blankRoom, isRoomComplete,
   calcCabinetry, calcUpgrades, calcFinishing, calcInstall,
+  DEFAULT_QUOTE_SECTIONS,
 } from "./appUtils.js"
 import { exportPDFInternal, exportPDFCustomer } from "./pdfExport.js"
 import { Toast } from "./components/Toast.jsx"
@@ -1129,6 +1130,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     rooms: 1, masterAdj: 0,
     deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false,
     taxEnabled: false, taxRate: 8.53,
+    quoteSections: { ...DEFAULT_QUOTE_SECTIONS },
   });
   const [rooms, setRooms] = useState([blankRoom(0)]);
 
@@ -1207,14 +1209,16 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       contractorName: "", contractorContact: "",
       billingName: "", billingEmail: "",
       rooms: 1, masterAdj: 0,
-      deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false, taxEnabled: false, taxRate: 8.53, installationType: "ewp" });
+      deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false, taxEnabled: false, taxRate: 8.53, installationType: "ewp",
+      quoteSections: { ...DEFAULT_QUOTE_SECTIONS } });
     setRooms([blankRoom(0)]);
     setStep(0); setSaved(false); setEditIdx(null); setView("new"); setMaxStep(0);
   };
 
   const openProject = (i) => {
     const p = projects[i];
-    setProject(p.project); setRooms(p.rooms.map(r => ({ ...r, countertops: r.countertops || [] })));
+    setProject({ ...p.project, quoteSections: p.project.quoteSections || { ...DEFAULT_QUOTE_SECTIONS } });
+    setRooms(p.rooms.map(r => ({ ...r, countertops: r.countertops || [] })));
     setStep(0); setEditIdx(i); setSaved(true); setView("new");
     const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
     const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);

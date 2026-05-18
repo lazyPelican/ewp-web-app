@@ -1,6 +1,6 @@
-import React from "react"
+import React, { useState } from "react"
 import { Field } from "./Field.jsx"
-import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "../appUtils.js"
+import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, DEFAULT_QUOTE_SECTIONS } from "../appUtils.js"
 
 export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
   const roomTotals = rooms.map(r => {
@@ -131,6 +131,100 @@ export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
           </div>
         </div>
       </div>
+
+      {/* Quote Output Settings */}
+      {(() => {
+        const qs = project.quoteSections || DEFAULT_QUOTE_SECTIONS;
+        const sections = [
+          { key: "cabinetry",   label: "Cabinets / Casework" },
+          { key: "upgrades",    label: "Upgrades / Overrides" },
+          { key: "countertops", label: "Countertops" },
+          { key: "finishing",   label: "Finishing" },
+          { key: "install",     label: "Installation" },
+          { key: "delivery",    label: "Delivery" },
+        ];
+        const rollOptions = [
+          { value: "", label: "— None —" },
+          ...sections.map(s => ({ value: s.key, label: s.label })),
+        ];
+        const updateSection = (sectionKey, field, value) => {
+          const updated = { ...qs, [sectionKey]: { ...qs[sectionKey], [field]: value } };
+          onChange({ quoteSections: updated });
+        };
+        const Toggle = ({ checked, onToggle, label }) => (
+          <button
+            type="button" role="switch" aria-checked={!!checked} aria-label={label}
+            onClick={onToggle}
+            style={{
+              position: "relative", width: 34, height: 18, borderRadius: 9, border: "none",
+              background: checked ? "var(--gold)" : "var(--ivory3)", cursor: "pointer", flexShrink: 0, transition: "background 0.2s",
+            }}>
+            <span style={{
+              position: "absolute", top: 2, left: checked ? 18 : 2,
+              width: 14, height: 14, borderRadius: "50%", background: "#fff",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.2)", transition: "left 0.2s",
+            }} />
+          </button>
+        );
+        return (
+          <div className="card" style={{ marginBottom: 20 }}>
+            <div className="card-header"><span className="card-title">QUOTE OUTPUT SETTINGS</span></div>
+            <div className="card-body">
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>
+                Control what appears on internal and external quotes for each section.
+              </div>
+              <div className="scrollable">
+                <table className="data-table" style={{ fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "22%" }}>Section</th>
+                      <th style={{ width: "12%", textAlign: "center" }}>Internal</th>
+                      <th style={{ width: "12%", textAlign: "center" }}>External</th>
+                      <th style={{ width: "14%", textAlign: "center" }}>Detail (Ext)</th>
+                      <th style={{ width: "14%", textAlign: "center" }}>Pricing (Ext)</th>
+                      <th style={{ width: "26%" }}>Roll Into</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sections.map(sec => {
+                      const cfg = qs[sec.key] || DEFAULT_QUOTE_SECTIONS[sec.key];
+                      return (
+                        <tr key={sec.key}>
+                          <td style={{ fontWeight: 600 }}>{sec.label}</td>
+                          <td style={{ textAlign: "center" }}>
+                            <Toggle checked={cfg.showInternal} label={`Show ${sec.label} on internal`}
+                              onToggle={() => updateSection(sec.key, "showInternal", !cfg.showInternal)} />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <Toggle checked={cfg.showExternal} label={`Show ${sec.label} on external`}
+                              onToggle={() => updateSection(sec.key, "showExternal", !cfg.showExternal)} />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <Toggle checked={cfg.showDetailExt} label={`Show ${sec.label} detail on external`}
+                              onToggle={() => updateSection(sec.key, "showDetailExt", !cfg.showDetailExt)} />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <Toggle checked={cfg.showPricingExt} label={`Show ${sec.label} pricing on external`}
+                              onToggle={() => updateSection(sec.key, "showPricingExt", !cfg.showPricingExt)} />
+                          </td>
+                          <td>
+                            <select value={cfg.rollInto || ""} style={{ fontSize: 12, padding: "4px 6px" }}
+                              onChange={e => updateSection(sec.key, "rollInto", e.target.value)}>
+                              {rollOptions.filter(o => o.value !== sec.key).map(o => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Live total preview */}
       <div className="card" style={{ background: "var(--ivory2)", border: "1px solid var(--ivory3)" }}>

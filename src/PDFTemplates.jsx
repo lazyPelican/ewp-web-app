@@ -666,6 +666,10 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
   const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
   const instDef  = pricing.installType?.find(i => i.name === room.install.type)
 
+  const qs = project.quoteSections || {}
+  const qd = { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" }
+  const cfgI = (k) => ({ ...qd, ...(qs[k] || {}) })
+
   const cabCols = [
     { w: '22%', label: 'Product Type' },
     { w: '14%', label: 'Construction' },
@@ -792,6 +796,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
       ]} />
 
       {/* Cabinetry */}
+      {cfgI('cabinetry').showInternal && (<>
       <SectionLabel label="Cabinetry" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={cabCols} />
@@ -803,8 +808,10 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
         }
       </View>
       <SubBar label="Cabinetry Total" value={rt.cab} />
+      </>)}
 
       {/* Upgrades */}
+      {cfgI('upgrades').showInternal && (<>
       <SectionLabel label="Upgrades / Overrides" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={upgCols} />
@@ -816,8 +823,10 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
         }
       </View>
       <SubBar label="Upgrades Total" value={rt.upg} />
+      </>)}
 
       {/* Countertops */}
+      {cfgI('countertops').showInternal && (<>
       <SectionLabel label="Countertops" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={[
@@ -858,8 +867,10 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
         }
       </View>
       <SubBar label="Countertops Total" value={rt.ctp} />
+      </>)}
 
       {/* Finishing */}
+      {cfgI('finishing').showInternal && (<>
       <SectionLabel label="Finishing" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={finCols} />
@@ -871,22 +882,25 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
         }
       </View>
       <SubBar label="Finishing Total" value={rt.fin} />
+      </>)}
 
       {/* Installation */}
+      {cfgI('install').showInternal && (<>
       <SectionLabel label="Installation" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={instInfoCols} />
         <TableRow colDefs={instInfoCols} cells={instInfoCells} isEven={false} />
       </View>
       <SubBar label="Install Total" value={rt.inst} />
+      </>)}
 
       <View wrap={false}>
         <TotalsStrip items={[
-          { label: 'Cabinetry', value: rt.cab },
-          { label: 'Upgrades', value: rt.upg },
-          { label: 'Countertops', value: rt.ctp },
-          { label: 'Finishing', value: rt.fin },
-          { label: 'Installation', value: rt.inst },
+          ...(cfgI('cabinetry').showInternal ? [{ label: 'Cabinetry', value: rt.cab }] : []),
+          ...(cfgI('upgrades').showInternal ? [{ label: 'Upgrades', value: rt.upg }] : []),
+          ...(cfgI('countertops').showInternal ? [{ label: 'Countertops', value: rt.ctp }] : []),
+          ...(cfgI('finishing').showInternal ? [{ label: 'Finishing', value: rt.fin }] : []),
+          ...(cfgI('install').showInternal ? [{ label: 'Installation', value: rt.inst }] : []),
         ]} />
         <GrandBar
           label="Room Grand Total"
@@ -1047,6 +1061,10 @@ function CustomerSummaryPage({
 // ── CUSTOMER ROOM PAGE ─────────────────────────────────────────────────────
 
 function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, preparedBy }) {
+  const qs = project.quoteSections || {}
+  const qd = { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" }
+  const cfg = (k) => ({ ...qd, ...(qs[k] || {}) })
+
   const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
   const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
   const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) > 0)
@@ -1064,17 +1082,35 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
     { w: '30%', label: 'Notes' },
   ]
 
-  // Rolled totals: Cab+Upgrades combined, Install+Delivery combined
-  const cabUpgTotal = rt.cab + rt.upg
-  const instDelTotal = rt.inst + delivery
-  const roomTotalWithDelivery = rt.total + delivery
+  // Build summary with roll-up logic from quoteSections
+  const amounts = { cabinetry: rt.cab, upgrades: rt.upg, countertops: rt.ctp, finishing: rt.fin, install: rt.inst, delivery: delivery }
+  const labels  = { cabinetry: 'Cabinets / Casework', upgrades: 'Upgrades / Overrides', countertops: 'Countertops', finishing: 'Finishing', install: 'Installation', delivery: 'Delivery' }
+  const keys = ['cabinetry', 'upgrades', 'countertops', 'finishing', 'install', 'delivery']
 
-  const summaryItems = [
-    { label: 'Cabinets / Casework + Upgrades', value: cabUpgTotal },
-    { label: 'Countertops', value: rt.ctp },
-    { label: 'Finishing', value: rt.fin },
-    { label: 'Installation + Delivery', value: instDelTotal },
-  ].filter(sec => sec.value > 0)
+  // Calculate rolled totals
+  const rolledTotals = {}
+  keys.forEach(k => {
+    const c = cfg(k)
+    if (!c.showExternal) return
+    const target = c.rollInto && c.rollInto !== k ? c.rollInto : k
+    rolledTotals[target] = (rolledTotals[target] || 0) + (amounts[k] || 0)
+  })
+
+  // Build summary items preserving order, combining labels for rolled items
+  const rolledLabels = {}
+  keys.forEach(k => {
+    const c = cfg(k)
+    if (!c.showExternal) return
+    const target = c.rollInto && c.rollInto !== k ? c.rollInto : k
+    if (!rolledLabels[target]) rolledLabels[target] = []
+    rolledLabels[target].push(labels[k])
+  })
+
+  const summaryItems = keys
+    .filter(k => rolledTotals[k] != null && rolledTotals[k] > 0)
+    .map(k => ({ label: rolledLabels[k].join(' + '), value: rolledTotals[k] }))
+
+  const roomTotalWithDelivery = rt.total + delivery
 
   const sumCols = [
     { w: '60%', label: 'Category' },
@@ -1096,124 +1132,136 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
         { label: 'Contact', value: project.contactName },
       ]} />
 
-      {/* 1. Cabinets / Casework — descriptions only */}
-      {cabItems.length > 0 && (
+      {/* 1. Cabinets / Casework */}
+      {cfg('cabinetry').showExternal && ((cfg('cabinetry').showDetailExt && cabItems.length > 0) || cfg('cabinetry').showPricingExt) && (
         <>
           <SectionLabel label="Cabinets / Casework" />
-          <View style={s.tblWrap}>
-            <TableHeader colDefs={cabDescCols} />
-            {cabItems.map((item, i) => {
-              const notes = [item.construction, item.wood]
-                .filter(v => v && v !== 'Not Applicable')
-                .join(' · ') || ''
-              return (
-                <TableRow
-                  key={i}
-                  colDefs={cabDescCols}
-                  isEven={i % 2 === 1}
-                  cells={[
-                    { val: trunc(item.product, 50) },
-                    { val: String(parseFloat(item.qty) || 0), right: true },
-                    { val: trunc(notes, 40) },
-                  ]}
-                />
-              )
-            })}
-          </View>
-          <View style={s.gap} />
+          {cfg('cabinetry').showDetailExt && cabItems.length > 0 && (
+            <View style={s.tblWrap}>
+              <TableHeader colDefs={cabDescCols} />
+              {cabItems.map((item, i) => {
+                const notes = [item.construction, item.wood]
+                  .filter(v => v && v !== 'Not Applicable')
+                  .join(' · ') || ''
+                return (
+                  <TableRow
+                    key={i}
+                    colDefs={cabDescCols}
+                    isEven={i % 2 === 1}
+                    cells={[
+                      { val: trunc(item.product, 50) },
+                      { val: String(parseFloat(item.qty) || 0), right: true },
+                      { val: trunc(notes, 40) },
+                    ]}
+                  />
+                )
+              })}
+            </View>
+          )}
+          {cfg('cabinetry').showPricingExt ? <SubBar label="Cabinetry Total" value={rt.cab} /> : <View style={s.gap} />}
         </>
       )}
 
-      {/* 2. Upgrades / Overrides — descriptions only */}
-      {upgItems.length > 0 && (
+      {/* 2. Upgrades / Overrides */}
+      {cfg('upgrades').showExternal && ((cfg('upgrades').showDetailExt && upgItems.length > 0) || cfg('upgrades').showPricingExt) && (
         <>
           <SectionLabel label="Upgrades / Overrides" />
-          <View style={s.tblWrap}>
-            <TableHeader colDefs={descCols} />
-            {upgItems.map((item, i) => (
-              <TableRow
-                key={i}
-                colDefs={descCols}
-                isEven={i % 2 === 1}
-                cells={[
-                  { val: trunc(item.upgrade, 60) },
-                  { val: trunc(item.notes || '', 50) },
-                ]}
-              />
-            ))}
-          </View>
-          <View style={s.gap} />
+          {cfg('upgrades').showDetailExt && upgItems.length > 0 && (
+            <View style={s.tblWrap}>
+              <TableHeader colDefs={descCols} />
+              {upgItems.map((item, i) => (
+                <TableRow
+                  key={i}
+                  colDefs={descCols}
+                  isEven={i % 2 === 1}
+                  cells={[
+                    { val: trunc(item.upgrade, 60) },
+                    { val: trunc(item.notes || '', 50) },
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+          {cfg('upgrades').showPricingExt ? <SubBar label="Upgrades Total" value={rt.upg} /> : <View style={s.gap} />}
         </>
       )}
 
-      {/* 3. Countertops — descriptions only */}
-      {ctpItems.length > 0 && (
+      {/* 3. Countertops */}
+      {cfg('countertops').showExternal && ((cfg('countertops').showDetailExt && ctpItems.length > 0) || cfg('countertops').showPricingExt) && (
         <>
           <SectionLabel label="Countertops" />
-          <View style={s.tblWrap}>
-            <TableHeader colDefs={descCols} />
-            {ctpItems.map((item, i) => (
-              <TableRow
-                key={i}
-                colDefs={descCols}
-                isEven={i % 2 === 1}
-                cells={[
-                  { val: trunc(item.product, 60) },
-                  { val: trunc(item.notes || '', 50) },
-                ]}
-              />
-            ))}
-          </View>
-          <View style={s.gap} />
+          {cfg('countertops').showDetailExt && ctpItems.length > 0 && (
+            <View style={s.tblWrap}>
+              <TableHeader colDefs={descCols} />
+              {ctpItems.map((item, i) => (
+                <TableRow
+                  key={i}
+                  colDefs={descCols}
+                  isEven={i % 2 === 1}
+                  cells={[
+                    { val: trunc(item.product, 60) },
+                    { val: trunc(item.notes || '', 50) },
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+          {cfg('countertops').showPricingExt ? <SubBar label="Countertops Total" value={rt.ctp} /> : <View style={s.gap} />}
         </>
       )}
 
-      {/* 4. Finishing — type names only */}
-      {finItems.length > 0 && (
+      {/* 4. Finishing */}
+      {cfg('finishing').showExternal && ((cfg('finishing').showDetailExt && finItems.length > 0) || cfg('finishing').showPricingExt) && (
         <>
           <SectionLabel label="Finishing" />
-          <View style={s.tblWrap}>
-            {finItems.map((item, i) => (
-              <View key={i} style={[s.tRow, i % 2 === 1 ? s.tRowAlt : {}]}>
-                <View style={{ width: '100%' }}>
-                  <Text style={s.tCell}>{trunc(item.type, 60)}</Text>
+          {cfg('finishing').showDetailExt && finItems.length > 0 && (
+            <View style={s.tblWrap}>
+              {finItems.map((item, i) => (
+                <View key={i} style={[s.tRow, i % 2 === 1 ? s.tRowAlt : {}]}>
+                  <View style={{ width: '100%' }}>
+                    <Text style={s.tCell}>{trunc(item.type, 60)}</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
-          <View style={s.gap} />
+              ))}
+            </View>
+          )}
+          {cfg('finishing').showPricingExt ? <SubBar label="Finishing Total" value={rt.fin} /> : <View style={s.gap} />}
         </>
       )}
 
-      {/* 5. Installation — type only */}
-      {hasInstall && (
+      {/* 5. Installation */}
+      {cfg('install').showExternal && ((cfg('install').showDetailExt && hasInstall) || cfg('install').showPricingExt) && (
         <>
           <SectionLabel label="Installation" />
-          <View style={s.tblWrap}>
-            <View style={s.tRow}>
-              <View style={{ width: '100%' }}>
-                <Text style={s.tCell}>Professional installation — {room.install.type}</Text>
+          {cfg('install').showDetailExt && hasInstall && (
+            <View style={s.tblWrap}>
+              <View style={s.tRow}>
+                <View style={{ width: '100%' }}>
+                  <Text style={s.tCell}>Professional installation — {room.install.type}</Text>
+                </View>
               </View>
             </View>
-          </View>
-          <View style={s.gap} />
+          )}
+          {cfg('install').showPricingExt ? <SubBar label="Installation Total" value={rt.inst} /> : <View style={s.gap} />}
         </>
       )}
 
       {/* 6. Delivery */}
-      {delivery > 0 && (
+      {cfg('delivery').showExternal && delivery > 0 && (cfg('delivery').showDetailExt || cfg('delivery').showPricingExt) && (
         <>
           <SectionLabel label="Delivery" />
-          <View style={s.tblWrap}>
-            <View style={s.tRow}>
-              <View style={{ width: '100%' }}>
-                <Text style={s.tCell}>
-                  {project.deliveryNotes ? trunc(project.deliveryNotes, 80) : 'Delivery included'}
-                </Text>
+          {cfg('delivery').showDetailExt && (
+            <View style={s.tblWrap}>
+              <View style={s.tRow}>
+                <View style={{ width: '100%' }}>
+                  <Text style={s.tCell}>
+                    {project.deliveryNotes ? trunc(project.deliveryNotes, 80) : 'Delivery included'}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-          <View style={s.gap} />
+          )}
+          {cfg('delivery').showPricingExt ? <SubBar label="Delivery Total" value={delivery} /> : <View style={s.gap} />}
         </>
       )}
 

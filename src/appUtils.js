@@ -163,6 +163,16 @@ export const calcEstimatedFinishingLF = (cabinetryItems) => {
   }, 0);
 };
 
+// ── Default quote section settings ────────────────────────────────────────────
+export const DEFAULT_QUOTE_SECTIONS = {
+  cabinetry:   { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" },
+  upgrades:    { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "cabinetry" },
+  countertops: { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" },
+  finishing:   { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" },
+  install:     { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" },
+  delivery:    { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "install" },
+};
+
 // ── Blank row factories ───────────────────────────────────────────────────────
 export const blankCabRow = () => ({
   product: "", construction: "Not Applicable", wood: "Not Applicable",
