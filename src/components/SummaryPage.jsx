@@ -36,7 +36,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
   const grandUpg  = roomTotals.reduce((s, r) => s + r.upg, 0);
   const grandFin  = roomTotals.reduce((s, r) => s + r.fin, 0);
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0);
-  const delivery  = parseFloat(project.deliveryAmount) || 0;
+  const delivery  = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0);
   const subtotalBeforeTax = grandCab + grandUpg + grandFin + grandInst + delivery;
   const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
   const taxRate    = Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8.53;

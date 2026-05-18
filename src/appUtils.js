@@ -127,7 +127,7 @@ export const calcFinishing = (items) => {
 };
 
 export const calcInstall = (installData, cabTotal) => {
-  if (!installData.type) return 0;
+  if (!installData.type || installData.type === "No Install") return 0;
   const inst = PRICING.installType.find(i => i.name === installData.type);
   if (!inst) return 0;
   const adjPct = parseFloat(installData.adjPct) || 0;

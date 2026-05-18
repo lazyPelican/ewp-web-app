@@ -332,7 +332,7 @@ function InstallSection({ data, cabTotal, onChange }) {
               <option value="">— Select —</option>
               {PRICING.installType.map(i => <option key={i.name}>{i.name}</option>)}
             </select>
-            {data.type && (() => {
+            {data.type && data.type !== "No Install" && (() => {
               const inst = PRICING.installType.find(i => i.name === data.type);
               return inst ? (
                 <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 4, fontWeight: 700 }}>
@@ -361,7 +361,8 @@ function InstallSection({ data, cabTotal, onChange }) {
             <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 600, color: "var(--gold)" }}>
               Install Total: {fmt(instTotal)}
             </span>
-            {data.type !== HOURLY_RATE && <div className="text-muted" style={{ marginTop: 4 }}>Based on {PRICING.installType.find(i => i.name === data.type)?.rate * 100}% of cabinetry total</div>}
+            {data.type === "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>No installation included</div>}
+            {data.type !== HOURLY_RATE && data.type !== "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {PRICING.installType.find(i => i.name === data.type)?.rate * 100}% of cabinetry total</div>}
           </div>
         )}
       </div>

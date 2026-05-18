@@ -1127,7 +1127,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     contractorYN: "No", contractorName: "", contractorContact: "",
     billingName: "", billingEmail: "",
     rooms: 1, masterAdj: 0,
-    deliveryAmount: "", deliveryNotes: "", showDeliveryOnPdf: false,
+    deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false,
     taxEnabled: false, taxRate: 8.53,
   });
   const [rooms, setRooms] = useState([blankRoom(0)]);
@@ -1207,7 +1207,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       contractorName: "", contractorContact: "",
       billingName: "", billingEmail: "",
       rooms: 1, masterAdj: 0,
-      deliveryAmount: "", deliveryNotes: "", showDeliveryOnPdf: false, taxEnabled: false, taxRate: 8.53, installationType: "ewp" });
+      deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false, taxEnabled: false, taxRate: 8.53, installationType: "ewp" });
     setRooms([blankRoom(0)]);
     setStep(0); setSaved(false); setEditIdx(null); setView("new"); setMaxStep(0);
   };

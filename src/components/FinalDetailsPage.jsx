@@ -11,7 +11,7 @@ export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
     return cab + upg + fin + inst;
   });
   const roomsSubtotal = roomTotals.reduce((s, v) => s + v, 0);
-  const delivery   = parseFloat(project.deliveryAmount) || 0;
+  const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0);
   const subtotal   = roomsSubtotal + delivery;
   const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
   const taxRate    = Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8.53;
@@ -32,15 +32,33 @@ export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
       <div className="card">
         <div className="card-header"><span className="card-title">DELIVERY</span></div>
         <div className="card-body">
-          <div className="form-grid form-grid-2">
-            <Field label="Delivery Amount (USD)">
-              <input type="number" min="0" step="0.01" value={project.deliveryAmount} placeholder="0.00"
-                onChange={e => onChange({ deliveryAmount: e.target.value })} />
+          <div className="form-grid form-grid-3">
+            <Field label="Delivery Option">
+              <select
+                value={project.noDelivery ? "none" : "standard"}
+                onChange={e => {
+                  if (e.target.value === "none") {
+                    onChange({ noDelivery: true, deliveryAmount: "", deliveryNotes: "" });
+                  } else {
+                    onChange({ noDelivery: false });
+                  }
+                }}>
+                <option value="standard">Standard Delivery</option>
+                <option value="none">No Delivery</option>
+              </select>
             </Field>
-            <Field label="Delivery Notes">
-              <input value={project.deliveryNotes} placeholder="e.g. Curbside drop-off, call ahead"
-                onChange={e => onChange({ deliveryNotes: e.target.value })} />
-            </Field>
+            {!project.noDelivery && (
+              <Field label="Delivery Amount (USD)">
+                <input type="number" min="0" step="0.01" value={project.deliveryAmount} placeholder="0.00"
+                  onChange={e => onChange({ deliveryAmount: e.target.value })} />
+              </Field>
+            )}
+            {!project.noDelivery && (
+              <Field label="Delivery Notes">
+                <input value={project.deliveryNotes} placeholder="e.g. Curbside drop-off, call ahead"
+                  onChange={e => onChange({ deliveryNotes: e.target.value })} />
+              </Field>
+            )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
             <button

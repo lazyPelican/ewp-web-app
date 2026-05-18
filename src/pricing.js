@@ -25,6 +25,7 @@ export const DEFAULT_PRICING = {
     { name: "Upper Cabinet", price: 190, finLF: 1 },
     { name: "Wood Floating Shelves", price: 100, finLF: 0.5 },
     { name: "Wood Tops LF", price: 100, finLF: 0.5 },
+    { name: "Millwork (per LF)", price: 1, finLF: 1 },
   ],
   construction: [
     { name: "Not Applicable", premium: 0 },
@@ -49,6 +50,7 @@ export const DEFAULT_PRICING = {
     { name: "White Oak", premium: 0.3 },
   ],
   finishing: [
+    { name: "No Finishing", pricePerLF: 0 },
     { name: "Stain", pricePerLF: 90 },
     { name: "Paint", pricePerLF: 90 },
     { name: "Clear Coat", pricePerLF: 65 },
@@ -61,6 +63,7 @@ export const DEFAULT_PRICING = {
     { name: "Kitchen Hood", pricePerLF: null },
   ],
   installType: [
+    { name: "No Install", rate: 0 },
     { name: "Standard or Full Overlay - Unfinished", rate: 0.18 },
     { name: "Standard or Full Overlay - Finished", rate: 0.2 },
     { name: "Inset - Unfinished", rate: 0.2 },

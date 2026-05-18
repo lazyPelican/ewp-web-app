@@ -1205,7 +1205,7 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
     const grandUpg  = roomTotals.reduce((s, r) => s + r.upg,  0)
     const grandFin  = roomTotals.reduce((s, r) => s + r.fin,  0)
     const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
-    const delivery   = parseFloat(project.deliveryAmount) || 0
+    const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
     const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
     const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
     const pdfSubtotal = grandCab + grandUpg + grandFin + grandInst + delivery
@@ -1258,7 +1258,7 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
       const inst = calcInstall(r.install, cab)
       return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
     })
-    const delivery   = parseFloat(project.deliveryAmount) || 0
+    const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
     const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
     const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
     const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
@@ -1305,7 +1305,7 @@ export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calc
     const inst = calcInstall(r.install, cab)
     return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
   })
-  const delivery    = parseFloat(project.deliveryAmount) || 0
+  const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
   const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
   const pdfTaxRate  = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
   const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
