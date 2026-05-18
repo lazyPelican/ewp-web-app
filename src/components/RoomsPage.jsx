@@ -106,7 +106,12 @@ function CabinetrySection({ items, masterAdj, onChange }) {
                     </select>
                   </td>
                   <td><input type="number" min="0" step="0.5" value={item.qty} onChange={e => update(i, "qty", e.target.value)} /></td>
-                  <td><input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} /></td>
+                  <td>
+                    <input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} />
+                    {item.product && stdPrice > 0 && (
+                      <div style={{ fontSize: 12, color: "var(--gold)", marginTop: 4, fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(stdPrice * (1 + adjPct / 100))}/LF</div>
+                    )}
+                  </td>
                   <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.product && qty > 0 ? "var(--gold)" : "var(--muted)" }}>
                     {item.product && qty > 0 ? fmt(lineTotal) : "–"}
                   </td>
@@ -176,7 +181,12 @@ function UpgradesSection({ items, masterAdj, onChange }) {
                     )}
                   </td>
                   <td><input type="number" min="0" value={item.qty} onChange={e => update(i, "qty", e.target.value)} /></td>
-                  <td><input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} /></td>
+                  <td>
+                    <input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} />
+                    {upg && (
+                      <div style={{ fontSize: 12, color: "var(--gold)", marginTop: 4, fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(upg.price * (1 + adjPct / 100))}/unit</div>
+                    )}
+                  </td>
                   <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.upgrade && qty > 0 ? "var(--gold)" : "var(--muted)" }}>
                     {item.upgrade && qty > 0 ? fmt(total) : "–"}
                   </td>
