@@ -59,6 +59,15 @@ const sanitizeUpgItem = (item) => ({
   notes:   sanitizeText(item.notes, 200),
 })
 
+// Sanitize a single countertop line item
+const sanitizeCtpItem = (item) => ({
+  ...item,
+  product: sanitizeName(item.product, 80),
+  qty:     sanitizeNumeric(item.qty),
+  adjPct:  sanitizeNumeric(item.adjPct),
+  notes:   sanitizeText(item.notes, 200),
+})
+
 // Sanitize a single finishing line item
 const sanitizeFinItem = (item) => ({
   ...item,
@@ -80,9 +89,10 @@ const sanitizeInstall = (inst) => ({
 export const sanitizeRoom = (room) => ({
   ...room,
   name:       sanitizeName(room.name, 80),
-  cabinetry:  (room.cabinetry  || []).map(sanitizeCabItem),
-  upgrades:   (room.upgrades   || []).map(sanitizeUpgItem),
-  finishing:  (room.finishing  || []).map(sanitizeFinItem),
+  cabinetry:    (room.cabinetry    || []).map(sanitizeCabItem),
+  upgrades:     (room.upgrades     || []).map(sanitizeUpgItem),
+  countertops:  (room.countertops  || []).map(sanitizeCtpItem),
+  finishing:    (room.finishing    || []).map(sanitizeFinItem),
   install:    sanitizeInstall(room.install || {}),
 })
 

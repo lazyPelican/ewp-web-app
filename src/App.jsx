@@ -1214,7 +1214,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
 
   const openProject = (i) => {
     const p = projects[i];
-    setProject(p.project); setRooms(p.rooms);
+    setProject(p.project); setRooms(p.rooms.map(r => ({ ...r, countertops: r.countertops || [] })));
     setStep(0); setEditIdx(i); setSaved(true); setView("new");
     const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
     const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
@@ -1660,10 +1660,11 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                   const adj = String(d.masterAdj)
                   setRooms(prev => prev.map(room => ({
                     ...room,
-                    cabinetry: room.cabinetry.map(r => ({ ...r, adjPct: adj })),
-                    upgrades:  room.upgrades.map(r => ({ ...r, adjPct: adj })),
-                    finishing: room.finishing.map(r => ({ ...r, adjPct: adj })),
-                    install:   { ...room.install, adjPct: adj },
+                    cabinetry:   room.cabinetry.map(r => ({ ...r, adjPct: adj })),
+                    upgrades:    room.upgrades.map(r => ({ ...r, adjPct: adj })),
+                    countertops: (room.countertops || []).map(r => ({ ...r, adjPct: adj })),
+                    finishing:   room.finishing.map(r => ({ ...r, adjPct: adj })),
+                    install:     { ...room.install, adjPct: adj },
                   })))
                 }
               }}

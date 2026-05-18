@@ -467,17 +467,11 @@ function GrandBar({ label, sub, value, standalone = false, small = false }) {
   )
 }
 
-function TotalsStrip4({ cab, upg, fin, inst }) {
-  const items = [
-    { label: 'Cabinetry', value: cab },
-    { label: 'Upgrades', value: upg },
-    { label: 'Finishing', value: fin },
-    { label: 'Installation', value: inst },
-  ]
+function TotalsStrip({ items }) {
   return (
     <View style={s.totalsStrip}>
       {items.map((item, i) => (
-        <View key={i} style={[s.ts, i === 3 ? s.tsLast : {}]}>
+        <View key={i} style={[s.ts, i === items.length - 1 ? s.tsLast : {}]}>
           <Text style={s.tsLbl}>{item.label}</Text>
           <Text style={s.tsVal}>{fmtN(item.value)}</Text>
         </View>
@@ -546,15 +540,16 @@ function EmptyRow({ colCount, label }) {
 
 function InternalSummaryPage({
   project, roomTotals,
-  grandCab, grandUpg, grandFin, grandInst,
+  grandCab, grandUpg, grandCtp, grandFin, grandInst,
   delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
 }) {
   const roomTableCols = [
-    { w: '28%', label: 'Room' },
-    { w: '14%', label: 'Cabinetry', right: true },
-    { w: '14%', label: 'Upgrades', right: true },
-    { w: '14%', label: 'Finishing', right: true },
-    { w: '15%', label: 'Installation', right: true },
+    { w: '22%', label: 'Room' },
+    { w: '13%', label: 'Cabinetry', right: true },
+    { w: '12%', label: 'Upgrades', right: true },
+    { w: '12%', label: 'Countertops', right: true },
+    { w: '12%', label: 'Finishing', right: true },
+    { w: '14%', label: 'Installation', right: true },
     { w: '15%', label: 'Room Total', right: true },
   ]
 
@@ -587,6 +582,7 @@ function InternalSummaryPage({
               { val: trunc(r.name || `Room ${i + 1}`, 36) },
               { val: fmtN(r.cab), right: true },
               { val: fmtN(r.upg), right: true },
+              { val: fmtN(r.ctp), right: true },
               { val: fmtN(r.fin), right: true },
               { val: fmtN(r.inst), right: true },
               { val: fmtN(r.total), amt: true },
@@ -598,7 +594,7 @@ function InternalSummaryPage({
       <View wrap={false}>
         <SubBar
           label={`Project Totals — all ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''} combined`}
-          value={grandCab + grandUpg + grandFin + grandInst}
+          value={grandCab + grandUpg + grandCtp + grandFin + grandInst}
         />
 
         {delivery > 0 && (
@@ -666,6 +662,7 @@ const HOURLY_RATE = 'Hourly Rate'
 function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, preparedBy }) {
   const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
   const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
+  const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) > 0)
   const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
   const instDef  = pricing.installType?.find(i => i.name === room.install.type)
 
@@ -820,6 +817,48 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
       </View>
       <SubBar label="Upgrades Total" value={rt.upg} />
 
+      {/* Countertops */}
+      <SectionLabel label="Countertops" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={[
+          { w: '36%', label: 'Description' },
+          { w: '8%',  label: 'Qty', right: true },
+          { w: '12%', label: 'Unit $', right: true },
+          { w: '12%', label: 'Price', right: true },
+          { w: '8%',  label: '% Adj', right: true },
+          { w: '12%', label: 'Total', right: true },
+          { w: '12%', label: 'Notes' },
+        ]} />
+        {ctpItems.length === 0
+          ? <EmptyRow colCount={7} label="No countertop items entered" />
+          : ctpItems.map((item, i) => {
+              const ctp = pricing.countertops?.find(c => c.name === item.product)
+              const qty = parseFloat(item.qty) || 0
+              const adj = parseFloat(item.adjPct) || 0
+              const tot = (ctp?.price || 0) * qty * (1 + adj / 100)
+              return (
+                <TableRow
+                  key={i}
+                  colDefs={[
+                    { w: '36%' }, { w: '8%' }, { w: '12%' }, { w: '12%' }, { w: '8%' }, { w: '12%' }, { w: '12%' },
+                  ]}
+                  isEven={i % 2 === 1}
+                  cells={[
+                    { val: trunc(item.product, 44) },
+                    { val: String(qty), right: true },
+                    { val: fmtN(ctp?.price || 0), right: true },
+                    { val: fmtN((ctp?.price || 0) * qty), right: true },
+                    { val: adj ? `${adj}%` : '—', right: true },
+                    { val: fmtN(tot), amt: true },
+                    { val: trunc(item.notes || '', 30) },
+                  ]}
+                />
+              )
+            })
+        }
+      </View>
+      <SubBar label="Countertops Total" value={rt.ctp} />
+
       {/* Finishing */}
       <SectionLabel label="Finishing" />
       <View style={s.tblWrap}>
@@ -842,7 +881,13 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
       <SubBar label="Install Total" value={rt.inst} />
 
       <View wrap={false}>
-        <TotalsStrip4 cab={rt.cab} upg={rt.upg} fin={rt.fin} inst={rt.inst} />
+        <TotalsStrip items={[
+          { label: 'Cabinetry', value: rt.cab },
+          { label: 'Upgrades', value: rt.upg },
+          { label: 'Countertops', value: rt.ctp },
+          { label: 'Finishing', value: rt.fin },
+          { label: 'Installation', value: rt.inst },
+        ]} />
         <GrandBar
           label="Room Grand Total"
           sub={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
@@ -856,7 +901,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
 
 // ── INTERNAL DOCUMENT ──────────────────────────────────────────────────────
 
-function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandFin, grandInst, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, pricing, preparedBy }) {
+function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandCtp, grandFin, grandInst, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, pricing, preparedBy }) {
   return (
     <Document title={`${project.name || 'Estimate'} — Internal`} author="Engstrom Wood Products">
       <InternalSummaryPage
@@ -864,6 +909,7 @@ function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandF
         roomTotals={roomTotals}
         grandCab={grandCab}
         grandUpg={grandUpg}
+        grandCtp={grandCtp}
         grandFin={grandFin}
         grandInst={grandInst}
         delivery={delivery}
@@ -1000,32 +1046,35 @@ function CustomerSummaryPage({
 
 // ── CUSTOMER ROOM PAGE ─────────────────────────────────────────────────────
 
-function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy }) {
+function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, preparedBy }) {
   const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
   const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
+  const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) > 0)
   const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
-  const hasInstall = room.install.type
+  const hasInstall = room.install.type && room.install.type !== 'No Install'
 
-  // Cabinetry detail columns: Description | Qty | Notes (no pricing)
-  const cabCols = [
+  const descCols = [
+    { w: '60%', label: 'Description' },
+    { w: '40%', label: 'Notes' },
+  ]
+
+  const cabDescCols = [
     { w: '50%', label: 'Description' },
     { w: '20%', label: 'Qty', right: true },
     { w: '30%', label: 'Notes' },
   ]
 
-  // Upgrades detail columns: Description | Notes (no pricing)
-  const upgCols = [
-    { w: '50%', label: 'Description' },
-    { w: '50%', label: 'Notes' },
-  ]
+  // Rolled totals: Cab+Upgrades combined, Install+Delivery combined
+  const cabUpgTotal = rt.cab + rt.upg
+  const instDelTotal = rt.inst + delivery
+  const roomTotalWithDelivery = rt.total + delivery
 
-  // Room Investment Summary
   const summaryItems = [
-    { label: 'Cabinetry', value: rt.cab },
+    { label: 'Cabinets / Casework + Upgrades', value: cabUpgTotal },
+    { label: 'Countertops', value: rt.ctp },
     { label: 'Finishing', value: rt.fin },
-    { label: 'Installation', value: rt.inst },
-    ...(project.showDeliveryOnPdf ? [{ label: 'Delivery', value: null }] : []),
-  ].filter(sec => sec.value > 0 || sec.value === null)
+    { label: 'Installation + Delivery', value: instDelTotal },
+  ].filter(sec => sec.value > 0)
 
   const sumCols = [
     { w: '60%', label: 'Category' },
@@ -1047,12 +1096,12 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
         { label: 'Contact', value: project.contactName },
       ]} />
 
-      {/* Cabinetry detail — no pricing */}
+      {/* 1. Cabinets / Casework — descriptions only */}
       {cabItems.length > 0 && (
         <>
-          <SectionLabel label="Cabinetry Included" />
+          <SectionLabel label="Cabinets / Casework" />
           <View style={s.tblWrap}>
-            <TableHeader colDefs={cabCols} />
+            <TableHeader colDefs={cabDescCols} />
             {cabItems.map((item, i) => {
               const notes = [item.construction, item.wood]
                 .filter(v => v && v !== 'Not Applicable')
@@ -1060,7 +1109,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
               return (
                 <TableRow
                   key={i}
-                  colDefs={cabCols}
+                  colDefs={cabDescCols}
                   isEven={i % 2 === 1}
                   cells={[
                     { val: trunc(item.product, 50) },
@@ -1075,19 +1124,19 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
         </>
       )}
 
-      {/* Upgrades detail — no pricing */}
+      {/* 2. Upgrades / Overrides — descriptions only */}
       {upgItems.length > 0 && (
         <>
-          <SectionLabel label="Upgrades / Special Features" />
+          <SectionLabel label="Upgrades / Overrides" />
           <View style={s.tblWrap}>
-            <TableHeader colDefs={upgCols} />
+            <TableHeader colDefs={descCols} />
             {upgItems.map((item, i) => (
               <TableRow
                 key={i}
-                colDefs={upgCols}
+                colDefs={descCols}
                 isEven={i % 2 === 1}
                 cells={[
-                  { val: trunc(item.upgrade, 50) },
+                  { val: trunc(item.upgrade, 60) },
                   { val: trunc(item.notes || '', 50) },
                 ]}
               />
@@ -1097,10 +1146,32 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
         </>
       )}
 
-      {/* Finishing — just type names, no LF pricing */}
+      {/* 3. Countertops — descriptions only */}
+      {ctpItems.length > 0 && (
+        <>
+          <SectionLabel label="Countertops" />
+          <View style={s.tblWrap}>
+            <TableHeader colDefs={descCols} />
+            {ctpItems.map((item, i) => (
+              <TableRow
+                key={i}
+                colDefs={descCols}
+                isEven={i % 2 === 1}
+                cells={[
+                  { val: trunc(item.product, 60) },
+                  { val: trunc(item.notes || '', 50) },
+                ]}
+              />
+            ))}
+          </View>
+          <View style={s.gap} />
+        </>
+      )}
+
+      {/* 4. Finishing — type names only */}
       {finItems.length > 0 && (
         <>
-          <SectionLabel label="Finishing Included" />
+          <SectionLabel label="Finishing" />
           <View style={s.tblWrap}>
             {finItems.map((item, i) => (
               <View key={i} style={[s.tRow, i % 2 === 1 ? s.tRowAlt : {}]}>
@@ -1114,10 +1185,10 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
         </>
       )}
 
-      {/* Installation — just type, no rates or percentages */}
+      {/* 5. Installation — type only */}
       {hasInstall && (
         <>
-          <SectionLabel label="Installation Included" />
+          <SectionLabel label="Installation" />
           <View style={s.tblWrap}>
             <View style={s.tRow}>
               <View style={{ width: '100%' }}>
@@ -1129,7 +1200,24 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
         </>
       )}
 
-      {/* Room Investment Summary */}
+      {/* 6. Delivery */}
+      {delivery > 0 && (
+        <>
+          <SectionLabel label="Delivery" />
+          <View style={s.tblWrap}>
+            <View style={s.tRow}>
+              <View style={{ width: '100%' }}>
+                <Text style={s.tCell}>
+                  {project.deliveryNotes ? trunc(project.deliveryNotes, 80) : 'Delivery included'}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={s.gap} />
+        </>
+      )}
+
+      {/* Room Investment Summary — rolled totals */}
       <SectionLabel label="Room Investment Summary" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={sumCols} />
@@ -1140,7 +1228,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
             isEven={i % 2 === 1}
             cells={[
               { val: sec.label },
-              { val: sec.value === null ? 'Included' : fmtN(sec.value), amt: sec.value !== null },
+              { val: fmtN(sec.value), amt: true },
             ]}
           />
         ))}
@@ -1150,7 +1238,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, preparedBy
         <GrandBar
           label="Room Total"
           sub={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
-          value={rt.total}
+          value={roomTotalWithDelivery}
           standalone
         />
         <PdfFooter preparedBy={preparedBy} />
@@ -1181,6 +1269,7 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
           roomIndex={i}
           totalRooms={rooms.length}
           rt={roomTotals[i]}
+          delivery={rooms.length > 0 ? delivery / rooms.length : 0}
           preparedBy={preparedBy}
         />
       ))}
@@ -1191,24 +1280,26 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
 // ── EXPORT FUNCTIONS ───────────────────────────────────────────────────────
 // Called from App.jsx; calc functions + PRICING are passed in.
 
-export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
+export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
   onStatus('generating')
   try {
     const roomTotals = rooms.map(r => {
       const cab  = calcCabinetry(r.cabinetry)
       const upg  = calcUpgrades(r.upgrades)
+      const ctp  = calcCountertops(r.countertops)
       const fin  = calcFinishing(r.finishing)
       const inst = calcInstall(r.install, cab)
-      return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
+      return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const grandCab  = roomTotals.reduce((s, r) => s + r.cab,  0)
     const grandUpg  = roomTotals.reduce((s, r) => s + r.upg,  0)
+    const grandCtp  = roomTotals.reduce((s, r) => s + r.ctp,  0)
     const grandFin  = roomTotals.reduce((s, r) => s + r.fin,  0)
     const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
     const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
     const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-    const pdfSubtotal = grandCab + grandUpg + grandFin + grandInst + delivery
+    const pdfSubtotal = grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery
     const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
     const grandTotal = pdfSubtotal + pdfTaxAmt
 
@@ -1219,6 +1310,7 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
         roomTotals={roomTotals}
         grandCab={grandCab}
         grandUpg={grandUpg}
+        grandCtp={grandCtp}
         grandFin={grandFin}
         grandInst={grandInst}
         delivery={delivery}
@@ -1248,15 +1340,16 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
   }
 }
 
-export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, preparedBy }, onStatus) {
+export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }, onStatus) {
   onStatus('generating')
   try {
     const roomTotals = rooms.map(r => {
       const cab  = calcCabinetry(r.cabinetry)
       const upg  = calcUpgrades(r.upgrades)
+      const ctp  = calcCountertops(r.countertops)
       const fin  = calcFinishing(r.finishing)
       const inst = calcInstall(r.install, cab)
-      return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
+      return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
     const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
@@ -1297,13 +1390,14 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
 }
 
 // Returns the customer PDF as a Blob (no download) — used for email attachment.
-export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcFinishing, calcInstall, preparedBy }) {
+export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }) {
   const roomTotals = rooms.map(r => {
     const cab  = calcCabinetry(r.cabinetry)
     const upg  = calcUpgrades(r.upgrades)
+    const ctp  = calcCountertops(r.countertops)
     const fin  = calcFinishing(r.finishing)
     const inst = calcInstall(r.install, cab)
-    return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst }
+    return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
   const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled

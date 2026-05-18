@@ -99,6 +99,15 @@ const TABLE_CONFIG = [
     ],
   },
   {
+    key: "countertops",
+    label: "Countertop Products",
+    description: "Base prices per unit for countertop items",
+    columns: [
+      { key: "name",  label: "Product Name",  type: "text",   width: "60%" },
+      { key: "price", label: "Base Price ($)", type: "number", width: "30%" },
+    ],
+  },
+  {
     key: "construction",
     label: "Construction Styles",
     description: "Price premium multipliers (e.g. 0.05 = 5%)",

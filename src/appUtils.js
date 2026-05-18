@@ -114,6 +114,18 @@ export const calcUpgrades = (items) => {
   }, 0);
 };
 
+export const calcCountertops = (items) => {
+  if (!items) return 0;
+  return items.reduce((sum, item) => {
+    if (!item.product) return sum;
+    const ctp = PRICING.countertops?.find(c => c.name === item.product);
+    if (!ctp) return sum;
+    const qty    = parseFloat(item.qty)    || 0;
+    const adjPct = parseFloat(item.adjPct) || 0;
+    return sum + ctp.price * qty * (1 + adjPct / 100);
+  }, 0);
+};
+
 export const calcFinishing = (items) => {
   return items.reduce((sum, item) => {
     if (!item.type) return sum;
@@ -157,6 +169,7 @@ export const blankCabRow = () => ({
   qty: "", adjPct: "", notes: "",
 });
 export const blankUpgRow = () => ({ upgrade: "", qty: "", adjPct: "", notes: "" });
+export const blankCtpRow = () => ({ product: "", qty: "", adjPct: "", notes: "" });
 export const blankFinRow = () => ({ type: "", lf: "", adjPct: "", notes: "" });
 
 export const blankRoom = (n, masterAdj) => ({
@@ -164,6 +177,7 @@ export const blankRoom = (n, masterAdj) => ({
   name: "",
   cabinetry: [{ ...blankCabRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
   upgrades:  [{ ...blankUpgRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
+  countertops: [{ ...blankCtpRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
   finishing: [blankFinRow()],
   install: { type: "", metric: "", adjPct: "", notes: "" },
 });

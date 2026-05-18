@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
-import { PRICING, fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcFinishing, calcInstall } from "../appUtils.js"
+import { PRICING, fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "../appUtils.js"
 
 export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
   const [saving, setSaving]           = useState(false);
@@ -27,17 +27,19 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
   const roomTotals = rooms.map(r => {
     const cab = calcCabinetry(r.cabinetry);
     const upg = calcUpgrades(r.upgrades);
+    const ctp = calcCountertops(r.countertops);
     const fin = calcFinishing(r.finishing);
     const inst = calcInstall(r.install, cab);
-    return { name: r.name, cab, upg, fin, inst, total: cab + upg + fin + inst };
+    return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst };
   });
 
   const grandCab  = roomTotals.reduce((s, r) => s + r.cab, 0);
   const grandUpg  = roomTotals.reduce((s, r) => s + r.upg, 0);
+  const grandCtp  = roomTotals.reduce((s, r) => s + r.ctp, 0);
   const grandFin  = roomTotals.reduce((s, r) => s + r.fin, 0);
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0);
   const delivery  = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0);
-  const subtotalBeforeTax = grandCab + grandUpg + grandFin + grandInst + delivery;
+  const subtotalBeforeTax = grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery;
   const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
   const taxRate    = Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8.53;
   const taxAmt     = taxEnabled ? subtotalBeforeTax * (taxRate / 100) : 0;
@@ -82,6 +84,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                 <th>Room</th>
                 <th className="num-cell">Cabinetry</th>
                 <th className="num-cell">Upgrades</th>
+                <th className="num-cell">Countertops</th>
                 <th className="num-cell">Finishing</th>
                 <th className="num-cell">Installation</th>
                 <th className="num-cell" style={{ color: "var(--gold)" }}>Room Total</th>
@@ -93,6 +96,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                   <td style={{ fontWeight: 600 }}>{r.name || `Room ${i + 1}`}</td>
                   <td className="num-cell">{fmt(r.cab)}</td>
                   <td className="num-cell">{fmt(r.upg)}</td>
+                  <td className="num-cell">{fmt(r.ctp)}</td>
                   <td className="num-cell">{fmt(r.fin)}</td>
                   <td className="num-cell">{fmt(r.inst)}</td>
                   <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, color: "var(--gold)" }}>{fmt(r.total)}</td>
@@ -102,9 +106,10 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                 <td style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Totals</td>
                 <td className="num-cell">{fmt(grandCab)}</td>
                 <td className="num-cell">{fmt(grandUpg)}</td>
+                <td className="num-cell">{fmt(grandCtp)}</td>
                 <td className="num-cell">{fmt(grandFin)}</td>
                 <td className="num-cell">{fmt(grandInst)}</td>
-                <td className="num-cell">{fmt(grandCab + grandUpg + grandFin + grandInst)}</td>
+                <td className="num-cell">{fmt(grandCab + grandUpg + grandCtp + grandFin + grandInst)}</td>
               </tr>
               {delivery > 0 && (
                 <tr className="total-row">
@@ -132,6 +137,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
         const rt = roomTotals[ri];
         const cabItems = room.cabinetry.filter(i => i.product && (parseFloat(i.qty) || 0) > 0);
         const upgItems = room.upgrades.filter(i => i.upgrade && (parseFloat(i.qty) || 0) > 0);
+        const ctpItems = (room.countertops || []).filter(i => i.product && (parseFloat(i.qty) || 0) > 0);
         const finItems = room.finishing.filter(i => i.type && (parseFloat(i.lf) || 0) > 0);
         const cabTotal = rt.cab;
         return (
@@ -179,6 +185,23 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                     <div className="report-line report-line-total"><span>Upgrades Total</span><span>{fmt(rt.upg)}</span></div>
                   </div>
                 )}
+                {ctpItems.length > 0 && (
+                  <div className="report-section">
+                    <div className="report-section-title">Countertops</div>
+                    {ctpItems.map((item, i) => {
+                      const ctp = PRICING.countertops?.find(c => c.name === item.product);
+                      const qty = parseFloat(item.qty) || 0;
+                      const adj = parseFloat(item.adjPct) || 0;
+                      return (
+                        <div className="report-line" key={i}>
+                          <span>{item.product} × {qty}</span>
+                          <span>{fmt((ctp?.price || 0) * qty * (1 + adj / 100))}</span>
+                        </div>
+                      );
+                    })}
+                    <div className="report-line report-line-total"><span>Countertops Total</span><span>{fmt(rt.ctp)}</span></div>
+                  </div>
+                )}
                 {finItems.length > 0 && (
                   <div className="report-section">
                     <div className="report-section-title">Finishing</div>
@@ -217,7 +240,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
         <div className="grand-total-label">GRAND TOTAL</div>
         {(delivery > 0 || taxAmt > 0) && (
           <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "0 10px", justifyContent: "center" }}>
-            <span>Rooms {fmt(grandCab + grandUpg + grandFin + grandInst)}</span>
+            <span>Rooms {fmt(grandCab + grandUpg + grandCtp + grandFin + grandInst)}</span>
             {delivery > 0 && <span>+ Delivery {fmt(delivery)}</span>}
             {taxAmt > 0 && <span>+ Tax ({taxRate}%) {fmt(taxAmt)}</span>}
           </div>

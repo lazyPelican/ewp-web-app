@@ -6,12 +6,13 @@ import {
   exportPDFCustomer as _exportPDFCustomer,
   buildCustomerPDFBlob as _buildCustomerPDFBlob,
 } from "./PDFTemplates.jsx"
-import { PRICING, calcCabinetry, calcUpgrades, calcFinishing, calcInstall } from "./appUtils.js"
+import { PRICING, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "./appUtils.js"
 
 export function exportPDFInternal(project, rooms, preparedBy, onStatus) {
   _exportPDFInternal(project, rooms, {
     calcCabinetry,
     calcUpgrades,
+    calcCountertops,
     calcFinishing,
     calcInstall,
     pricing: PRICING,
@@ -23,6 +24,7 @@ export function exportPDFCustomer(project, rooms, preparedBy, onStatus) {
   _exportPDFCustomer(project, rooms, {
     calcCabinetry,
     calcUpgrades,
+    calcCountertops,
     calcFinishing,
     calcInstall,
     preparedBy,
@@ -33,6 +35,7 @@ export function buildCustomerPDFBlob(project, rooms, preparedBy) {
   return _buildCustomerPDFBlob(project, rooms, {
     calcCabinetry,
     calcUpgrades,
+    calcCountertops,
     calcFinishing,
     calcInstall,
     preparedBy,

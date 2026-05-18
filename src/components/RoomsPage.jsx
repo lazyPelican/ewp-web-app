@@ -8,11 +8,13 @@ import {
   isRoomComplete,
   calcCabinetry,
   calcUpgrades,
+  calcCountertops,
   calcFinishing,
   calcInstall,
   calcEstimatedFinishingLF,
   blankCabRow,
   blankUpgRow,
+  blankCtpRow,
   blankFinRow,
 } from "../appUtils.js"
 
@@ -207,6 +209,79 @@ function UpgradesSection({ items, masterAdj, onChange }) {
   );
 }
 
+// ── CountertopsSection ────────────────────────────────────────────────────────
+function CountertopsSection({ items, masterAdj, onChange }) {
+  const update = (i, field, val) => onChange(items.map((it, idx) => idx === i ? { ...it, [field]: val } : it));
+  const addRow = () => onChange([...items, { ...blankCtpRow(), adjPct: masterAdj != null ? String(masterAdj) : "" }]);
+  const removeRow = (i) => { if (items.length === 1) return; onChange(items.filter((_, idx) => idx !== i)); };
+  const subTotal = calcCountertops(items);
+
+  return (
+    <div className="card form-section-anim" style={{ marginBottom: 16 }}>
+      <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 12 }}>COUNTERTOPS
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--gold)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+        </span>
+        <button className="btn btn-sm" style={{ background: "var(--gold)", color: "#fff", border: "none" }} onClick={addRow}>+ Add Row</button>
+      </div>
+      <div className="scrollable">
+        <table className="data-table" aria-label="Countertop items">
+          <thead>
+            <tr>
+              <th scope="col" style={{ width: 260 }}>Countertop Type</th>
+              <th scope="col" style={{ width: 80 }}>LF / Qty</th>
+              <th scope="col" style={{ width: 80 }}>
+                <abbr title="Price adjustment % — positive = markup, negative = discount">% Adj</abbr>
+              </th>
+              <th scope="col" style={{ width: 110 }}>Total</th>
+              <th scope="col" style={{ width: 140 }}>Notes</th>
+              <th scope="col" style={{ width: 36 }} aria-label="Actions" />
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => {
+              const ctp = PRICING.countertops?.find(c => c.name === item.product);
+              const qty = parseFloat(item.qty) || 0;
+              const adjPct = parseFloat(item.adjPct) || 0;
+              const total = ctp ? ctp.price * qty * (1 + adjPct / 100) : 0;
+              return (
+                <tr key={i}>
+                  <td>
+                    <select value={item.product} onChange={e => update(i, "product", e.target.value)}>
+                      <option value="">— Select —</option>
+                      {(PRICING.countertops || []).map(c => <option key={c.name}>{c.name}</option>)}
+                    </select>
+                    {ctp && (
+                      <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 4, fontWeight: 700 }}>{fmt(ctp.price)}/unit</div>
+                    )}
+                  </td>
+                  <td><input type="number" min="0" step="0.5" value={item.qty} onChange={e => update(i, "qty", e.target.value)} /></td>
+                  <td>
+                    <input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} />
+                    {ctp && (
+                      <div style={{ fontSize: 12, color: "var(--gold)", marginTop: 4, fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(ctp.price * (1 + adjPct / 100))}/unit</div>
+                    )}
+                  </td>
+                  <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.product && qty > 0 ? "var(--gold)" : "var(--muted)" }}>
+                    {item.product && qty > 0 ? fmt(total) : "–"}
+                  </td>
+                  <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
+                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)}>✕</button></td>
+                </tr>
+              );
+            })}
+            <tr className="total-row">
+              <td colSpan={3} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Countertops Total</td>
+              <td className="num-cell">{fmt(subTotal)}</td>
+              <td /><td />
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── FinishingSection ──────────────────────────────────────────────────────────
 function FinishingSection({ items, cabinetry = [], onChange }) {
   const update = (i, field, val) => onChange(items.map((it, idx) => idx === i ? { ...it, [field]: val } : it));
@@ -382,9 +457,10 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
 
   const cabTotal = calcCabinetry(room.cabinetry);
   const upgTotal = calcUpgrades(room.upgrades);
+  const ctpTotal = calcCountertops(room.countertops);
   const finTotal = calcFinishing(room.finishing);
   const instTotal = calcInstall(room.install, cabTotal);
-  const roomTotal = cabTotal + upgTotal + finTotal + instTotal;
+  const roomTotal = cabTotal + upgTotal + ctpTotal + finTotal + instTotal;
 
   return (
     <div>
@@ -518,7 +594,7 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
 
       {/* Quick Summary for this room */}
       <div className="summary-grid">
-        {[["Cabinetry", cabTotal], ["Upgrades", upgTotal], ["Finishing", finTotal], ["Installation", instTotal]].map(([lbl, val]) => (
+        {[["Cabinetry", cabTotal], ["Upgrades", upgTotal], ["Countertops", ctpTotal], ["Finishing", finTotal], ["Installation", instTotal]].map(([lbl, val]) => (
           <div className="summary-card" key={lbl}>
             <div className="summary-card-label">{lbl}</div>
             <div className="summary-card-value">{fmt(val)}</div>
@@ -528,6 +604,7 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
 
       <CabinetrySection items={room.cabinetry} masterAdj={project.masterAdj} onChange={v => updateRoom("cabinetry", v)} />
       <UpgradesSection items={room.upgrades} masterAdj={project.masterAdj} onChange={v => updateRoom("upgrades", v)} />
+      <CountertopsSection items={room.countertops || []} masterAdj={project.masterAdj} onChange={v => updateRoom("countertops", v)} />
       <FinishingSection items={room.finishing} cabinetry={room.cabinetry} onChange={v => updateRoom("finishing", v)} />
       <InstallSection data={room.install} cabTotal={cabTotal} onChange={v => updateRoom("install", v)} />
 

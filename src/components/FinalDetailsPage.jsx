@@ -1,14 +1,15 @@
 import React from "react"
 import { Field } from "./Field.jsx"
-import { calcCabinetry, calcUpgrades, calcFinishing, calcInstall } from "../appUtils.js"
+import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "../appUtils.js"
 
 export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
   const roomTotals = rooms.map(r => {
     const cab  = calcCabinetry(r.cabinetry);
     const upg  = calcUpgrades(r.upgrades);
+    const ctp  = calcCountertops(r.countertops);
     const fin  = calcFinishing(r.finishing);
     const inst = calcInstall(r.install, cab);
-    return cab + upg + fin + inst;
+    return cab + upg + ctp + fin + inst;
   });
   const roomsSubtotal = roomTotals.reduce((s, v) => s + v, 0);
   const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0);
