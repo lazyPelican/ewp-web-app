@@ -1437,7 +1437,49 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
   }
 }
 
-// Returns the customer PDF as a Blob (no download) — used for email attachment.
+// Returns the internal PDF as a Blob (no download) — used for preview.
+export async function buildInternalPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }) {
+  const roomTotals = rooms.map(r => {
+    const cab  = calcCabinetry(r.cabinetry)
+    const upg  = calcUpgrades(r.upgrades)
+    const ctp  = calcCountertops(r.countertops)
+    const fin  = calcFinishing(r.finishing)
+    const inst = calcInstall(r.install, cab)
+    return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
+  })
+  const grandCab  = roomTotals.reduce((s, r) => s + r.cab,  0)
+  const grandUpg  = roomTotals.reduce((s, r) => s + r.upg,  0)
+  const grandCtp  = roomTotals.reduce((s, r) => s + r.ctp,  0)
+  const grandFin  = roomTotals.reduce((s, r) => s + r.fin,  0)
+  const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
+  const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
+  const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+  const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
+  const pdfSubtotal = grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery
+  const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+  const grandTotal = pdfSubtotal + pdfTaxAmt
+
+  return pdf(
+    <InternalPDFDoc
+      project={project}
+      rooms={rooms}
+      roomTotals={roomTotals}
+      grandCab={grandCab}
+      grandUpg={grandUpg}
+      grandCtp={grandCtp}
+      grandFin={grandFin}
+      grandInst={grandInst}
+      delivery={delivery}
+      pdfTaxRate={pdfTaxRate}
+      pdfTaxAmt={pdfTaxAmt}
+      grandTotal={grandTotal}
+      pricing={pricing}
+      preparedBy={preparedBy}
+    />
+  ).toBlob()
+}
+
+// Returns the customer PDF as a Blob (no download) — used for email attachment and preview.
 export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }) {
   const roomTotals = rooms.map(r => {
     const cab  = calcCabinetry(r.cabinetry)
