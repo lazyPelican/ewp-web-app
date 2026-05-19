@@ -689,6 +689,7 @@ const styles = `
   }
   .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); transform: translateY(-2px); box-shadow: 0 3px 10px rgba(138,106,56,0.15); }
   .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(20,15,5,0.18); }
+  .room-tab.dragging { opacity: 0.4; transform: scale(0.95); }
 
   /* ── STEPPER ── */
   .step {

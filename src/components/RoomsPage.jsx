@@ -448,6 +448,8 @@ function InstallSection({ data, cabTotal, onChange }) {
 // ── RoomsPage ─────────────────────────────────────────────────────────────────
 export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onMoveRoom, onDuplicateRoom, onProjectChange, onNext, onBack }) {
   const [activeRoom, setActiveRoom] = useState(0);
+  const [dragOver, setDragOver] = useState(null);
+  const dragIdxRef = useRef(null);
   const room = rooms[Math.min(activeRoom, rooms.length - 1)];
   const safeActiveRoom = Math.min(activeRoom, rooms.length - 1);
 
@@ -496,47 +498,51 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
         </span>
       </div>
 
-      {/* Room Tabs */}
+      {/* Room Tabs — drag to reorder */}
       <div className="room-tabs" style={{ flexWrap: "wrap", gap: 6 }}>
         {rooms.map((r, i) => {
           const done = isRoomComplete(r);
           const isActive = i === safeActiveRoom;
           return (
             <div key={r.id}
+              draggable
+              onDragStart={e => {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(i));
+                dragIdxRef.current = i;
+                requestAnimationFrame(() => e.target.classList.add("dragging"));
+              }}
+              onDragEnd={e => {
+                e.target.classList.remove("dragging");
+                dragIdxRef.current = null;
+                setDragOver(null);
+              }}
+              onDragOver={e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                if (dragIdxRef.current !== null && dragIdxRef.current !== i) setDragOver(i);
+              }}
+              onDragLeave={() => setDragOver(null)}
+              onDrop={e => {
+                e.preventDefault();
+                const from = dragIdxRef.current ?? parseInt(e.dataTransfer.getData("text/plain"), 10);
+                if (!isNaN(from) && from !== i) {
+                  onMoveRoom(from, i);
+                  setActiveRoom(i);
+                }
+                setDragOver(null);
+                dragIdxRef.current = null;
+              }}
               className={`room-tab ${isActive ? "active" : ""}`}
               style={{
                 ...(done && !isActive ? { borderColor: "#2D7A4F", background: "#e8f4ed", color: "#2D7A4F" } : {}),
                 display: "flex", alignItems: "center", gap: 6, paddingRight: 6,
+                cursor: "grab",
+                ...(dragOver === i ? { borderColor: "var(--gold)", boxShadow: "0 0 0 2px var(--gold-bg)" } : {}),
               }}
               onClick={() => setActiveRoom(i)}>
-              {rooms.length > 1 && i > 0 && (
-                <button
-                  onClick={e => { e.stopPropagation(); onMoveRoom(i, i - 1); setActiveRoom(i - 1); }}
-                  title="Move left"
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    color: isActive ? "var(--gold)" : "var(--muted)",
-                    fontSize: 11, lineHeight: 1, padding: "0 1px",
-                    display: "flex", alignItems: "center",
-                  }}>
-                  ◀
-                </button>
-              )}
               {done && !isActive && <span style={{ fontSize: 11 }}>✓</span>}
               <span>{r.name || `Room ${i + 1}`}</span>
-              {rooms.length > 1 && i < rooms.length - 1 && (
-                <button
-                  onClick={e => { e.stopPropagation(); onMoveRoom(i, i + 1); setActiveRoom(i + 1); }}
-                  title="Move right"
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    color: isActive ? "var(--gold)" : "var(--muted)",
-                    fontSize: 11, lineHeight: 1, padding: "0 1px",
-                    display: "flex", alignItems: "center",
-                  }}>
-                  ▶
-                </button>
-              )}
               {rooms.length > 1 && (
                 <button
                   onClick={e => {
