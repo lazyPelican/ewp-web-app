@@ -1,5 +1,4 @@
 ﻿import React, { useState, useEffect, useCallback, useRef } from "react"
-import BgDots from "./BgDots.jsx"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { logError } from "./logger.js"
@@ -1420,7 +1419,6 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     <>
       <style>{styles}</style>
       <div className={`app${dark ? " dark" : ""}`}>
-        <BgDots dark={dark} />
         {/* TOPBAR + STEPPER sticky wrapper */}
         <div style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--ivory2)" }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}`}>

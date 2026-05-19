@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react"
-import BgDots from "./BgDots.jsx"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
@@ -511,7 +510,6 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
 
   return (
     <div style={{ minHeight: "100vh", background: t.bg, fontFamily: font }}>
-      <BgDots dark={dark} />
       <style>{`body { margin: 0; padding: 0; background: ${t.bg}; }`}</style>
 
       {/* Top bar - matching main app header */}
