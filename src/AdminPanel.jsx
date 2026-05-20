@@ -20,11 +20,17 @@ const loadXLSX = () => new Promise((resolve, reject) => {
 })
 
 // ── Download helpers ───────────────────────────────────────────
+// Convert a cell value for export — percent columns stored as decimals become display %
+const exportVal = (v, col) => {
+  if (col.type === "percent" && v !== "" && v != null) return Math.round(v * 10000) / 100
+  return v ?? ""
+}
+
 const downloadCSV = (rows, columns, filename) => {
   const header = columns.map(c => c.label).join(",")
   const body = rows.map(row =>
     columns.map(c => {
-      const v = row[c.key] ?? ""
+      const v = exportVal(row[c.key], c)
       return typeof v === "string" && v.includes(",") ? `"${v}"` : v
     }).join(",")
   ).join("\n")
@@ -37,7 +43,7 @@ const downloadXLSX = async (rows, columns, filename) => {
   const XLSX = await loadXLSX()
   const data = [
     columns.map(c => c.label),
-    ...rows.map(row => columns.map(c => row[c.key] ?? ""))
+    ...rows.map(row => columns.map(c => exportVal(row[c.key], c)))
   ]
   const ws = XLSX.utils.aoa_to_sheet(data)
   // Bold header row
@@ -79,7 +85,13 @@ const parseUploadedFile = async (file, expectedColumns) => {
     expectedColumns.forEach(col => {
       const rawKey = Object.keys(row).find(k => k.toLowerCase().trim() === col.label.toLowerCase())
       const val = rawKey !== undefined ? row[rawKey] : ""
-      out[col.key] = col.type === "number" ? (val === "" ? 0 : Number(val)) : String(val)
+      if (col.type === "percent") {
+        out[col.key] = val === "" ? 0 : Number(val) / 100
+      } else if (col.type === "number") {
+        out[col.key] = val === "" ? 0 : Number(val)
+      } else {
+        out[col.key] = String(val)
+      }
     })
     return out
   }).filter(row => row[expectedColumns[0].key] !== "" && row[expectedColumns[0].key] !== 0)
@@ -109,19 +121,19 @@ const TABLE_CONFIG = [
   {
     key: "construction",
     label: "Construction Styles",
-    description: "Price premium multipliers (e.g. 0.05 = 5%)",
+    description: "Markup % over standard (paint grade). e.g. 20 = 20% markup.",
     columns: [
       { key: "name",    label: "Style",          type: "text",   width: "60%" },
-      { key: "premium", label: "Premium (×)",    type: "number", width: "30%" },
+      { key: "premium", label: "Markup %",       type: "percent", width: "30%" },
     ],
   },
   {
     key: "wood",
     label: "Wood Species",
-    description: "Price premium multipliers per species",
+    description: "Markup % over standard (paint grade). e.g. 15 = 15% markup.",
     columns: [
       { key: "name",    label: "Species",        type: "text",   width: "60%" },
-      { key: "premium", label: "Premium (×)",    type: "number", width: "30%" },
+      { key: "premium", label: "Markup %",       type: "percent", width: "30%" },
     ],
   },
   {
@@ -285,15 +297,22 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
     showToast("Prices reset to defaults — click Save to apply")
   }
 
-  const updateCell = (tableKey, rowIdx, colKey, value) => {
+  const updateCell = (tableKey, rowIdx, colKey, value, colType) => {
     setPricing(prev => {
-      const next = { ...prev, [tableKey]: prev[tableKey].map((row, i) =>
-        i === rowIdx
-          ? { ...row, [colKey]: colKey === "name"
-              ? sanitizeName(value, 120)
-              : (value === "" ? "" : Number(sanitizeNumeric(String(value)))) }
-          : row
-      )}
+      const next = { ...prev, [tableKey]: prev[tableKey].map((row, i) => {
+        if (i !== rowIdx) return row
+        let v
+        if (colKey === "name") {
+          // Don't trim while typing — allows spaces between words
+          v = String(value ?? "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F<>'"]/g, "").slice(0, 120)
+        } else if (colType === "percent") {
+          // Display is %, stored as decimal (20 → 0.20)
+          v = value === "" ? "" : Number(sanitizeNumeric(String(value))) / 100
+        } else {
+          v = value === "" ? "" : Number(sanitizeNumeric(String(value)))
+        }
+        return { ...row, [colKey]: v }
+      })}
       return next
     })
     setDirty(true)
@@ -972,13 +991,18 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                           borderTop: `1px solid ${t.border}`,
                           background: rowIdx % 2 === 0 ? t.card : (dark ? "#161616" : "#FDFAF5"),
                         }}>
-                          {activeCfg.columns.map(col => (
+                          {activeCfg.columns.map(col => {
+                            // Percent columns: stored as decimal (0.20), displayed as % (20)
+                            const displayVal = col.type === "percent" && row[col.key] !== "" && row[col.key] != null
+                              ? Math.round(row[col.key] * 10000) / 100
+                              : (row[col.key] ?? "")
+                            return (
                             <div key={col.key} style={{ width: col.width }}>
                               <input
-                                type={col.type === "number" ? "number" : "text"}
-                                value={row[col.key] ?? ""}
-                                onChange={e => updateCell(activeTable, realIdx, col.key, e.target.value)}
-                                step={col.type === "number" ? "any" : undefined}
+                                type={col.type === "number" || col.type === "percent" ? "number" : "text"}
+                                value={displayVal}
+                                onChange={e => updateCell(activeTable, realIdx, col.key, e.target.value, col.type)}
+                                step={col.type === "number" || col.type === "percent" ? "any" : undefined}
                                 style={{
                                   width: "100%", padding: "5px 8px", borderRadius: 4,
                                   border: `1px solid transparent`, background: "transparent",
@@ -992,7 +1016,8 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                                 }}
                               />
                             </div>
-                          ))}
+                            )
+                          })}
                           <div style={{ width: 36, display: "flex", justifyContent: "center" }}>
                             <button onClick={() => deleteRow(activeTable, realIdx)} title="Delete row"
                               style={{ background: "none", border: "none", cursor: "pointer", color: dark ? "#5A2A28" : "#DDA8A4", fontSize: 16, lineHeight: 1, padding: "2px 4px", borderRadius: 4, transition: "color 0.15s" }}
