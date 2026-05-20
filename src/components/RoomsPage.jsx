@@ -614,7 +614,7 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
             </Field>
           </div>
           {!isRoomComplete(room) && (
-            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>
+            <div style={{ fontSize: 13, color: "var(--mid)", marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>
               For large projects with repeating rooms — complete the data entry for this room and a duplication option will appear, allowing you to copy it multiple times.
             </div>
           )}
