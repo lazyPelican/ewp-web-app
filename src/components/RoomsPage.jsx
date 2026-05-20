@@ -613,6 +613,11 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
                 onChange={e => updateRoom("name", toTitleCase(e.target.value))} />
             </Field>
           </div>
+          {!isRoomComplete(room) && (
+            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>
+              For large projects with repeating rooms — complete the data entry for this room and a duplication option will appear, allowing you to copy it multiple times.
+            </div>
+          )}
         </div>
       </div>
 
