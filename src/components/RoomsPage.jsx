@@ -448,7 +448,7 @@ function InstallSection({ data, cabTotal, onChange }) {
 // ── RoomsPage ─────────────────────────────────────────────────────────────────
 export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onMoveRoom, onReplicateRoom, onDuplicateRoom, onProjectChange, onNext, onBack }) {
   const [activeRoom, setActiveRoom] = useState(0);
-  const [copies, setCopies] = useState(1);
+  const [dupeCount, setDupeCount] = useState(1);
   const [dragOver, setDragOver] = useState(null);
   const dragIdxRef = useRef(null);
   const room = rooms[Math.min(activeRoom, rooms.length - 1)];
@@ -577,16 +577,33 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
         <div className="card-header">
           <span className="card-title">ROOM INFORMATION</span>
           {isRoomComplete(room) && (
-            <button
-              className="btn btn-outline"
-              style={{ fontSize: 11, padding: "4px 10px", display: "flex", alignItems: "center", gap: 5 }}
-              onClick={() => {
-                onDuplicateRoom(safeActiveRoom);
-                setActiveRoom(safeActiveRoom + 1);
-              }}
-              title="Duplicate this room">
-              ⧉ Duplicate Room
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <input
+                type="number" min="1" max="500" step="1"
+                value={dupeCount}
+                onChange={e => setDupeCount(Math.max(1, parseInt(e.target.value) || 1))}
+                title="Number of copies"
+                style={{ width: 52, padding: "4px 6px", borderRadius: 4, border: "1px solid var(--ivory3)", background: "var(--input-bg)", fontSize: 12, textAlign: "center", color: "var(--char)" }}
+              />
+              <button
+                className="btn btn-outline"
+                style={{ fontSize: 11, padding: "4px 10px", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap" }}
+                onClick={() => {
+                  if (dupeCount <= 1) {
+                    onDuplicateRoom(safeActiveRoom);
+                    setActiveRoom(safeActiveRoom + 1);
+                  } else {
+                    const roomName = room.name || `Room ${safeActiveRoom + 1}`;
+                    if (window.confirm(`This will create ${dupeCount} copies of "${roomName}" with all its data. Each copy can be edited independently.\n\nContinue?`)) {
+                      onReplicateRoom(safeActiveRoom, dupeCount);
+                      setDupeCount(1);
+                    }
+                  }
+                }}
+                title={dupeCount > 1 ? `Create ${dupeCount} copies of this room` : "Duplicate this room"}>
+                ⧉ {dupeCount > 1 ? `Duplicate ×${dupeCount}` : "Duplicate Room"}
+              </button>
+            </div>
           )}
         </div>
         <div className="card-body">
@@ -594,31 +611,6 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
             <Field label="Room Name / Label">
               <input value={room.name} placeholder={`e.g. Kitchen, Master Bath, Room ${safeActiveRoom + 1}`}
                 onChange={e => updateRoom("name", toTitleCase(e.target.value))} />
-            </Field>
-            <Field label="Copies">
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input
-                  type="number" min="1" max="500" step="1"
-                  value={copies}
-                  onChange={e => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                  style={{ width: 70 }}
-                />
-                {copies > 1 && (
-                  <button
-                    className="btn btn-gold"
-                    style={{ fontSize: 11, padding: "5px 12px", whiteSpace: "nowrap" }}
-                    onClick={() => {
-                      const roomName = room.name || `Room ${safeActiveRoom + 1}`;
-                      if (window.confirm(`This will create ${copies} copies of "${roomName}". Each copy can be edited independently.\n\nContinue?`)) {
-                        onReplicateRoom(safeActiveRoom, copies);
-                        setCopies(1);
-                      }
-                    }}
-                  >
-                    Replicate ×{copies}
-                  </button>
-                )}
-              </div>
             </Field>
           </div>
         </div>
