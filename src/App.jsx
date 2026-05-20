@@ -1200,6 +1200,21 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     });
   };
 
+  const replicateRoom = (idx, count) => {
+    setRooms(prev => {
+      const src = prev[idx];
+      const baseName = src.name || `Room ${idx + 1}`;
+      const copies = Array.from({ length: count }, (_, n) => ({
+        ...JSON.parse(JSON.stringify(src)),
+        id: Date.now() + n + Math.random(),
+        name: `${baseName} ${n + 1}`,
+      }));
+      const next = [...prev];
+      next.splice(idx, 1, ...copies);
+      return next;
+    });
+  };
+
   const showToast = (msg) => setToast(msg);
 
   const startNew = () => {
@@ -1650,7 +1665,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           )}
           {view === "new" && step === 1 && (
             <RoomsPage project={project} rooms={rooms} onRoomsChange={setRooms}
-              onAddRoom={addRoom} onRemoveRoom={removeRoom} onMoveRoom={moveRoom}
+              onAddRoom={addRoom} onRemoveRoom={removeRoom} onMoveRoom={moveRoom} onReplicateRoom={replicateRoom}
               onDuplicateRoom={(i) => {
                 const src = rooms[i];
                 const duped = { ...src, id: Date.now() + Math.random(), name: makeCopyName(src.name, rooms.map(r => r.name)) };
