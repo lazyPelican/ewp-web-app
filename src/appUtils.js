@@ -76,11 +76,16 @@ export const escHtml = (s) => String(s ?? "")
   .replace(/"/g, "&quot;");
 
 // ── Room completeness ─────────────────────────────────────────────────────────
-// Room is complete when: has a name, at least one cabinetry item with product+qty, AND install type selected
-export const isRoomComplete = (room) =>
-  room.name.trim() !== "" &&
-  room.cabinetry.some(c => c.product && parseFloat(c.qty) > 0) &&
-  room.install.type !== "";
+// Room is complete when it has a name AND at least one of:
+//   A) cabinetry item with product+qty AND install type selected (standard room)
+//   B) countertop item with product+qty (countertop-only room — no cabinetry/install required)
+export const isRoomComplete = (room) => {
+  if (room.name.trim() === "") return false;
+  const hasCabinetry   = room.cabinetry.some(c => c.product && parseFloat(c.qty) > 0);
+  const hasCountertops = (room.countertops || []).some(c => c.product && parseFloat(c.qty) > 0);
+  if (hasCabinetry) return room.install.type !== "";
+  return hasCountertops;
+};
 
 // ── Calculation helpers ───────────────────────────────────────────────────────
 export const calcCabinetry = (items) => {

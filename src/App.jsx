@@ -1169,7 +1169,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           setLoadError(true)
           showToast("Failed to load estimates — check your connection")
         } else {
-          setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id })))
+          setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id, _updatedAt: row.updated_at })))
         }
       }
     } catch (err) {
@@ -1227,6 +1227,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false, taxEnabled: false, taxRate: 8.53, installationType: "ewp",
       quoteSections: { ...DEFAULT_QUOTE_SECTIONS } });
     setRooms([blankRoom(0)]);
+    _serverUpdatedAt.current = null;
     setStep(0); setSaved(false); setEditIdx(null); setView("new"); setMaxStep(0);
   };
 
@@ -1234,6 +1235,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     const p = projects[i];
     setProject({ ...p.project, quoteSections: p.project.quoteSections || { ...DEFAULT_QUOTE_SECTIONS } });
     setRooms(p.rooms.map(r => ({ ...r, countertops: r.countertops || [] })));
+    _serverUpdatedAt.current = p._updatedAt || null;
     setStep(0); setEditIdx(i); setSaved(true); setView("new");
     const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
     const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
@@ -1297,9 +1299,24 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       showToast("Saved for this session — sign in to keep estimates permanently");
       return;
     }
+    // Conflict detection: check if someone else saved since we loaded
+    if (_serverUpdatedAt.current && editIdx !== null) {
+      const { data: current } = await supabase
+        .from("projects").select("updated_at").eq("id", cleanProject.id).single();
+      if (current && current.updated_at !== _serverUpdatedAt.current) {
+        const overwrite = window.confirm(
+          "⚠ This estimate was modified by another user since you opened it.\n\n" +
+          "Click OK to save your version (overwrites their changes).\n" +
+          "Click Cancel to go back and reload the latest version."
+        );
+        if (!overwrite) return;
+      }
+    }
+
     const payload = { id: cleanProject.id, name: cleanProject.name, address: cleanProject.address, data: entry };
-    const { error } = await supabase.from("projects").upsert(payload, { onConflict: "id" });
+    const { data: savedRow, error } = await supabase.from("projects").upsert(payload, { onConflict: "id" }).select("updated_at").single();
     if (error) { logError("saveProject", error); showToast("Error saving — check connection"); return; }
+    if (savedRow) _serverUpdatedAt.current = savedRow.updated_at;
 
     // Auto-save new contractor name to the contractors table
     if (cleanProject.contractorYN === "Yes" && cleanProject.contractorName?.trim()) {
@@ -1331,6 +1348,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
 
   // Reset saved indicator whenever the user edits project or rooms.
   // Skip the very first render so opening a saved project doesn't immediately flip it.
+  const _serverUpdatedAt = useRef(null);
   const _initialEditRef = useRef(true);
   useEffect(() => {
     if (_initialEditRef.current) { _initialEditRef.current = false; return; }

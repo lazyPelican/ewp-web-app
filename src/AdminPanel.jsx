@@ -175,6 +175,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   const uploadRef = useRef(null)
   const [sortCol, setSortCol] = useState(null)   // { key, dir: "asc"|"desc" }
   const [sortTable, setSortTable] = useState(null) // track which table the sort applies to
+  const pricingStampRef = useRef(null)
 
   // Users state
   const [users, setUsers] = useState([])
@@ -224,9 +225,10 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   const fetchPricing = async () => {
     try {
       const { data, error } = await supabase
-        .from("pricing").select("data").eq("id", "main").single()
+        .from("pricing").select("data, updated_at").eq("id", "main").single()
       if (error || !data) {
         setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING)))
+        pricingStampRef.current = null
       } else {
         // Merge with defaults so new keys added to DEFAULT_PRICING are always present
         const merged = {}
@@ -234,6 +236,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           merged[key] = data.data[key] ?? DEFAULT_PRICING[key]
         }
         setPricing(merged)
+        pricingStampRef.current = data.updated_at || null
       }
     } catch (err) { logError("fetchPricing", err); setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING))) }
   }
@@ -249,7 +252,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
             showToast(`⚠ "${tc.label}" row ${i + 1}: "${col.label}" cannot be blank`)
             return
           }
-          if (col.type === "number" && (isNaN(Number(val)))) {
+          if ((col.type === "number" || col.type === "percent") && (isNaN(Number(val)))) {
             showToast(`⚠ "${tc.label}" row ${i + 1}: "${col.label}" must be a number`)
             return
           }
@@ -282,11 +285,27 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
 
     setPricing(finalPricing)
     setSaving(true)
+
+    // Conflict detection: check if someone else saved since we loaded
+    if (pricingStampRef.current) {
+      const { data: current } = await supabase
+        .from("pricing").select("updated_at").eq("id", "main").single()
+      if (current && current.updated_at !== pricingStampRef.current) {
+        const overwrite = confirm(
+          "⚠ Pricing was modified by another user since you opened this page.\n\n" +
+          "OK = Save your version (overwrites their changes)\n" +
+          "Cancel = Go back and reload the latest pricing"
+        )
+        if (!overwrite) { setSaving(false); return }
+      }
+    }
+
+    const now = new Date().toISOString()
     const { error } = await supabase
       .from("pricing")
-      .upsert({ id: "main", data: finalPricing, updated_at: new Date().toISOString() }, { onConflict: "id" })
+      .upsert({ id: "main", data: finalPricing, updated_at: now }, { onConflict: "id" })
     if (error) showToast("Error saving prices")
-    else { showToast("✓ Prices saved & sorted successfully"); setDirty(false) }
+    else { showToast("✓ Prices saved & sorted successfully"); setDirty(false); pricingStampRef.current = now }
     setSaving(false)
   }
 
