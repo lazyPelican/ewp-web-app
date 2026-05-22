@@ -177,41 +177,45 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                 </div>
 
                 {/* Total */}
-                <div className="project-card-total">{fmt(gt)}</div>
+                <div className="project-card-total" style={{ textAlign: "center" }}>{fmt(gt)}</div>
 
                 {/* Actions */}
                 <div className="project-card-actions" onClick={e => e.stopPropagation()}>
                   <button
-                    className={`btn ${allComplete ? "btn-primary" : "btn-outline"}`}
-                    style={{ fontSize: 10, padding: "5px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed", flex: 1 }}
+                    className={`btn project-card-btn ${allComplete ? "btn-primary" : "btn-outline"}`}
+                    style={{ opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
                     title={allComplete ? "Generate internal PDF quote" : "Complete all rooms to generate quote"}
                     aria-disabled={!allComplete}
                     onClick={() => allComplete && onGenerateQuote(realIdx)}>
-                    📄 Internal Quote
+                    <span className="project-card-btn-icon">📄</span>
+                    <span className="project-card-btn-text">Internal Quote</span>
                   </button>
                   <button
-                    className={`btn ${allComplete ? "btn-gold" : "btn-outline"}`}
-                    style={{ fontSize: 10, padding: "5px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed", flex: 1 }}
+                    className={`btn project-card-btn ${allComplete ? "btn-gold" : "btn-outline"}`}
+                    style={{ opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
                     title={allComplete ? "Generate customer PDF quote" : "Complete all rooms to generate quote"}
                     aria-disabled={!allComplete}
                     onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
-                    📄 Client Quote
+                    <span className="project-card-btn-icon">📄</span>
+                    <span className="project-card-btn-text">Client Quote</span>
                   </button>
                   <button
-                    className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "5px 10px", opacity: actionBusy ? 0.5 : 1, flex: 1 }}
+                    className="btn btn-outline project-card-btn"
+                    style={{ opacity: actionBusy ? 0.5 : 1 }}
                     title="Duplicate project"
                     disabled={actionBusy}
                     onClick={() => !actionBusy && onDuplicate(realIdx)}>
-                    {actionBusy ? "…" : "⧉ Duplicate Project"}
+                    <span className="project-card-btn-icon">⧉</span>
+                    <span className="project-card-btn-text">{actionBusy ? "…" : "Duplicate"}</span>
                   </button>
                   <button
-                    className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "5px 10px", color: "var(--red)", borderColor: "rgba(184,59,46,0.3)", opacity: actionBusy ? 0.5 : 1 }}
+                    className="btn btn-outline project-card-btn"
+                    style={{ color: "var(--red)", borderColor: "rgba(184,59,46,0.3)", opacity: actionBusy ? 0.5 : 1 }}
                     title="Delete project"
                     disabled={actionBusy}
                     onClick={() => !actionBusy && onDelete(realIdx)}>
-                    🗑
+                    <span className="project-card-btn-icon">🗑</span>
+                    <span className="project-card-btn-text">{actionBusy ? "…" : "Delete"}</span>
                   </button>
                 </div>
               </div>

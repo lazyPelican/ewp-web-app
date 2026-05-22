@@ -707,8 +707,16 @@ const styles = `
     margin-bottom: 14px;
   }
   .project-card-actions {
-    display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; margin-top: auto;
   }
+  .project-card-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 8px 6px !important; font-size: 10px !important;
+    min-height: 48px;
+  }
+  .project-card-btn-icon { font-size: 16px; line-height: 1; }
+  .project-card-btn-text { font-size: 10px; font-weight: 600; line-height: 1.2; }
 
   /* Legacy compat — keep these for any remaining references */
   .project-row-name { font-weight: 600; font-size: 15px; color: var(--ewp-slate); }
@@ -1001,8 +1009,6 @@ const styles = `
 
     .project-card-grid { grid-template-columns: 1fr; }
     .project-card { padding: 16px; }
-    .project-card-actions { flex-direction: column; }
-    .project-card-actions .btn { width: 100%; }
 
     .section-banner { flex-wrap: wrap; gap: 8px; }
     .room-tabs { padding-bottom: 4px; }
