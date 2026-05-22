@@ -423,10 +423,12 @@ const styles = `
   .dark .badge-draft { background: #2E2A1A; color: var(--gold); }
   .dark .modal-overlay { background: rgba(0,0,0,0.55); }
   .dark .divider { background: var(--ivory3); }
-  .dark .project-row { background: var(--card-bg); border-color: var(--ivory3); }
-  .dark .project-row:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.25); border-left-color: var(--gold); }
-  .dark .project-row-name { color: var(--char); }
-  .dark .project-row-total { color: var(--gold-light); }
+  .dark .project-card { background: var(--card-bg); border-color: var(--ivory3); border-top-color: var(--gold); }
+  .dark .project-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+  .dark .project-card-name { color: var(--char); }
+  .dark .project-card-value { color: var(--char); }
+  .dark .project-card-total { color: var(--gold-light); }
+  .dark .project-card-info { border-bottom-color: var(--ivory3); }
   .dark .summary-card { background: var(--card-bg); border-color: var(--ivory3); }
   .dark .summary-card-value { color: var(--gold-light); }
   /* Room tabs in dark mode */
@@ -649,31 +651,69 @@ const styles = `
   input[type="date"] { color-scheme: light; }
   .dark input[type="date"] { color-scheme: dark; }
 
-  /* ── PROJECT ROWS ── */
-  .project-list { display: flex; flex-direction: column; gap: 8px; }
-  .project-row {
+  /* ── PROJECT CARDS ── */
+  .project-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .project-card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-left: 3px solid transparent;
-    border-radius: 4px;
-    padding: 16px 20px;
-    display: flex; align-items: center; justify-content: space-between;
+    border-top: 3px solid var(--gold);
+    border-radius: 6px;
+    padding: 20px;
     cursor: pointer;
-    transition: border-left-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease, background 0.18s ease;
+    display: flex; flex-direction: column;
+    transition: box-shadow 0.22s ease, transform 0.22s ease;
   }
-  .project-row:nth-child(1) { animation-delay: 0.03s; }
-  .project-row:nth-child(2) { animation-delay: 0.07s; }
-  .project-row:nth-child(3) { animation-delay: 0.11s; }
-  .project-row:nth-child(4) { animation-delay: 0.15s; }
-  .project-row:nth-child(5) { animation-delay: 0.19s; }
-  .project-row:nth-child(6) { animation-delay: 0.23s; }
-  .project-row:nth-child(7) { animation-delay: 0.27s; }
-  .project-row:nth-child(8) { animation-delay: 0.31s; }
-  .project-row:hover {
-    border-left-color: var(--gold);
-    box-shadow: 0 4px 20px rgba(20,15,5,0.1);
-    transform: translateX(3px);
+  .project-card:nth-child(1) { animation-delay: 0.03s; }
+  .project-card:nth-child(2) { animation-delay: 0.07s; }
+  .project-card:nth-child(3) { animation-delay: 0.11s; }
+  .project-card:nth-child(4) { animation-delay: 0.15s; }
+  .project-card:nth-child(5) { animation-delay: 0.19s; }
+  .project-card:nth-child(6) { animation-delay: 0.23s; }
+  .project-card:nth-child(7) { animation-delay: 0.27s; }
+  .project-card:nth-child(8) { animation-delay: 0.31s; }
+  .project-card:hover {
+    box-shadow: 0 6px 24px rgba(138,106,56,0.15);
+    transform: translateY(-3px);
   }
+  .project-card-name {
+    font-weight: 700; font-size: 16px; color: var(--char);
+    line-height: 1.3; margin-bottom: 2px;
+  }
+  .project-card-id {
+    font-size: 11px; color: var(--muted); font-family: 'DM Sans', monospace;
+    letter-spacing: 0.03em;
+  }
+  .project-card-info {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px 16px; margin-bottom: 14px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--ivory3);
+  }
+  .project-card-label {
+    display: block; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 1px;
+  }
+  .project-card-value {
+    display: block; font-size: 13px; color: var(--char);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .project-card-total {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; font-weight: 700; color: var(--gold);
+    margin-bottom: 14px;
+  }
+  .project-card-actions {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto;
+  }
+
+  /* Legacy compat — keep these for any remaining references */
+  .project-row-name { font-weight: 600; font-size: 15px; color: var(--ewp-slate); }
+  .project-row-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .project-row-total { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--ewp-slate); }
 
   /* ── ROOM TABS ── */
   .room-tab {
@@ -959,17 +999,10 @@ const styles = `
       width: 100%;
     }
 
-    .project-row {
-      flex-direction: column;
-      align-items: stretch !important;
-      padding: 14px 16px;
-    }
-    .project-row .flex.items-center.gap-8 {
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .project-row-total { margin-right: 0 !important; text-align: right; width: 100%; }
+    .project-card-grid { grid-template-columns: 1fr; }
+    .project-card { padding: 16px; }
+    .project-card-actions { flex-direction: column; }
+    .project-card-actions .btn { width: 100%; }
 
     .section-banner { flex-wrap: wrap; gap: 8px; }
     .room-tabs { padding-bottom: 4px; }
@@ -1093,7 +1126,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       const selectors = [
         '.card', '.report-room', '.summary-card',
         '.grand-total', '.section-banner', '.stat-card-anim',
-        '.project-row',
+        '.project-card',
       ];
       const els = document.querySelectorAll(selectors.join(','));
 

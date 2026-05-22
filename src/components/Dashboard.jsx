@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { fmt, fmtDate, calcCabinetry, calcUpgrades, calcFinishing, calcInstall, isRoomComplete } from "../appUtils.js"
+import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, isRoomComplete } from "../appUtils.js"
 
 export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
   const [search, setSearch] = useState("");
@@ -23,9 +23,6 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
       )
     })
     .sort((a, b) => {
-      // Extract a sortable date string from both ID formats:
-      //   New: B-yymmdd-hhmm  → "20" + yymmdd + hhmm
-      //   Legacy: EWPYYYYMMDDHHmmss → YYYYMMDDHHmmss
       const getIdTime = (id = '') => {
         if (id.startsWith('B-')) return '20' + id.slice(2).replace('-', '')
         if (id.startsWith('EWP')) return id.slice(3)
@@ -37,7 +34,7 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
   const totalRevenue = projects.reduce((s, p) => {
     const gt = p.rooms.reduce((rs, r) => {
       const cab = calcCabinetry(r.cabinetry);
-      return rs + cab + calcUpgrades(r.upgrades) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
+      return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
     }, 0);
     return s + gt;
   }, 0);
@@ -122,7 +119,7 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
           style={{ background: "var(--card-bg)" }} />
       </div>
 
-      {/* Project list */}
+      {/* Project cards */}
       {filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📋</div>
@@ -131,66 +128,86 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
           {projects.length === 0 && <button className="btn btn-gold" onClick={onNew}>+ Create First Estimate</button>}
         </div>
       ) : (
-        <div className="project-list">
+        <div className="project-card-grid">
           {filtered.map((p, i) => {
             const gt = p.rooms.reduce((rs, r) => {
               const cab = calcCabinetry(r.cabinetry);
-              return rs + cab + calcUpgrades(r.upgrades) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
+              return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
             }, 0);
             const allComplete = p.rooms.every(isRoomComplete);
-            // find real index in projects array (since filtered may differ)
             const realIdx = projects.indexOf(p);
             return (
-              <div key={i} className="project-row" onClick={() => onOpen(realIdx)}
-                style={{ cursor: "pointer", alignItems: "center" }}
+              <div key={i} className="project-card" onClick={() => onOpen(realIdx)}
                 role="button" tabIndex={0}
                 aria-label={`Open estimate: ${p.project.name}`}
                 onKeyDown={e => (e.key === "Enter" || e.key === " ") && onOpen(realIdx)}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="project-row-name">{p.project.name}</div>
-                  <div className="project-row-meta">{p.project.address} · {p.rooms.length} room{p.rooms.length !== 1 ? "s" : ""} · {fmtDate(p.project.bidDate)}</div>
+
+                {/* Header */}
+                <div style={{ marginBottom: 12 }}>
+                  <div className="project-card-name">{p.project.name}</div>
+                  <div className="project-card-id">{fmtId(p.project.id)}</div>
                 </div>
-                <div className="flex items-center gap-8" onClick={e => e.stopPropagation()}>
-                  <div className="project-row-total" style={{ marginRight: 8, color: "var(--gold)" }}>{fmt(gt)}</div>
-                  {/* Quote — Internal */}
+
+                {/* Info grid */}
+                <div className="project-card-info">
+                  <div className="project-card-info-item">
+                    <span className="project-card-label">Address</span>
+                    <span className="project-card-value">{p.project.address || "—"}</span>
+                  </div>
+                  <div className="project-card-info-item">
+                    <span className="project-card-label">Client</span>
+                    <span className="project-card-value">{p.project.contactName || "—"}</span>
+                  </div>
+                  <div className="project-card-info-item">
+                    <span className="project-card-label">Bid Date</span>
+                    <span className="project-card-value">{fmtDate(p.project.bidDate)}</span>
+                  </div>
+                  <div className="project-card-info-item">
+                    <span className="project-card-label">Rooms</span>
+                    <span className="project-card-value">{p.rooms.length}</span>
+                  </div>
+                  <div className="project-card-info-item">
+                    <span className="project-card-label">Prepared By</span>
+                    <span className="project-card-value">{userName || "—"}</span>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="project-card-total">{fmt(gt)}</div>
+
+                {/* Actions */}
+                <div className="project-card-actions" onClick={e => e.stopPropagation()}>
                   <button
                     className={`btn ${allComplete ? "btn-primary" : "btn-outline"}`}
-                    style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
+                    style={{ fontSize: 10, padding: "5px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed", flex: 1 }}
                     title={allComplete ? "Generate internal PDF quote" : "Complete all rooms to generate quote"}
-                    aria-label={`Generate internal PDF quote for ${p.project.name}`}
                     aria-disabled={!allComplete}
                     onClick={() => allComplete && onGenerateQuote(realIdx)}>
-                    📄 Internal
+                    📄 Internal Quote
                   </button>
-                  {/* Quote — Customer */}
                   <button
                     className={`btn ${allComplete ? "btn-gold" : "btn-outline"}`}
-                    style={{ fontSize: 10, padding: "4px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
+                    style={{ fontSize: 10, padding: "5px 10px", opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed", flex: 1 }}
                     title={allComplete ? "Generate customer PDF quote" : "Complete all rooms to generate quote"}
-                    aria-label={`Generate customer PDF quote for ${p.project.name}`}
                     aria-disabled={!allComplete}
                     onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
-                    📄 Client
+                    📄 Client Quote
                   </button>
-                  {/* Duplicate */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "4px 10px", opacity: actionBusy ? 0.5 : 1 }}
+                    style={{ fontSize: 10, padding: "5px 10px", opacity: actionBusy ? 0.5 : 1, flex: 1 }}
                     title="Duplicate project"
-                    aria-label={`Duplicate ${p.project.name}`}
                     disabled={actionBusy}
                     onClick={() => !actionBusy && onDuplicate(realIdx)}>
-                    {actionBusy ? "…" : "⧉ Duplicate"}
+                    {actionBusy ? "…" : "⧉ Duplicate Project"}
                   </button>
-                  {/* Delete */}
                   <button
                     className="btn btn-outline"
-                    style={{ fontSize: 10, padding: "4px 10px", color: "var(--red)", borderColor: "rgba(184,59,46,0.3)", opacity: actionBusy ? 0.5 : 1 }}
+                    style={{ fontSize: 10, padding: "5px 10px", color: "var(--red)", borderColor: "rgba(184,59,46,0.3)", opacity: actionBusy ? 0.5 : 1 }}
                     title="Delete project"
-                    aria-label={`Delete ${p.project.name}`}
                     disabled={actionBusy}
                     onClick={() => !actionBusy && onDelete(realIdx)}>
-                    {actionBusy ? "…" : "🗑"}
+                    🗑
                   </button>
                 </div>
               </div>
