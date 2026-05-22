@@ -1657,30 +1657,29 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         })()}
         {view === "new" && project.id && project.name.trim() && (
           <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
+            display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center",
             padding: "8px 32px",
             background: "rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             fontSize: 13, letterSpacing: "0.04em",
           }}>
-            <span>
-              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--char)" }}>{project.name}</span>
-              <span style={{ margin: "0 8px", opacity: 0.4 }}>·</span>
-              <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span>
-            </span>
-            <button
-              className="btn btn-gold btn-lg"
-              style={{
-                padding: "10px 28px", fontSize: 13, fontWeight: 800,
-                background: quickSaved ? "var(--green)" : undefined,
-                boxShadow: quickSaved ? "0 4px 14px rgba(42,107,64,0.45)" : "0 4px 14px rgba(138,106,56,0.4)",
-                transition: "background 0.3s, transform 0.15s",
-                letterSpacing: "0.1em",
-              }}
-              disabled={quickSaving}
-              onClick={handleQuickSave}
-            >
-              {quickSaving ? "⏳ Saving…" : quickSaved ? "✅ Saved!" : "💾 Save Estimate"}
-            </button>
+            <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--char)", textAlign: "center" }}>{project.name}</span>
+            <div style={{ textAlign: "right" }}>
+              <button
+                className="btn btn-gold btn-lg"
+                style={{
+                  padding: "10px 28px", fontSize: 13, fontWeight: 800,
+                  background: quickSaved ? "var(--green)" : undefined,
+                  boxShadow: quickSaved ? "0 4px 14px rgba(42,107,64,0.45)" : "0 4px 14px rgba(138,106,56,0.4)",
+                  transition: "background 0.3s, transform 0.15s",
+                  letterSpacing: "0.1em",
+                }}
+                disabled={quickSaving}
+                onClick={handleQuickSave}
+              >
+                {quickSaving ? "⏳ Saving…" : quickSaved ? "✅ Saved!" : "💾 Save Estimate"}
+              </button>
+            </div>
           </div>
         )}
         </div>{/* end sticky wrapper */}
