@@ -657,7 +657,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           />
           <div>
             <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 600, color: dark ? "#C3C8C8" : "#494D4D", letterSpacing: "0.04em", lineHeight: 1 }} className="admin-header-name">Engstrom Wood Products</div>
-            <div style={{ fontSize: 11, color: dark ? "#A09580" : "#8C9191", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 7, fontWeight: 600 }} className="admin-header-sub">Admin Panel</div>
+            <div style={{ fontSize: 11, color: dark ? "#A09580" : "#6B7070", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 7, fontWeight: 600 }} className="admin-header-sub">Admin Panel</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

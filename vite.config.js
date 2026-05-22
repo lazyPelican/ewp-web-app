@@ -24,6 +24,7 @@ export default defineConfig({
           if (!id.includes('node_modules')) return
           if (id.includes('@supabase')) return 'supabase'
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) return 'react-vendor'
+          if (id.includes('@react-pdf') || id.includes('react-pdf')) return 'react-pdf'
         },
       },
     },

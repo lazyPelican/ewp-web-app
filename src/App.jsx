@@ -35,7 +35,7 @@ const styles = `
     --header-text:    #1F242E;
     --header-subtext: #6E7480;
 
-    --gold:        #A88147;
+    --gold:        #8B6B3A;
     --gold-light:  #C99E64;
     --gold-bg:     #F5EFE3;
 
@@ -1496,7 +1496,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         <div style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--ivory2)" }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}`}>
           <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => setView("dashboard")}>
-            <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" />
+            <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" width="78" height="78" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
               <div className="topbar-sub">

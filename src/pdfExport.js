@@ -1,56 +1,42 @@
 // ── PDF Export wrappers ───────────────────────────────────────────────────────
-// These thin wrappers inject the calc functions and PRICING into the
-// underlying PDF template functions from PDFTemplates.jsx.
-import {
-  exportPDFInternal as _exportPDFInternal,
-  exportPDFCustomer as _exportPDFCustomer,
-  buildInternalPDFBlob as _buildInternalPDFBlob,
-  buildCustomerPDFBlob as _buildCustomerPDFBlob,
-} from "./PDFTemplates.jsx"
+// These thin wrappers lazy-load PDFTemplates.jsx (and its heavy @react-pdf
+// dependency) only when the user actually generates a PDF.  This keeps the
+// initial bundle small and dramatically improves LCP / TBT.
 import { PRICING, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "./appUtils.js"
 
-export function exportPDFInternal(project, rooms, preparedBy, onStatus) {
-  _exportPDFInternal(project, rooms, {
-    calcCabinetry,
-    calcUpgrades,
-    calcCountertops,
-    calcFinishing,
-    calcInstall,
-    pricing: PRICING,
-    preparedBy,
-  }, onStatus);
+const opts = (preparedBy, withPricing) => ({
+  calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall,
+  preparedBy,
+  ...(withPricing ? { pricing: PRICING } : {}),
+});
+
+let _pdfMod = null;
+const getPDF = () => {
+  if (!_pdfMod) _pdfMod = import("./PDFTemplates.jsx");
+  return _pdfMod;
+};
+
+export async function exportPDFInternal(project, rooms, preparedBy, onStatus) {
+  const mod = await getPDF();
+  mod.exportPDFInternal(project, rooms, opts(preparedBy, true), onStatus);
 }
 
-export function exportPDFCustomer(project, rooms, preparedBy, onStatus) {
-  _exportPDFCustomer(project, rooms, {
-    calcCabinetry,
-    calcUpgrades,
-    calcCountertops,
-    calcFinishing,
-    calcInstall,
-    preparedBy,
-  }, onStatus);
+export async function exportPDFCustomer(project, rooms, preparedBy, onStatus) {
+  const mod = await getPDF();
+  mod.exportPDFCustomer(project, rooms, opts(preparedBy, false), onStatus);
 }
 
-export function buildCustomerPDFBlob(project, rooms, preparedBy) {
-  return _buildCustomerPDFBlob(project, rooms, {
-    calcCabinetry,
-    calcUpgrades,
-    calcCountertops,
-    calcFinishing,
-    calcInstall,
-    preparedBy,
-  });
+export async function buildCustomerPDFBlob(project, rooms, preparedBy) {
+  const mod = await getPDF();
+  return mod.buildCustomerPDFBlob(project, rooms, opts(preparedBy, false));
 }
 
 // Preview helpers — generate blob and open in new browser tab
 export async function previewPDFInternal(project, rooms, preparedBy, onStatus) {
   onStatus('generating');
   try {
-    const blob = await _buildInternalPDFBlob(project, rooms, {
-      calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall,
-      pricing: PRICING, preparedBy,
-    });
+    const mod = await getPDF();
+    const blob = await mod.buildInternalPDFBlob(project, rooms, opts(preparedBy, true));
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 120000);
@@ -64,10 +50,8 @@ export async function previewPDFInternal(project, rooms, preparedBy, onStatus) {
 export async function previewPDFCustomer(project, rooms, preparedBy, onStatus) {
   onStatus('generating');
   try {
-    const blob = await _buildCustomerPDFBlob(project, rooms, {
-      calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall,
-      preparedBy,
-    });
+    const mod = await getPDF();
+    const blob = await mod.buildCustomerPDFBlob(project, rooms, opts(preparedBy, false));
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 120000);
