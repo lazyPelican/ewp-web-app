@@ -170,6 +170,10 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                     <span className="project-card-label">Prepared By</span>
                     <span className="project-card-value">{userName || "—"}</span>
                   </div>
+                  <div className="project-card-info-item">
+                    <span className="project-card-label">Last Modified</span>
+                    <span className="project-card-value">{p._updatedAt ? fmtDate(p._updatedAt.slice(0, 10)) : "—"}</span>
+                  </div>
                 </div>
 
                 {/* Total */}

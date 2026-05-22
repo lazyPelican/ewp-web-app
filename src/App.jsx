@@ -1656,7 +1656,11 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             background: "rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             fontSize: 13, letterSpacing: "0.04em",
           }}>
-            <span>Project ID: <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span></span>
+            <span>
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--char)" }}>{project.name}</span>
+              <span style={{ margin: "0 8px", opacity: 0.4 }}>·</span>
+              <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span>
+            </span>
             <button
               className="btn btn-gold btn-lg"
               style={{
