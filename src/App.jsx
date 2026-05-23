@@ -579,6 +579,9 @@ const styles = `
   .dark .pcard-act-btn { border-color: var(--ivory3); color: #d4d0c8; background: rgba(255,255,255,0.04); }
   .dark .pcard-status--done { background: rgba(42,107,64,0.15); color: #5CBB76; }
   .dark .pcard-status--draft { background: rgba(138,106,56,0.15); }
+  .dark .pcard-status--confirmed { background: rgba(56,130,210,0.15); color: #6BAAEE; }
+  .dark .pcard-confirm-btn { background: rgba(56,130,210,0.1); color: #6BAAEE; border-color: rgba(56,130,210,0.25); }
+  .dark .pcard-confirm-btn:hover { background: rgba(56,130,210,0.2); }
   .dark .dash-stat { background: var(--card-bg); border-color: var(--ivory3); }
   .dark .dash-search-input { background: var(--card-bg); border-color: var(--ivory3); color: var(--char); }
   .dark .summary-card { background: var(--card-bg); border-color: var(--ivory3); }
@@ -833,11 +836,24 @@ const styles = `
   /* Status + ID row */
   .pcard-status-row { display: flex; align-items: center; justify-content: space-between; }
   .pcard-status {
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-    padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 4px 12px; border-radius: 20px;
   }
   .pcard-status--done { background: rgba(42,107,64,0.1); color: #2A6B40; }
   .pcard-status--draft { background: rgba(138,106,56,0.1); color: var(--gold); }
+  .pcard-status--confirmed { background: rgba(37,99,170,0.1); color: #2563AA; }
+  .pcard-total-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .pcard-confirm-btn {
+    font-size: 11px; font-weight: 700; font-family: 'DM Sans', sans-serif;
+    padding: 5px 14px; border-radius: 6px; cursor: pointer;
+    background: rgba(37,99,170,0.08); color: #2563AA;
+    border: 1px solid rgba(37,99,170,0.2);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    transition: all 0.22s ease; white-space: nowrap;
+  }
+  .pcard-confirm-btn:hover { background: rgba(37,99,170,0.15); border-color: #2563AA; }
   .pcard-id {
     font-size: 10px; color: var(--muted); font-family: 'DM Sans', monospace;
     letter-spacing: 0.03em;

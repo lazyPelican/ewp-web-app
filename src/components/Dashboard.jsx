@@ -3,6 +3,9 @@ import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calc
 
 export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
   const [search, setSearch] = useState("");
+  const [confirmedIds, setConfirmedIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ewp_confirmed') || '[]'); } catch { return []; }
+  });
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -87,17 +90,32 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                 aria-label={`Open estimate: ${p.project.name}`}
                 onKeyDown={e => (e.key === "Enter" || e.key === " ") && onOpen(realIdx)}>
 
-                {/* Status dot */}
+                {/* Status tag */}
                 <div className="pcard-status-row">
-                  <span className={`pcard-status ${allComplete ? "pcard-status--done" : "pcard-status--draft"}`}>
-                    {allComplete ? "Complete" : "Draft"}
+                  <span className={`pcard-status ${
+                    confirmedIds.includes(p.project.id) ? "pcard-status--confirmed"
+                    : allComplete ? "pcard-status--done" : "pcard-status--draft"
+                  }`}>
+                    {confirmedIds.includes(p.project.id) ? "Confirmed" : allComplete ? "Complete" : "Draft"}
                   </span>
                   <span className="pcard-id">{fmtId(p.project.id)}</span>
                 </div>
 
-                {/* Name + total */}
+                {/* Name + total + confirm */}
                 <div className="pcard-name">{p.project.name}</div>
-                <div className="pcard-total">{fmt(gt)}</div>
+                <div className="pcard-total-row">
+                  <div className="pcard-total">{fmt(gt)}</div>
+                  {allComplete && !confirmedIds.includes(p.project.id) && (
+                    <button className="pcard-confirm-btn" onClick={e => {
+                      e.stopPropagation();
+                      if (window.confirm("Confirming this quote will move it to the admin-only panel. Are you sure?")) {
+                        const next = [...confirmedIds, p.project.id];
+                        setConfirmedIds(next);
+                        localStorage.setItem('ewp_confirmed', JSON.stringify(next));
+                      }
+                    }}>✓ Confirmed</button>
+                  )}
+                </div>
 
                 {/* Meta pills */}
                 <div className="pcard-meta">
