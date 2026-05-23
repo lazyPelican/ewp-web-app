@@ -35,6 +35,10 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
     <div>
       {/* ── Hero Banner (full-bleed, blends with header) ── */}
       <div className="dash-hero-banner">
+        <div className="dash-hero-slide" />
+        <div className="dash-hero-slide" />
+        <div className="dash-hero-slide" />
+        <div className="dash-hero-overlay" />
         <div className="dash-hero-tagline">
           Estimate Manager
           <span>New Age Technology • Old World Craftsmanship</span>
