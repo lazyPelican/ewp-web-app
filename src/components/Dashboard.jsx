@@ -31,14 +31,6 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
       return getIdTime(b.project.id || '').localeCompare(getIdTime(a.project.id || ''))
     })
 
-  const totalRevenue = projects.reduce((s, p) => {
-    const gt = p.rooms.reduce((rs, r) => {
-      const cab = calcCabinetry(r.cabinetry);
-      return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
-    }, 0);
-    return s + gt;
-  }, 0);
-
   return (
     <div>
       {/* ── Compact Hero ── */}
@@ -48,23 +40,6 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
           <span className="dash-user">{userName || "–"}</span>
         </div>
         <button className="btn btn-gold btn-lg dash-new-btn" onClick={onNew}>+ New Estimate</button>
-      </div>
-
-      {/* ── Stats Strip ── */}
-      <div className="dash-stats">
-        {[
-          ["Projects", projects.length, "📋"],
-          ["Total Value", fmt(totalRevenue), "💰"],
-          ["Rooms", projects.reduce((s, p) => s + p.rooms.length, 0), "🏠"],
-        ].map(([lbl, val, icon], idx) => (
-          <div key={lbl} className="dash-stat sr" style={{ animationDelay: `${idx * 0.08}s` }}>
-            <span className="dash-stat-icon">{icon}</span>
-            <div>
-              <div className="dash-stat-val">{val}</div>
-              <div className="dash-stat-lbl">{lbl}</div>
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* ── Search ── */}
