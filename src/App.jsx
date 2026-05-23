@@ -66,47 +66,83 @@ const styles = `
 
   /* ── TOPBAR ── */
   .topbar {
-    background: var(--header-bg);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: #1F242E;
     padding: 0 40px;
-    height: 110px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--header-border);
-    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    border-bottom: none;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+    transition: height 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s, background 0.4s;
   }
   .topbar.scrolled {
-    box-shadow: 0 2px 14px rgba(20,15,5,0.06);
+    height: 58px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .topbar.topbar--hero {
+    background: transparent;
+    box-shadow: none;
+  }
+  .topbar.topbar--hero.scrolled {
+    background: rgba(31,36,46,0.95);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
   }
   .topbar-logo {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
   }
   .header-logo {
-    height: 78px;
+    height: 44px;
     width: auto;
     flex-shrink: 0;
+    transition: height 0.35s cubic-bezier(0.22,1,0.36,1);
+    filter: brightness(0) invert(1);
   }
+  .topbar.scrolled .header-logo { height: 36px; }
   .topbar-name {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 32px; font-weight: 600;
-    color: var(--header-text); letter-spacing: 0.02em;
+    font-size: 22px; font-weight: 600;
+    color: #FFFFFF; letter-spacing: 0.03em;
     line-height: 1.1;
+    transition: font-size 0.35s cubic-bezier(0.22,1,0.36,1);
   }
+  .topbar.scrolled .topbar-name { font-size: 18px; }
   .topbar-sub {
-    font-size: 10px; color: var(--gold);
-    letter-spacing: 0.28em; text-transform: uppercase;
-    margin-top: 6px; font-weight: 700;
+    font-size: 9px; color: rgba(255,255,255,0.45);
+    letter-spacing: 0.22em; text-transform: uppercase;
+    margin-top: 4px; font-weight: 600;
+    transition: opacity 0.35s;
   }
+  .topbar.scrolled .topbar-sub { opacity: 0; height: 0; margin: 0; overflow: hidden; }
   .topbar-tag-divider {
-    display: inline-block; width: 5px; height: 5px;
-    background: var(--gold); border-radius: 50%;
-    margin: 0 8px; vertical-align: middle; opacity: 0.6;
+    display: inline-block; width: 4px; height: 4px;
+    background: var(--gold-light); border-radius: 50%;
+    margin: 0 8px; vertical-align: middle; opacity: 0.5;
   }
-  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .topbar-right { display: flex; align-items: center; gap: 6px; }
+  .topbar-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 7px 14px; cursor: pointer;
+    color: rgba(255,255,255,0.8); font-size: 11px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    display: flex; align-items: center; gap: 5px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+    white-space: nowrap;
+  }
+  .topbar-btn:hover { background: rgba(255,255,255,0.15); color: #fff; transform: translateY(-1px); }
+  .topbar-btn:active { transform: scale(0.96); }
+  .topbar-btn--danger { color: rgba(220,120,100,0.9); border-color: rgba(220,120,100,0.2); }
+  .topbar-btn--danger:hover { background: rgba(220,120,100,0.12); color: #E8836E; }
+  .topbar-btn .badge {
+    background: #C0392B; color: #fff; border-radius: 50%;
+    min-width: 16px; height: 16px; font-size: 10px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0 3px;
+  }
 
   /* ── STEPPER (see animation block below) ── */
   .stepper {
@@ -125,6 +161,8 @@ const styles = `
 
   /* ── MAIN CONTENT ── */
   .main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 40px 32px; }
+  .main--dashboard { max-width: 100%; padding: 0; }
+  .main--dashboard .dash-below-hero { max-width: 1200px; margin: 0 auto; padding: 24px 32px 40px; }
 
   /* ── PAGE HEADER ── */
   .page-header { margin-bottom: 32px; }
@@ -298,20 +336,58 @@ const styles = `
     max-width: 100%;
   }
 
-  /* ── DASHBOARD HERO ── */
-  .dash-hero {
+  /* ── DASHBOARD HERO BANNER ── */
+  .dash-hero-banner {
+    position: relative;
+    margin: -110px -32px 0;
+    padding: 110px 0 0;
+    min-height: 400px;
+    background: linear-gradient(rgba(30,35,44,0.55), rgba(30,35,44,0.6)),
+                url('/hero-kitchen.jpg') center center / cover no-repeat;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    overflow: hidden;
+  }
+  .dash-hero-banner::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+    background: linear-gradient(to bottom, transparent, var(--ivory));
+    pointer-events: none;
+  }
+  .dark .dash-hero-banner::after {
+    background: linear-gradient(to bottom, transparent, var(--bg));
+  }
+  .dash-hero-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 38px; font-weight: 600;
+    color: #fff; letter-spacing: 0.06em;
+    text-transform: uppercase; line-height: 1.3;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    animation: fadeUp 0.8s cubic-bezier(0.22,1,0.36,1) both;
+    margin-top: 40px;
+  }
+  .dash-hero-tagline span {
+    display: block; font-size: 14px; font-weight: 400;
+    letter-spacing: 0.18em; color: rgba(255,255,255,0.6);
+    margin-top: 6px; text-shadow: none;
+    font-family: 'DM Sans', sans-serif; text-transform: uppercase;
+  }
+  .dash-hero-content {
+    position: relative; z-index: 2;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 24px 0 20px; gap: 16px; flex-wrap: wrap;
-    animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    width: 100%; max-width: 1200px;
+    padding: 0 32px; margin-top: 28px; gap: 16px; flex-wrap: wrap;
+    animation: fadeUp 0.7s 0.2s cubic-bezier(0.22,1,0.36,1) both;
   }
   .dash-hero-left { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .dash-greeting {
-    font-size: 14px; color: var(--muted); font-weight: 500;
+    font-size: 15px; color: rgba(255,255,255,0.7); font-weight: 500;
     letter-spacing: 0.02em;
   }
   .dash-user {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 28px; font-weight: 600; color: var(--char);
+    font-size: 28px; font-weight: 600; color: #fff;
     line-height: 1.1;
   }
   .dash-new-btn { white-space: nowrap; }
@@ -442,6 +518,9 @@ const styles = `
   .dark .app {
     background-color: #0E1014;
   }
+  .dark .topbar { background: #12141A; }
+  .dark .topbar.topbar--hero { background: transparent; }
+  .dark .topbar.topbar--hero.scrolled { background: rgba(18,20,26,0.95); }
   .dark .stepper { background: var(--header-bg); border-bottom-color: var(--header-border); }
   .dark .step:hover { background: #323028; }
   .dark .step-num { background: #323028; border-color: #484030; }
@@ -952,6 +1031,9 @@ const styles = `
   /* ── Tablet (â‰¤1024px) ── */
   @media (max-width: 1024px) {
     .main { padding: 28px 20px; }
+    .main--dashboard .dash-below-hero { padding: 24px 20px 40px; }
+    .dash-hero-banner { margin: -72px -20px 0; }
+    .dash-hero-content { padding: 0 20px; }
     .topbar { padding: 0 24px; }
     .stepper { padding: 0 20px; }
     .form-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -1070,8 +1152,11 @@ const styles = `
 
     .project-card-grid { grid-template-columns: 1fr; }
     .project-card { padding: 16px; }
-    .dash-hero { padding: 16px 0 12px; }
+    .dash-hero-banner { margin: -72px -14px 0; min-height: 300px; }
+    .dash-hero-tagline { font-size: 26px; margin-top: 32px; }
+    .dash-hero-content { padding: 0 14px; margin-top: 18px; flex-direction: column; align-items: flex-start; }
     .dash-user { font-size: 22px; }
+    .main--dashboard .dash-below-hero { padding: 16px 14px 24px; }
     .dash-stats { gap: 8px; }
     .dash-stat { padding: 10px 14px; min-width: 100px; }
     .dash-stat-val { font-size: 17px; }
@@ -1557,10 +1642,10 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       <style>{styles}</style>
       <div className={`app${dark ? " dark" : ""}`}>
         {/* TOPBAR + STEPPER sticky wrapper */}
-        <div style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--ivory2)" }}>
-        <div className={`topbar${scrolled ? " scrolled" : ""}`}>
+        <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
+        <div className={`topbar${scrolled ? " scrolled" : ""}${view === "dashboard" ? " topbar--hero" : ""}`}>
           <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => setView("dashboard")}>
-            <img src={dark ? "/ewp-logo.png" : "/favicon-512_dark.png"} alt="Engstrom Wood Products" className="header-logo" width="78" height="78" />
+            <img src="/ewp-logo.png" alt="Engstrom Wood Products" className="header-logo" width="44" height="44" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
               <div className="topbar-sub">
@@ -1570,84 +1655,36 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           </div>
           <div className="topbar-right">
             {isAdmin && (
-              <button onClick={onOpenAdmin} aria-label="Open admin panel" style={{
-                background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                color: "var(--ewp-slate)", fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 6,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-              }}>
+              <button className="topbar-btn" onClick={onOpenAdmin} aria-label="Open admin panel">
                 👥 Admin
                 {(pendingCount + openBugCount) > 0 && (
-                  <span style={{ background: "#C0392B", color: "#fff", borderRadius: "50%", minWidth: 16, height: 16, fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
-                    {pendingCount + openBugCount}
-                  </span>
+                  <span className="badge">{pendingCount + openBugCount}</span>
                 )}
               </button>
             )}
             {!isGuest && <button
+              className="topbar-btn topbar-btn--danger"
               onClick={() => setBugReportOpen(true)}
-              title="Report an error or bug"
-              style={{
-                background: "transparent", border: "1px solid rgba(184,59,46,0.35)",
-                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                color: "var(--red)", fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 6,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-              }}>
+              title="Report an error or bug">
               🐛 Report Error
             </button>}
             {!isAdmin && !isGuest && (
-              <button
-                onClick={() => setMyReportsOpen(true)}
-                title="View my submitted reports"
-                style={{
-                  background: "transparent", border: "1px solid rgba(73,77,77,0.25)",
-                  borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                  color: "var(--ewp-slate)", fontSize: 11,
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                  display: "flex", alignItems: "center", gap: 6,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                }}>
+              <button className="topbar-btn" onClick={() => setMyReportsOpen(true)} title="View my submitted reports">
                 📋 My Reports
               </button>
             )}
             <button
+              className="topbar-btn"
               onClick={() => setDark(d => !d)}
               title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-              aria-pressed={dark}
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3,
-                padding: "6px 14px",
-                cursor: "pointer",
-                color: "var(--ewp-slate)",
-                fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 6,
-                transition: "all 0.15s",
-                letterSpacing: "0.06em", textTransform: "uppercase",
-              }}>
+              aria-pressed={dark}>
               {dark ? "☀ Light" : "☾ Dark"}
             </button>
             <button
+              className="topbar-btn"
               onClick={isGuest ? onGuestExit : () => import("./supabase.js").then(m => m.supabase.auth.signOut())}
-              aria-label={isGuest ? "Exit guest mode" : "Sign out"}
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(73,77,77,0.25)",
-                borderRadius: 3, padding: "6px 14px", cursor: "pointer",
-                color: "var(--ewp-slate)", fontSize: 11,
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 6,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-              }}>
+              aria-label={isGuest ? "Exit guest mode" : "Sign out"}>
               {isGuest ? "Exit Guest" : "Sign Out"}
             </button>
           </div>
@@ -1656,14 +1693,19 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         {/* GUEST BANNER */}
         {isGuest && (
           <div style={{
-            background: dark ? "rgba(168,129,71,0.13)" : "rgba(168,129,71,0.10)",
-            borderBottom: "1px solid rgba(168,129,71,0.28)",
+            background: view === "dashboard"
+              ? "rgba(0,0,0,0.25)"
+              : (dark ? "rgba(168,129,71,0.13)" : "rgba(168,129,71,0.10)"),
+            backdropFilter: view === "dashboard" ? "blur(8px)" : "none",
+            WebkitBackdropFilter: view === "dashboard" ? "blur(8px)" : "none",
+            borderBottom: view === "dashboard" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(168,129,71,0.28)",
             padding: "7px 20px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             gap: 12, flexWrap: "wrap",
           }}>
             <div style={{
-              fontSize: 12, color: dark ? "#C99E64" : "#8C6A37",
+              fontSize: 12,
+              color: view === "dashboard" ? "rgba(255,255,255,0.75)" : (dark ? "#C99E64" : "#8C6A37"),
               fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 8,
             }}>
               <span style={{ fontSize: 14 }}>👤</span>
@@ -1672,9 +1714,11 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             <button
               onClick={onGuestExit}
               style={{
-                background: "transparent", border: "1px solid rgba(168,129,71,0.45)",
+                background: "transparent",
+                border: view === "dashboard" ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(168,129,71,0.45)",
                 borderRadius: 4, padding: "4px 12px", cursor: "pointer",
-                color: dark ? "#C99E64" : "#8C6A37", fontSize: 11,
+                color: view === "dashboard" ? "rgba(255,255,255,0.8)" : (dark ? "#C99E64" : "#8C6A37"),
+                fontSize: 11,
                 fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
                 letterSpacing: "0.04em", whiteSpace: "nowrap",
               }}
@@ -1749,7 +1793,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         </div>{/* end sticky wrapper */}
 
         {/* MAIN */}
-        <div className="main">
+        <div className={`main${view === "dashboard" ? " main--dashboard" : ""}`}>
           {view === "dashboard" && (
             <Dashboard
             userName={preparedBy}

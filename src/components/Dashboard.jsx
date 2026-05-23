@@ -33,15 +33,23 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
 
   return (
     <div>
-      {/* ── Compact Hero ── */}
-      <div className="dash-hero">
-        <div className="dash-hero-left">
-          <span className="dash-greeting">{greeting},</span>
-          <span className="dash-user">{userName || "–"}</span>
+      {/* ── Hero Banner (full-bleed, blends with header) ── */}
+      <div className="dash-hero-banner">
+        <div className="dash-hero-tagline">
+          Estimate Manager
+          <span>New Age Technology • Old World Craftsmanship</span>
         </div>
-        <button className="btn btn-gold btn-lg dash-new-btn" onClick={onNew}>+ New Estimate</button>
+        <div className="dash-hero-content">
+          <div className="dash-hero-left">
+            <span className="dash-greeting">{greeting},</span>
+            <span className="dash-user">{userName || "–"}</span>
+          </div>
+          <button className="btn btn-gold btn-lg dash-new-btn" onClick={onNew}>+ New Estimate</button>
+        </div>
       </div>
 
+      {/* ── Below hero: search + cards ── */}
+      <div className="dash-below-hero">
       {/* ── Search ── */}
       <div className="dash-search-row">
         <div className="dash-search-wrap">
@@ -125,6 +133,7 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
           })}
         </div>
       )}
+      </div>{/* end dash-below-hero */}
     </div>
   );
 }
