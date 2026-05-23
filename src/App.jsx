@@ -67,8 +67,8 @@ const styles = `
   /* ── TOPBAR ── */
   .topbar {
     background: #1F242E;
-    padding: 0 48px;
-    height: 88px;
+    padding: 0 56px;
+    height: 110px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -92,36 +92,36 @@ const styles = `
   .topbar-logo {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 20px;
   }
   .header-logo {
-    height: 52px;
+    height: 64px;
     width: auto;
     flex-shrink: 0;
     filter: brightness(0) invert(1);
   }
   .topbar-name {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 28px; font-weight: 600;
+    font-size: 32px; font-weight: 600;
     color: #FFFFFF; letter-spacing: 0.03em;
     line-height: 1.1;
   }
   .topbar-sub {
-    font-size: 11px; color: rgba(255,255,255,0.5);
+    font-size: 12px; color: rgba(255,255,255,0.5);
     letter-spacing: 0.18em; text-transform: uppercase;
-    margin-top: 5px; font-weight: 500;
+    margin-top: 6px; font-weight: 500;
   }
   .topbar-tag-divider {
-    display: inline-block; width: 4px; height: 4px;
+    display: inline-block; width: 5px; height: 5px;
     background: var(--gold-light); border-radius: 50%;
     margin: 0 10px; vertical-align: middle; opacity: 0.5;
   }
-  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
   .topbar-btn {
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px; padding: 9px 16px; cursor: pointer;
-    color: rgba(255,255,255,0.85); font-size: 12px;
+    border-radius: 8px; padding: 10px 18px; cursor: pointer;
+    color: rgba(255,255,255,0.85); font-size: 13px;
     font-family: 'DM Sans', sans-serif; font-weight: 600;
     display: flex; align-items: center; gap: 6px;
     letter-spacing: 0.04em; text-transform: uppercase;
@@ -333,8 +333,8 @@ const styles = `
   /* ── DASHBOARD HERO BANNER ── */
   .dash-hero-banner {
     position: relative;
-    margin: -124px -32px 0;
-    padding: 124px 0 0;
+    margin: -146px -32px 0;
+    padding: 146px 0 0;
     min-height: 75vh;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -1066,7 +1066,7 @@ const styles = `
   @media (max-width: 1024px) {
     .main { padding: 28px 20px; }
     .main--dashboard .dash-below-hero { padding: 24px 20px 40px; }
-    .dash-hero-banner { margin: -124px -20px 0; padding-top: 124px; min-height: 65vh; }
+    .dash-hero-banner { margin: -146px -20px 0; padding-top: 146px; min-height: 65vh; }
     .dash-hero-tagline { font-size: 38px; }
     .dash-hero-content { padding: 0 24px; }
     .topbar { padding: 0 24px; }
@@ -1187,11 +1187,11 @@ const styles = `
 
     .project-card-grid { grid-template-columns: 1fr; }
     .project-card { padding: 16px; }
-    .topbar { height: 72px; padding: 0 18px; }
-    .header-logo { height: 40px; }
-    .topbar-name { font-size: 20px; }
+    .topbar { height: 80px; padding: 0 18px; }
+    .header-logo { height: 44px; }
+    .topbar-name { font-size: 22px; }
     .topbar-sub { font-size: 9px; }
-    .dash-hero-banner { margin: -108px -14px 0; padding-top: 108px; min-height: 55vh; }
+    .dash-hero-banner { margin: -116px -14px 0; padding-top: 116px; min-height: 55vh; }
     .dash-hero-tagline { font-size: 28px; margin-top: 20px; }
     .dash-hero-tagline span { font-size: 12px; letter-spacing: 0.14em; }
     .dash-hero-content { padding: 0 14px; margin-top: 18px; flex-direction: column; align-items: flex-start; }
