@@ -41,85 +41,42 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
 
   return (
     <div>
-      {/* ── Welcome Banner ── */}
-      <div style={{
-        textAlign: "center",
-        padding: "52px 24px 40px",
-        borderBottom: "1px solid var(--ivory3)",
-        background: "linear-gradient(180deg, var(--ivory2) 0%, transparent 100%)",
-      }}>
-        <div style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: "0.22em",
-          textTransform: "uppercase", color: "var(--muted)",
-          fontFamily: "'DM Sans', sans-serif", marginBottom: 12,
-          animation: "welcomeSubIn 0.55s cubic-bezier(0.22,1,0.36,1) both",
-        }}>
-          {greeting}
+      {/* ── Compact Hero ── */}
+      <div className="dash-hero">
+        <div className="dash-hero-left">
+          <span className="dash-greeting">{greeting},</span>
+          <span className="dash-user">{userName || "–"}</span>
         </div>
-
-        <div style={{
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: "clamp(40px, 6.5vw, 72px)",
-          fontWeight: 600, color: "var(--gold)",
-          lineHeight: 1, letterSpacing: "0.05em",
-          animation: "welcomeIn 0.75s 0.08s cubic-bezier(0.22,1,0.36,1) both",
-        }}>
-          {userName || "–"}
-        </div>
-
-        <div style={{
-          height: 2,
-          background: "linear-gradient(90deg, transparent, var(--gold), transparent)",
-          margin: "20px auto 0",
-          animation: "welcomeLineGrow 0.65s 0.3s cubic-bezier(0.22,1,0.36,1) both",
-          width: 72,
-        }} />
+        <button className="btn btn-gold btn-lg dash-new-btn" onClick={onNew}>+ New Estimate</button>
       </div>
 
-      <div className="page-header">
-        <div className="flex justify-between items-center">
-          <div>
-            <div className="page-title">Projects</div>
-            <div className="gold-rule" />
-            <div className="page-subtitle">Engstrom Wood Products — Quote Management</div>
-          </div>
-          <button className="btn btn-gold btn-lg" onClick={onNew}>+ New Estimate</button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="dashboard-stats">
+      {/* ── Stats Strip ── */}
+      <div className="dash-stats">
         {[
-          ["Total Projects", projects.length, "📋"],
-          ["Active Estimates", projects.length, "📝"],
-          ["Total Est. Value", fmt(totalRevenue), "💰"],
-        ].map(([lbl, val, icon]) => (
-          <div key={lbl} className="stat-card-anim" style={{
-            background: "var(--card-bg)", border: "1px solid var(--ivory3)",
-            borderRadius: 4, padding: "20px 24px",
-            borderTop: "2px solid var(--gold)",
-            boxShadow: "0 1px 6px rgba(20,15,5,0.04)",
-            transition: "transform 0.22s ease, box-shadow 0.22s ease",
-            cursor: "default",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(138,106,56,0.13)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 1px 6px rgba(20,15,5,0.04)"; }}
-          >
-            <div style={{ fontSize: 20, marginBottom: 8, opacity: 0.5 }}>{icon}</div>
-            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--muted)", marginBottom: 4 }}>{lbl}</div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "var(--char)" }}>{val}</div>
+          ["Projects", projects.length, "📋"],
+          ["Total Value", fmt(totalRevenue), "💰"],
+          ["Rooms", projects.reduce((s, p) => s + p.rooms.length, 0), "🏠"],
+        ].map(([lbl, val, icon], idx) => (
+          <div key={lbl} className="dash-stat sr" style={{ animationDelay: `${idx * 0.08}s` }}>
+            <span className="dash-stat-icon">{icon}</span>
+            <div>
+              <div className="dash-stat-val">{val}</div>
+              <div className="dash-stat-lbl">{lbl}</div>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Search */}
-      <div className="dashboard-search-wrap" style={{ marginBottom: 16 }}>
-        <input className="dashboard-search" placeholder="🔍  Search by project name, ID, client, phone, or address…" value={search} onChange={e => setSearch(e.target.value)}
-          aria-label="Search estimates"
-          style={{ background: "var(--card-bg)" }} />
+      {/* ── Search ── */}
+      <div className="dash-search-row">
+        <div className="dash-search-wrap">
+          <span className="dash-search-icon">🔍</span>
+          <input className="dash-search-input" placeholder="Search projects…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Search estimates" />
+        </div>
+        <div className="dash-result-count">{filtered.length} {filtered.length === 1 ? "project" : "projects"}</div>
       </div>
 
-      {/* Project cards */}
+      {/* ── Project cards ── */}
       {filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📋</div>
@@ -138,83 +95,54 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
             const realIdx = projects.indexOf(p);
             return (
               <div key={i} className="project-card" onClick={() => onOpen(realIdx)}
+                style={{ animationDelay: `${i * 0.06}s` }}
                 role="button" tabIndex={0}
                 aria-label={`Open estimate: ${p.project.name}`}
                 onKeyDown={e => (e.key === "Enter" || e.key === " ") && onOpen(realIdx)}>
 
-                {/* Header */}
-                <div className="project-card-header">
-                  <div>
-                    <div className="project-card-name">{p.project.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{p.project.address || "No address"}</div>
-                  </div>
-                  <div className="project-card-id">{fmtId(p.project.id)}</div>
+                {/* Status dot */}
+                <div className="pcard-status-row">
+                  <span className={`pcard-status ${allComplete ? "pcard-status--done" : "pcard-status--draft"}`}>
+                    {allComplete ? "Complete" : "Draft"}
+                  </span>
+                  <span className="pcard-id">{fmtId(p.project.id)}</span>
                 </div>
 
-                {/* Info grid */}
-                <div className="project-card-info">
-                  <div className="project-card-info-item">
-                    <span className="project-card-label">Client</span>
-                    <span className="project-card-value">{p.project.contactName || "—"}</span>
-                  </div>
-                  <div className="project-card-info-item">
-                    <span className="project-card-label">Bid Date</span>
-                    <span className="project-card-value">{fmtDate(p.project.bidDate)}</span>
-                  </div>
-                  <div className="project-card-info-item">
-                    <span className="project-card-label">Rooms</span>
-                    <span className="project-card-value">{p.rooms.length}</span>
-                  </div>
-                  <div className="project-card-info-item">
-                    <span className="project-card-label">Prepared By</span>
-                    <span className="project-card-value">{userName || "—"}</span>
-                  </div>
-                  <div className="project-card-info-item">
-                    <span className="project-card-label">Modified</span>
-                    <span className="project-card-value">{p._updatedAt ? fmtDate(p._updatedAt.slice(0, 10)) : "—"}</span>
-                  </div>
-                </div>
+                {/* Name + total */}
+                <div className="pcard-name">{p.project.name}</div>
+                <div className="pcard-total">{fmt(gt)}</div>
 
-                {/* Total */}
-                <div className="project-card-total">{fmt(gt)}</div>
+                {/* Meta pills */}
+                <div className="pcard-meta">
+                  {p.project.contactName && <span className="pcard-pill">👤 {p.project.contactName}</span>}
+                  <span className="pcard-pill">🏠 {p.rooms.length} {p.rooms.length === 1 ? "room" : "rooms"}</span>
+                  <span className="pcard-pill">📅 {fmtDate(p.project.bidDate)}</span>
+                  {p._updatedAt && <span className="pcard-pill">✏️ {fmtDate(p._updatedAt.slice(0, 10))}</span>}
+                </div>
 
                 {/* Actions */}
-                <div className="project-card-actions" onClick={e => e.stopPropagation()}>
+                <div className="pcard-actions" onClick={e => e.stopPropagation()}>
                   <button
-                    className={`btn project-card-btn ${allComplete ? "btn-primary" : "btn-outline"}`}
-                    style={{ opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
-                    title={allComplete ? "Generate internal PDF quote" : "Complete all rooms to generate quote"}
-                    aria-disabled={!allComplete}
+                    className={`pcard-act-btn ${allComplete ? "pcard-act--primary" : ""}`}
+                    disabled={!allComplete}
+                    title={allComplete ? "Internal PDF" : "Complete all rooms first"}
                     onClick={() => allComplete && onGenerateQuote(realIdx)}>
-                    <span className="project-card-btn-icon">📄</span>
-                    <span className="project-card-btn-text">Internal</span>
+                    📄 Internal
                   </button>
                   <button
-                    className={`btn project-card-btn ${allComplete ? "btn-gold" : "btn-outline"}`}
-                    style={{ opacity: allComplete ? 1 : 0.4, cursor: allComplete ? "pointer" : "not-allowed" }}
-                    title={allComplete ? "Generate customer PDF quote" : "Complete all rooms to generate quote"}
-                    aria-disabled={!allComplete}
+                    className={`pcard-act-btn ${allComplete ? "pcard-act--gold" : ""}`}
+                    disabled={!allComplete}
+                    title={allComplete ? "Client PDF" : "Complete all rooms first"}
                     onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
-                    <span className="project-card-btn-icon">📋</span>
-                    <span className="project-card-btn-text">Client</span>
+                    📋 Client
                   </button>
-                  <button
-                    className="btn btn-outline project-card-btn"
-                    style={{ opacity: actionBusy ? 0.5 : 1 }}
-                    title="Duplicate project"
-                    disabled={actionBusy}
-                    onClick={() => !actionBusy && onDuplicate(realIdx)}>
-                    <span className="project-card-btn-icon">⧉</span>
-                    <span className="project-card-btn-text">{actionBusy ? "…" : "Copy"}</span>
+                  <button className="pcard-act-btn" disabled={actionBusy}
+                    onClick={() => !actionBusy && onDuplicate(realIdx)} title="Duplicate">
+                    ⧉ Copy
                   </button>
-                  <button
-                    className="btn btn-outline project-card-btn"
-                    style={{ color: "var(--red)", borderColor: "rgba(184,59,46,0.2)", opacity: actionBusy ? 0.5 : 1 }}
-                    title="Delete project"
-                    disabled={actionBusy}
-                    onClick={() => !actionBusy && onDelete(realIdx)}>
-                    <span className="project-card-btn-icon">🗑</span>
-                    <span className="project-card-btn-text">{actionBusy ? "…" : "Delete"}</span>
+                  <button className="pcard-act-btn pcard-act--danger" disabled={actionBusy}
+                    onClick={() => !actionBusy && onDelete(realIdx)} title="Delete">
+                    🗑
                   </button>
                 </div>
               </div>
