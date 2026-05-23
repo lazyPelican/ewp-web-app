@@ -143,17 +143,16 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                 onKeyDown={e => (e.key === "Enter" || e.key === " ") && onOpen(realIdx)}>
 
                 {/* Header */}
-                <div style={{ marginBottom: 12 }}>
-                  <div className="project-card-name">{p.project.name}</div>
+                <div className="project-card-header">
+                  <div>
+                    <div className="project-card-name">{p.project.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{p.project.address || "No address"}</div>
+                  </div>
                   <div className="project-card-id">{fmtId(p.project.id)}</div>
                 </div>
 
                 {/* Info grid */}
                 <div className="project-card-info">
-                  <div className="project-card-info-item">
-                    <span className="project-card-label">Address</span>
-                    <span className="project-card-value">{p.project.address || "—"}</span>
-                  </div>
                   <div className="project-card-info-item">
                     <span className="project-card-label">Client</span>
                     <span className="project-card-value">{p.project.contactName || "—"}</span>
@@ -171,13 +170,13 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                     <span className="project-card-value">{userName || "—"}</span>
                   </div>
                   <div className="project-card-info-item">
-                    <span className="project-card-label">Last Modified</span>
+                    <span className="project-card-label">Modified</span>
                     <span className="project-card-value">{p._updatedAt ? fmtDate(p._updatedAt.slice(0, 10)) : "—"}</span>
                   </div>
                 </div>
 
                 {/* Total */}
-                <div className="project-card-total" style={{ textAlign: "center" }}>{fmt(gt)}</div>
+                <div className="project-card-total">{fmt(gt)}</div>
 
                 {/* Actions */}
                 <div className="project-card-actions" onClick={e => e.stopPropagation()}>
@@ -188,7 +187,7 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                     aria-disabled={!allComplete}
                     onClick={() => allComplete && onGenerateQuote(realIdx)}>
                     <span className="project-card-btn-icon">📄</span>
-                    <span className="project-card-btn-text">Internal Quote</span>
+                    <span className="project-card-btn-text">Internal</span>
                   </button>
                   <button
                     className={`btn project-card-btn ${allComplete ? "btn-gold" : "btn-outline"}`}
@@ -196,8 +195,8 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                     title={allComplete ? "Generate customer PDF quote" : "Complete all rooms to generate quote"}
                     aria-disabled={!allComplete}
                     onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
-                    <span className="project-card-btn-icon">📄</span>
-                    <span className="project-card-btn-text">Client Quote</span>
+                    <span className="project-card-btn-icon">📋</span>
+                    <span className="project-card-btn-text">Client</span>
                   </button>
                   <button
                     className="btn btn-outline project-card-btn"
@@ -206,11 +205,11 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
                     disabled={actionBusy}
                     onClick={() => !actionBusy && onDuplicate(realIdx)}>
                     <span className="project-card-btn-icon">⧉</span>
-                    <span className="project-card-btn-text">{actionBusy ? "…" : "Duplicate"}</span>
+                    <span className="project-card-btn-text">{actionBusy ? "…" : "Copy"}</span>
                   </button>
                   <button
                     className="btn btn-outline project-card-btn"
-                    style={{ color: "var(--red)", borderColor: "rgba(184,59,46,0.3)", opacity: actionBusy ? 0.5 : 1 }}
+                    style={{ color: "var(--red)", borderColor: "rgba(184,59,46,0.2)", opacity: actionBusy ? 0.5 : 1 }}
                     title="Delete project"
                     disabled={actionBusy}
                     onClick={() => !actionBusy && onDelete(realIdx)}>

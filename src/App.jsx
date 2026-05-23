@@ -423,8 +423,9 @@ const styles = `
   .dark .badge-draft { background: #2E2A1A; color: var(--gold); }
   .dark .modal-overlay { background: rgba(0,0,0,0.55); }
   .dark .divider { background: var(--ivory3); }
-  .dark .project-card { background: var(--card-bg); border-color: var(--ivory3); border-top-color: var(--gold); }
-  .dark .project-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+  .dark .project-card { background: var(--card-bg); border-color: var(--ivory3); }
+  .dark .project-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
+  .dark .project-card-id { background: rgba(255,255,255,0.06); }
   .dark .project-card-name { color: var(--char); }
   .dark .project-card-value { color: var(--char); }
   .dark .project-card-total { color: var(--gold-light); }
@@ -576,16 +577,16 @@ const styles = `
   .card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-radius: 4px;
+    border-radius: 10px;
     overflow: hidden;
     margin-bottom: 20px;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    transition: box-shadow 0.3s cubic-bezier(0.22,1,0.36,1), transform 0.3s cubic-bezier(0.22,1,0.36,1);
   }
   .card:hover {
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 1px 6px rgba(0,0,0,0.06);
     transform: translateY(-2px);
   }
 
@@ -594,11 +595,11 @@ const styles = `
     font-family: 'DM Sans', sans-serif;
     font-size: 12px; font-weight: 700;
     padding: 10px 20px;
-    border-radius: 3px;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
-    transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     position: relative;
@@ -634,18 +635,17 @@ const styles = `
     color: var(--char);
     background: var(--input-bg);
     border: 1px solid var(--rule);
-    border-radius: 3px;
-    padding: 9px 12px;
+    border-radius: 8px;
+    padding: 10px 14px;
     width: 100%;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
     outline: none;
     appearance: none;
   }
   input:focus, select:focus, textarea:focus {
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(138,106,56,0.12);
+    box-shadow: 0 0 0 3px rgba(138,106,56,0.10);
     background: var(--input-focus-bg);
-    transform: translateY(-1px);
   }
   /* Native date-picker calendar follows the app's colour scheme */
   input[type="date"] { color-scheme: light; }
@@ -654,18 +654,25 @@ const styles = `
   /* ── PROJECT CARDS ── */
   .project-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
   }
   .project-card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-top: 3px solid var(--gold);
-    border-radius: 6px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 24px;
     cursor: pointer;
     display: flex; flex-direction: column;
-    transition: box-shadow 0.22s ease, transform 0.22s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.03);
+    transition: box-shadow 0.3s cubic-bezier(0.22,1,0.36,1), transform 0.3s cubic-bezier(0.22,1,0.36,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .project-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 12px 12px 0 0;
   }
   .project-card:nth-child(1) { animation-delay: 0.03s; }
   .project-card:nth-child(2) { animation-delay: 0.07s; }
@@ -676,47 +683,56 @@ const styles = `
   .project-card:nth-child(7) { animation-delay: 0.27s; }
   .project-card:nth-child(8) { animation-delay: 0.31s; }
   .project-card:hover {
-    box-shadow: 0 6px 24px rgba(138,106,56,0.15);
-    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.08), 0 2px 8px rgba(138,106,56,0.08);
+    transform: translateY(-4px);
+  }
+  .project-card-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 16px; gap: 12px;
   }
   .project-card-name {
-    font-weight: 700; font-size: 16px; color: var(--char);
-    line-height: 1.3; margin-bottom: 2px;
+    font-weight: 700; font-size: 17px; color: var(--char);
+    line-height: 1.3;
   }
   .project-card-id {
-    font-size: 11px; color: var(--muted); font-family: 'DM Sans', monospace;
-    letter-spacing: 0.03em;
+    font-size: 10px; color: var(--muted); font-family: 'DM Sans', monospace;
+    letter-spacing: 0.04em; white-space: nowrap; margin-top: 3px;
+    background: var(--ivory3); padding: 2px 8px; border-radius: 4px;
   }
   .project-card-info {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px 16px; margin-bottom: 14px;
-    padding-bottom: 14px; border-bottom: 1px solid var(--ivory3);
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px 16px; margin-bottom: 16px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--ivory3);
+  }
+  .project-card-info-item-full {
+    grid-column: 1 / -1;
   }
   .project-card-label {
-    display: block; font-size: 9px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.1em;
-    color: var(--muted); margin-bottom: 1px;
+    display: block; font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin-bottom: 3px;
   }
   .project-card-value {
     display: block; font-size: 13px; color: var(--char);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.4;
   }
   .project-card-total {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 26px; font-weight: 700; color: var(--gold);
-    margin-bottom: 14px;
+    font-size: 28px; font-weight: 700; color: var(--gold);
+    text-align: center; margin-bottom: 16px;
+    letter-spacing: -0.01em;
   }
   .project-card-actions {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 6px; margin-top: auto;
+    display: flex; gap: 6px; margin-top: auto;
   }
   .project-card-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; padding: 8px 6px !important; font-size: 10px !important;
-    min-height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 5px; padding: 8px 10px !important; font-size: 10px !important;
+    flex: 1; border-radius: 8px !important;
   }
-  .project-card-btn-icon { font-size: 16px; line-height: 1; }
-  .project-card-btn-text { font-size: 10px; font-weight: 600; line-height: 1.2; }
+  .project-card-btn-icon { font-size: 13px; line-height: 1; }
+  .project-card-btn-text { font-size: 10px; font-weight: 600; line-height: 1; }
 
   /* Legacy compat — keep these for any remaining references */
   .project-row-name { font-weight: 600; font-size: 15px; color: var(--ewp-slate); }
@@ -725,18 +741,18 @@ const styles = `
 
   /* ── ROOM TABS ── */
   .room-tab {
-    padding: 7px 15px;
-    border-radius: 3px;
+    padding: 8px 16px;
+    border-radius: 8px;
     border: 1px solid var(--ivory3);
     background: var(--card-bg);
     cursor: pointer;
     font-size: 12px; font-weight: 500;
     color: var(--mid);
-    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
     display: flex; align-items: center; gap: 6px;
   }
-  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); transform: translateY(-2px); box-shadow: 0 3px 10px rgba(138,106,56,0.15); }
-  .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(20,15,5,0.18); }
+  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); transform: translateY(-2px); box-shadow: 0 3px 12px rgba(138,106,56,0.1); }
+  .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(20,15,5,0.15); }
   .room-tab.dragging { opacity: 0.4; transform: scale(0.95); }
 
   /* ── STEPPER ── */
@@ -771,15 +787,14 @@ const styles = `
   .summary-card {
     background: var(--card-bg);
     border: 1px solid var(--ivory3);
-    border-radius: 4px;
-    padding: 14px 16px;
-    border-top: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 16px 18px;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 14px rgba(0,0,0,0.03);
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s cubic-bezier(0.22,1,0.36,1);
   }
-  .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 4px 12px rgba(138,106,56,0.15); }
+  .summary-card:hover { transform: translateY(-3px); box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 2px 8px rgba(138,106,56,0.08); }
   .summary-card-value {
     font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--char); text-align: center;
     animation: countUp 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1008,7 +1023,8 @@ const styles = `
     }
 
     .project-card-grid { grid-template-columns: 1fr; }
-    .project-card { padding: 16px; }
+    .project-card { padding: 18px; }
+    .project-card-info { grid-template-columns: 1fr 1fr; }
 
     .section-banner { flex-wrap: wrap; gap: 8px; }
     .room-tabs { padding-bottom: 4px; }
