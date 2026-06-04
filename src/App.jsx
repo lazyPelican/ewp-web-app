@@ -68,7 +68,7 @@ const styles = `
   .topbar {
     background: #1F242E;
     padding: 0 56px;
-    height: 200px;
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -333,8 +333,8 @@ const styles = `
   /* ── DASHBOARD HERO BANNER ── */
   .dash-hero-banner {
     position: relative;
-    margin: -236px -32px 0;
-    padding: 236px 0 0;
+    margin: -186px -32px 0;
+    padding: 186px 0 0;
     min-height: 75vh;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -1066,7 +1066,7 @@ const styles = `
   @media (max-width: 1024px) {
     .main { padding: 28px 20px; }
     .main--dashboard .dash-below-hero { padding: 24px 20px 40px; }
-    .dash-hero-banner { margin: -236px -20px 0; padding-top: 236px; min-height: 65vh; }
+    .dash-hero-banner { margin: -186px -20px 0; padding-top: 186px; min-height: 65vh; }
     .dash-hero-tagline { font-size: 38px; }
     .dash-hero-content { padding: 0 24px; }
     .topbar { padding: 0 24px; }
@@ -1187,11 +1187,11 @@ const styles = `
 
     .project-card-grid { grid-template-columns: 1fr; }
     .project-card { padding: 16px; }
-    .topbar { height: 120px; padding: 0 18px; }
+    .topbar { height: 100px; padding: 0 18px; }
     .header-logo { height: 44px; }
     .topbar-name { font-size: 22px; }
     .topbar-sub { font-size: 9px; }
-    .dash-hero-banner { margin: -156px -14px 0; padding-top: 156px; min-height: 55vh; }
+    .dash-hero-banner { margin: -136px -14px 0; padding-top: 136px; min-height: 55vh; }
     .dash-hero-tagline { font-size: 28px; margin-top: 20px; }
     .dash-hero-tagline span { font-size: 12px; letter-spacing: 0.14em; }
     .dash-hero-content { padding: 0 14px; margin-top: 18px; flex-direction: column; align-items: flex-start; }
