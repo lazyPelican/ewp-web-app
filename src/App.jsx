@@ -156,6 +156,9 @@ const styles = `
   /* ── MAIN CONTENT ── */
   .main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 40px 32px; }
   .main--dashboard { max-width: 100%; padding: 0; }
+  .main--readonly input, .main--readonly select, .main--readonly textarea { pointer-events: none; opacity: 0.7; }
+  .main--readonly .btn:not(.btn-gold-outline):not([class*="pcard"]) { pointer-events: none; opacity: 0.5; }
+  .main--readonly .field-row button, .main--readonly .add-row-btn { display: none; }
   .main--dashboard .dash-below-hero { max-width: 1200px; margin: 0 auto; padding: 24px 32px 40px; }
 
   /* ── PAGE HEADER ── */
@@ -448,6 +451,20 @@ const styles = `
   }
   .dash-search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(138,106,56,0.08); }
   .dash-result-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .dash-section-header {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    margin: 36px 0 16px; padding: 0 4px;
+    border-top: 1px solid var(--ivory3); padding-top: 28px;
+  }
+  .dash-section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 700; color: var(--char);
+    letter-spacing: 0.02em;
+  }
+  .dash-section-sub {
+    font-size: 12px; color: var(--muted); font-weight: 500;
+    font-style: italic;
+  }
 
   /* Responsive layout helpers (used with media queries below) */
   .summary-project-grid {
@@ -1268,6 +1285,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
   const [maxStep, setMaxStep] = useState(0);
+  const [readOnly, setReadOnly] = useState(false);
   const [quickSaving, setQuickSaving] = useState(false);
   const [quickSaved, setQuickSaved] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -1398,7 +1416,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           setLoadError(true)
           showToast("Failed to load estimates — check your connection")
         } else {
-          setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id, _updatedAt: row.updated_at })))
+          setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id, _updatedAt: row.updated_at, _status: row.status || null })))
         }
       }
     } catch (err) {
@@ -1457,6 +1475,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       quoteSections: { ...DEFAULT_QUOTE_SECTIONS } });
     setRooms([blankRoom(0)]);
     _serverUpdatedAt.current = null;
+    setReadOnly(false);
     setStep(0); setSaved(false); setEditIdx(null); setView("new"); setMaxStep(0);
   };
 
@@ -1465,6 +1484,8 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     setProject({ ...p.project, quoteSections: p.project.quoteSections || { ...DEFAULT_QUOTE_SECTIONS } });
     setRooms(p.rooms.map(r => ({ ...r, countertops: r.countertops || [] })));
     _serverUpdatedAt.current = p._updatedAt || null;
+    const isConfirmed = p._status === "confirmed";
+    setReadOnly(isConfirmed && !isAdmin);
     setStep(0); setEditIdx(i); setSaved(true); setView("new");
     const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
     const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
@@ -1509,6 +1530,24 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     });
     if (error) { logError("duplicateProject", error); showToast("Error duplicating"); }
     else { setProjects(prev => [duped, ...prev]); showToast("Duplicated with new ID: " + newId); }
+    setActionBusy(false);
+  };
+
+  const confirmProject = async (i) => {
+    if (actionBusy) return;
+    const p = projects[i];
+    if (isGuest) {
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "confirmed" } : pr));
+      showToast("Quote marked as confirmed");
+      return;
+    }
+    setActionBusy(true);
+    const { error } = await supabase.from("projects").update({ status: "confirmed" }).eq("id", p.project.id);
+    if (error) { logError("confirmProject", error); showToast("Error confirming quote"); }
+    else {
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "confirmed" } : pr));
+      showToast("Quote confirmed: " + p.project.name);
+    }
     setActionBusy(false);
   };
 
@@ -1812,8 +1851,13 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             fontSize: 13, letterSpacing: "0.04em",
           }}>
             <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--char)", textAlign: "center" }}>{project.name}</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--char)", textAlign: "center" }}>{project.name}
+              {readOnly && <span style={{ marginLeft: 10, fontSize: 11, fontWeight: 700, color: "#2563AA", background: "rgba(37,99,170,0.1)", padding: "2px 10px", borderRadius: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>Read Only</span>}
+            </span>
             <div style={{ textAlign: "right" }}>
+              {readOnly ? (
+                <span style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic" }}>Confirmed — view &amp; print only</span>
+              ) : (
               <button
                 className="btn btn-gold btn-lg"
                 style={{
@@ -1828,21 +1872,24 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
               >
                 {quickSaving ? "⏳ Saving…" : quickSaved ? "✅ Saved!" : "💾 Save Estimate"}
               </button>
+              )}
             </div>
           </div>
         )}
         </div>{/* end sticky wrapper */}
 
         {/* MAIN */}
-        <div className={`main${view === "dashboard" ? " main--dashboard" : ""}`}>
+        <div className={`main${view === "dashboard" ? " main--dashboard" : ""}${readOnly ? " main--readonly" : ""}`}>
           {view === "dashboard" && (
             <Dashboard
             userName={preparedBy}
             projects={projects}
+            isAdmin={isAdmin}
             onNew={startNew}
             onOpen={openProject}
             onDelete={deleteProject}
             onDuplicate={duplicateProject}
+            onConfirm={confirmProject}
             actionBusy={actionBusy}
             onGenerateQuote={(i) => {
               const p = projects[i];

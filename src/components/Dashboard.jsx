@@ -1,11 +1,8 @@
 import React, { useState } from "react"
 import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, isRoomComplete } from "../appUtils.js"
 
-export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
+export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
   const [search, setSearch] = useState("");
-  const [confirmedIds, setConfirmedIds] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ewp_confirmed') || '[]'); } catch { return []; }
-  });
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -14,7 +11,8 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
     if (h >= 17 && h < 21) return "Good evening";
     return "Welcome back";
   })();
-  const filtered = projects
+
+  const allFiltered = projects
     .filter(p => {
       const q = search.toLowerCase()
       return (
@@ -33,6 +31,93 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
       }
       return getIdTime(b.project.id || '').localeCompare(getIdTime(a.project.id || ''))
     })
+
+  const confirmed = allFiltered.filter(p => p._status === "confirmed");
+  const filtered  = allFiltered.filter(p => p._status !== "confirmed");
+
+  const calcTotal = (p) => p.rooms.reduce((rs, r) => {
+    const cab = calcCabinetry(r.cabinetry);
+    return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
+  }, 0);
+
+  const renderCard = (p, i, { isConfirmedSection } = {}) => {
+    const gt = calcTotal(p);
+    const allComplete = p.rooms.every(isRoomComplete);
+    const realIdx = projects.indexOf(p);
+    const isConfirmed = p._status === "confirmed";
+
+    return (
+      <div key={p.project.id || i} className="project-card" onClick={() => onOpen(realIdx)}
+        style={{ animationDelay: `${i * 0.06}s` }}
+        role="button" tabIndex={0}
+        aria-label={`Open estimate: ${p.project.name}`}
+        onKeyDown={e => (e.key === "Enter" || e.key === " ") && onOpen(realIdx)}>
+
+        {/* Status tag */}
+        <div className="pcard-status-row">
+          <span className={`pcard-status ${
+            isConfirmed ? "pcard-status--confirmed"
+            : allComplete ? "pcard-status--done" : "pcard-status--draft"
+          }`}>
+            {isConfirmed ? "Confirmed" : allComplete ? "Complete" : "Draft"}
+          </span>
+          <span className="pcard-id">{fmtId(p.project.id)}</span>
+        </div>
+
+        {/* Name + total + confirm */}
+        <div className="pcard-name">{p.project.name}</div>
+        <div className="pcard-total-row">
+          <div className="pcard-total">{fmt(gt)}</div>
+          {allComplete && !isConfirmed && (
+            <button className="pcard-confirm-btn" onClick={e => {
+              e.stopPropagation();
+              if (window.confirm("Confirming this quote will mark it as finalized.\n\nConfirmed quotes become read-only for team members (view & print only).\n\nProceed?")) {
+                onConfirm(realIdx);
+              }
+            }}>✓ Mark as Confirmed</button>
+          )}
+        </div>
+
+        {/* Meta pills */}
+        <div className="pcard-meta">
+          {p.project.contactName && <span className="pcard-pill">👤 {p.project.contactName}</span>}
+          <span className="pcard-pill">🏠 {p.rooms.length} {p.rooms.length === 1 ? "room" : "rooms"}</span>
+          <span className="pcard-pill">📅 {fmtDate(p.project.bidDate)}</span>
+          {p._updatedAt && <span className="pcard-pill">✏️ {fmtDate(p._updatedAt.slice(0, 10))}</span>}
+        </div>
+
+        {/* Actions */}
+        <div className="pcard-actions" onClick={e => e.stopPropagation()}>
+          <button
+            className={`pcard-act-btn ${allComplete ? "pcard-act--primary" : ""}`}
+            disabled={!allComplete}
+            title={allComplete ? "Internal PDF" : "Complete all rooms first"}
+            onClick={() => allComplete && onGenerateQuote(realIdx)}>
+            📄 Internal
+          </button>
+          <button
+            className={`pcard-act-btn ${allComplete ? "pcard-act--gold" : ""}`}
+            disabled={!allComplete}
+            title={allComplete ? "Client PDF" : "Complete all rooms first"}
+            onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
+            📋 Client
+          </button>
+          {!isConfirmedSection && (
+            <button className="pcard-act-btn" disabled={actionBusy}
+              onClick={() => !actionBusy && onDuplicate(realIdx)} title="Duplicate">
+              ⧉ Copy
+            </button>
+          )}
+          {!isConfirmedSection && (
+            <button className="pcard-act-btn pcard-act--danger" disabled={actionBusy}
+              onClick={() => !actionBusy && onDelete(realIdx)} title="Delete">
+              🗑
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -63,11 +148,11 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
           <span className="dash-search-icon">🔍</span>
           <input className="dash-search-input" placeholder="Search projects…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Search estimates" />
         </div>
-        <div className="dash-result-count">{filtered.length} {filtered.length === 1 ? "project" : "projects"}</div>
+        <div className="dash-result-count">{allFiltered.length} {allFiltered.length === 1 ? "project" : "projects"}</div>
       </div>
 
-      {/* ── Project cards ── */}
-      {filtered.length === 0 ? (
+      {/* ── Active Estimates ── */}
+      {filtered.length === 0 && confirmed.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📋</div>
           <div className="empty-title">{projects.length === 0 ? "No estimates yet" : "No results found"}</div>
@@ -75,85 +160,26 @@ export function Dashboard({ projects, onNew, onOpen, onDelete, onDuplicate, onGe
           {projects.length === 0 && <button className="btn btn-gold" onClick={onNew}>+ Create First Estimate</button>}
         </div>
       ) : (
-        <div className="project-card-grid">
-          {filtered.map((p, i) => {
-            const gt = p.rooms.reduce((rs, r) => {
-              const cab = calcCabinetry(r.cabinetry);
-              return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
-            }, 0);
-            const allComplete = p.rooms.every(isRoomComplete);
-            const realIdx = projects.indexOf(p);
-            return (
-              <div key={i} className="project-card" onClick={() => onOpen(realIdx)}
-                style={{ animationDelay: `${i * 0.06}s` }}
-                role="button" tabIndex={0}
-                aria-label={`Open estimate: ${p.project.name}`}
-                onKeyDown={e => (e.key === "Enter" || e.key === " ") && onOpen(realIdx)}>
+        <>
+          {filtered.length > 0 && (
+            <div className="project-card-grid">
+              {filtered.map((p, i) => renderCard(p, i))}
+            </div>
+          )}
 
-                {/* Status tag */}
-                <div className="pcard-status-row">
-                  <span className={`pcard-status ${
-                    confirmedIds.includes(p.project.id) ? "pcard-status--confirmed"
-                    : allComplete ? "pcard-status--done" : "pcard-status--draft"
-                  }`}>
-                    {confirmedIds.includes(p.project.id) ? "Confirmed" : allComplete ? "Complete" : "Draft"}
-                  </span>
-                  <span className="pcard-id">{fmtId(p.project.id)}</span>
-                </div>
-
-                {/* Name + total + confirm */}
-                <div className="pcard-name">{p.project.name}</div>
-                <div className="pcard-total-row">
-                  <div className="pcard-total">{fmt(gt)}</div>
-                  {allComplete && !confirmedIds.includes(p.project.id) && (
-                    <button className="pcard-confirm-btn" onClick={e => {
-                      e.stopPropagation();
-                      if (window.confirm("Confirming this quote will move it to the admin-only panel. Are you sure?")) {
-                        const next = [...confirmedIds, p.project.id];
-                        setConfirmedIds(next);
-                        localStorage.setItem('ewp_confirmed', JSON.stringify(next));
-                      }
-                    }}>✓ Confirmed</button>
-                  )}
-                </div>
-
-                {/* Meta pills */}
-                <div className="pcard-meta">
-                  {p.project.contactName && <span className="pcard-pill">👤 {p.project.contactName}</span>}
-                  <span className="pcard-pill">🏠 {p.rooms.length} {p.rooms.length === 1 ? "room" : "rooms"}</span>
-                  <span className="pcard-pill">📅 {fmtDate(p.project.bidDate)}</span>
-                  {p._updatedAt && <span className="pcard-pill">✏️ {fmtDate(p._updatedAt.slice(0, 10))}</span>}
-                </div>
-
-                {/* Actions */}
-                <div className="pcard-actions" onClick={e => e.stopPropagation()}>
-                  <button
-                    className={`pcard-act-btn ${allComplete ? "pcard-act--primary" : ""}`}
-                    disabled={!allComplete}
-                    title={allComplete ? "Internal PDF" : "Complete all rooms first"}
-                    onClick={() => allComplete && onGenerateQuote(realIdx)}>
-                    📄 Internal
-                  </button>
-                  <button
-                    className={`pcard-act-btn ${allComplete ? "pcard-act--gold" : ""}`}
-                    disabled={!allComplete}
-                    title={allComplete ? "Client PDF" : "Complete all rooms first"}
-                    onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
-                    📋 Client
-                  </button>
-                  <button className="pcard-act-btn" disabled={actionBusy}
-                    onClick={() => !actionBusy && onDuplicate(realIdx)} title="Duplicate">
-                    ⧉ Copy
-                  </button>
-                  <button className="pcard-act-btn pcard-act--danger" disabled={actionBusy}
-                    onClick={() => !actionBusy && onDelete(realIdx)} title="Delete">
-                    🗑
-                  </button>
-                </div>
+          {/* ── Confirmed Quotes Section ── */}
+          {confirmed.length > 0 && (
+            <>
+              <div className="dash-section-header">
+                <div className="dash-section-title">Confirmed Quotes</div>
+                <div className="dash-section-sub">{isAdmin ? "Admin — full access" : "View & print only"}</div>
               </div>
-            );
-          })}
-        </div>
+              <div className="project-card-grid">
+                {confirmed.map((p, i) => renderCard(p, i, { isConfirmedSection: true }))}
+              </div>
+            </>
+          )}
+        </>
       )}
       </div>{/* end dash-below-hero */}
     </div>
