@@ -151,7 +151,7 @@ function Root() {
         left: 0,
         right: 0,
         bottom: 0,
-        padding: "10px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
+        padding: "5px max(12px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
         textAlign: "center",
         fontFamily: "'DM Sans', sans-serif",
         fontSize: "clamp(11px, 2.8vw, 14px)",
@@ -189,9 +189,7 @@ function Root() {
             background: dark ? "rgba(55, 51, 38, 0.6)" : "rgba(255, 255, 255, 0.65)",
           }}
         >
-          <span style={{ textDecoration: "underline" }}>Created by Bilal Ahmed</span>
-          <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
-          <span style={{ fontWeight: 600, letterSpacing: "0.02em" }}>NextGen Sheets</span>
+          <span>Created by Bilal Ahmed</span>
           <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
           <img
             src="/upwork_light.png"
