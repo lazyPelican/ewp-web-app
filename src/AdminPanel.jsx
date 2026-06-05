@@ -553,15 +553,15 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
       {/* Top bar - matching main app header */}
       <div 
         className="admin-topbar"
-        style={{ 
-          background: dark ? "#2A2820" : "#FDFAF5", 
-          borderBottom: dark ? "1px solid #3A3628" : "1px solid #E4D9C8", 
-          padding: "0 48px", 
-          height: 130, 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "space-between", 
-          boxShadow: "0 2px 24px rgba(20,15,5,0.08)",
+        style={{
+          background: dark ? "#12141A" : "#1F242E",
+          borderBottom: "none",
+          padding: "0 56px",
+          height: 150,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          boxShadow: "0 2px 20px rgba(0,0,0,0.15)",
           position: "sticky",
           top: 0,
           zIndex: 100,
@@ -633,6 +633,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
               text-overflow: ellipsis;
             }
             .admin-header-logo { height: 48px !important; }
+            .admin-tab-bar { top: auto !important; position: relative !important; }
           }
           @media (max-width: 768px) {
             .admin-main-inner { padding: 16px 14px !important; }
@@ -652,23 +653,23 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           <img
             src="/ewp-logo.png"
             alt="Engstrom Wood Products"
-            style={{ height: 100, width: "auto", flexShrink: 0 }}
+            style={{ height: 64, width: "auto", flexShrink: 0, filter: "brightness(0) invert(1)" }}
             className="admin-header-logo"
           />
           <div>
-            <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 600, color: dark ? "#C3C8C8" : "#494D4D", letterSpacing: "0.04em", lineHeight: 1 }} className="admin-header-name">Engstrom Wood Products</div>
-            <div style={{ fontSize: 11, color: dark ? "#A09580" : "#6B7070", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 7, fontWeight: 600 }} className="admin-header-sub">Admin Panel</div>
+            <div style={{ fontFamily: serif, fontSize: 32, fontWeight: 600, color: "#FFFFFF", letterSpacing: "0.03em", lineHeight: 1 }} className="admin-header-name">Engstrom Wood Products</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 5, fontWeight: 500 }} className="admin-header-sub">Admin Panel</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => confirmIfDirty(onBack)} style={{ background: "transparent", border: `1px solid rgba(201,169,110,0.35)`, borderRadius: 20, padding: "6px 16px", cursor: "pointer", color: t.gold, fontSize: 13, fontFamily: font, fontWeight: 500 }}>
+          <button onClick={() => confirmIfDirty(onBack)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "6px 16px", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: 13, fontFamily: font, fontWeight: 500 }}>
             ← Back to App
           </button>
         </div>
       </div>
 
       {/* Main tab bar */}
-      <div className="admin-tab-bar" style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0 }}>
+      <div className="admin-tab-bar" style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0, position: "sticky", top: 150, zIndex: 99 }}>
         {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"], ["contractors", "🏢 Contractors"], ["bugs", "🐛 Bug Reports"]].map(([key, label]) => (
           <button key={key} onClick={() => confirmIfDirty(() => setTab(key))} style={{
             padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === key ? t.gold : "transparent"}`,
