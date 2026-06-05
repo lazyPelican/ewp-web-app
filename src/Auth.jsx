@@ -130,12 +130,14 @@ export default function Auth({ onGuestLogin }) {
         textAlign: "center", transition: "background 0.2s, border-color 0.2s",
       }}>
         {/* Logo */}
-        <div style={{
-          width: 64, height: 64, borderRadius: "50%", border: `2px solid ${t.char}`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 20px", fontSize: 22,
-          fontFamily: "Georgia, serif", fontWeight: 700, color: t.char,
-        }}>E</div>
+        <img
+          src="/ewp-logo.png"
+          alt="Engstrom Wood Products"
+          style={{
+            width: 64, height: 64, borderRadius: "50%",
+            objectFit: "cover", margin: "0 auto 20px", display: "block",
+          }}
+        />
 
         <div style={{ fontSize: 20, fontWeight: 700, color: t.char, marginBottom: 4 }}>
           Engstrom Wood Products
@@ -370,21 +372,18 @@ export default function Auth({ onGuestLogin }) {
             <button
               onClick={onGuestLogin}
               style={{
-                width: "100%", padding: "10px 0", borderRadius: 7,
-                border: `1px solid ${t.border}`,
-                background: "transparent",
-                color: t.muted,
-                fontWeight: 500, fontSize: 13, cursor: "pointer",
-                fontFamily: font, transition: "all 0.15s",
+                width: "100%", padding: "11px 0", borderRadius: 7,
+                border: "none",
+                background: t.submitBg, color: t.submitColor,
+                fontWeight: 600, fontSize: 14, cursor: "pointer",
+                fontFamily: font, transition: "opacity 0.15s",
                 letterSpacing: "0.01em",
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = t.gold; e.currentTarget.style.color = t.gold }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.muted }}
             >
               Continue as Guest
             </button>
             <div style={{ fontSize: 11, color: t.muted, marginTop: 7, lineHeight: 1.5, textAlign: "center" }}>
-              Try the app without an account — estimates won't be saved permanently.
+              Try the app without an account
             </div>
           </div>
         )}
