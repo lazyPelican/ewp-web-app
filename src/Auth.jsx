@@ -130,22 +130,15 @@ export default function Auth({ onGuestLogin }) {
         textAlign: "center", transition: "background 0.2s, border-color 0.2s",
       }}>
         {/* Logo */}
-        <div style={{
-          width: 80, height: 80, borderRadius: "50%",
-          background: "#1F242E",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 20px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-        }}>
-          <img
-            src="/ewp-logo.png"
-            alt="Engstrom Wood Products"
-            style={{
-              width: 52, height: 52,
-              objectFit: "contain",
-            }}
-          />
-        </div>
+        <img
+          src={dark ? "/ewp-logo.png" : "/ewp-logo-dark.png"}
+          alt="Engstrom Wood Products"
+          style={{
+            width: 80, height: 80,
+            objectFit: "contain",
+            margin: "0 auto 20px", display: "block",
+          }}
+        />
 
         <div style={{ fontSize: 20, fontWeight: 700, color: t.char, marginBottom: 4 }}>
           Engstrom Wood Products
