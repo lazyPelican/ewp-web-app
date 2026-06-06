@@ -26,14 +26,14 @@ export default function Auth({ onGuestLogin }) {
 
   const t = dark ? {
     bg: "#141414", card: "#1C1C1C", border: "#2A2A2A",
-    char: "#E8E2D9", gold: "#C9A96E", muted: "#666666",
+    char: "#E8E2D9", gold: "#7BAF7A", muted: "#666666",
     inputBg: "#141414", inputColor: "#E8E2D9",
     tabBg: "#111111", red: "#E05C50", redBg: "#2A0D0D", redBorder: "#5A2A28",
     green: "#4CAF80", greenBg: "#0D2A1A", greenBorder: "#1A4D35",
     submitBg: "#E8E2D9", submitColor: "#1A1A1A",
   } : {
     bg: "#FDFAF5", card: "#fff", border: "#EDE8DF",
-    char: "#2D2D2D", gold: "#C9A96E", muted: "#9E9E9E",
+    char: "#2D2D2D", gold: "#7BAF7A", muted: "#9E9E9E",
     inputBg: "#FDFAF5", inputColor: "#2D2D2D",
     tabBg: "#F5F0E8", red: "#C0392B", redBg: "#fdf0ef", redBorder: "#f5c6c3",
     green: "#065F46", greenBg: "#D1FAE5", greenBorder: "#6EE7B7",

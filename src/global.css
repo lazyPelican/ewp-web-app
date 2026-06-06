@@ -35,9 +35,9 @@ body {
   --muted: #5A6068;
   --muted-2: #6E7480;
 
-  --gold: #A88147;
-  --gold-2: #C99E64;
-  --gold-bg: #F5EFE3;
+  --gold: #5B8C5A;
+  --gold-2: #7BAF7A;
+  --gold-bg: #EBF3EB;
 
   /* Header */
   --header-bg: #1F242E;
@@ -84,9 +84,9 @@ body {
   --muted: #9BA4B6;
   --muted-2: #7A8290;
 
-  --gold: #C99E64;
-  --gold-2: #DCB47C;
-  --gold-bg: #2E2418;
+  --gold: #7BAF7A;
+  --gold-2: #93C492;
+  --gold-bg: #1E2E1E;
 
   --header-bg: #0A0C10;
   --header-text: #ffffff;
@@ -125,7 +125,7 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(168, 129, 71, 0.35);
 }
 button:focus-visible {
-  outline: 2px solid var(--gold, #C99E64);
+  outline: 2px solid var(--gold, #7BAF7A);
   outline-offset: 2px;
 }
 button:focus:not(:focus-visible) {

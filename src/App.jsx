@@ -35,9 +35,9 @@ const styles = `
     --header-text:    #1F242E;
     --header-subtext: #6E7480;
 
-    --gold:        #8B6B3A;
-    --gold-light:  #C99E64;
-    --gold-bg:     #F5EFE3;
+    --gold:        #5B8C5A;
+    --gold-light:  #7BAF7A;
+    --gold-bg:     #EBF3EB;
 
     --ivory2:  #EAE8E2;
     --ivory3:  #DCDAD2;
@@ -172,7 +172,7 @@ const styles = `
   .page-subtitle { font-size: 13px; color: var(--mid); margin-top: 4px; }
   .gold-rule {
     height: 1px;
-    background: linear-gradient(90deg, var(--gold) 0%, rgba(138,106,56,0.2) 60%, transparent 100%);
+    background: linear-gradient(90deg, var(--gold) 0%, rgba(91,140,90,0.2) 60%, transparent 100%);
     width: 100px;
     margin: 12px 0;
   }
@@ -230,7 +230,7 @@ const styles = `
   .room-tab-add {
     border-style: dashed;
     color: var(--gold);
-    border-color: rgba(138,106,56,0.4);
+    border-color: rgba(91,140,90,0.4);
   }
   .room-tab-add:hover { background: var(--gold-bg); border-style: solid; }
 
@@ -449,7 +449,7 @@ const styles = `
     background: var(--card-bg); font-size: 13px; color: var(--char);
     transition: border-color 0.25s, box-shadow 0.25s;
   }
-  .dash-search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(138,106,56,0.08); }
+  .dash-search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(91,140,90,0.08); }
   .dash-result-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
   .dash-section-header {
     display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
@@ -532,9 +532,9 @@ const styles = `
     --header-border:  #2A2F38;
     --header-text:    #F0EDE5;
     --header-subtext: #9BA4B6;
-    --gold:        #C99E64;
-    --gold-light:  #DCB47C;
-    --gold-bg:     #2E2418;
+    --gold:        #7BAF7A;
+    --gold-light:  #93C492;
+    --gold-bg:     #1E2E1E;
     --ivory2:  #1A1E25;
     --ivory3:  #262A33;
     --rule:    #353A45;
@@ -574,8 +574,8 @@ const styles = `
   /* Buttons in dark mode */
   .dark .btn-primary { background: var(--ewp-slate); color: #0E1014; }
   .dark .btn-primary:hover { background: var(--ewp-slate2); }
-  .dark .btn-gold { background: #C99E64; color: #0E1014; }
-  .dark .btn-gold:hover { background: #D4AA72; }
+  .dark .btn-gold { background: #7BAF7A; color: #0E1014; }
+  .dark .btn-gold:hover { background: #93C492; }
   .dark .btn-outline { color: #D5D0C8; border-color: #484030; background: transparent; }
   .dark .btn-outline:hover { background: #2E2A1A; border-color: var(--gold); color: var(--gold-light); }
   .dark .btn-ghost { color: #A09080; }
@@ -595,7 +595,7 @@ const styles = `
   .dark .pcard-actions { border-top-color: var(--ivory3); }
   .dark .pcard-act-btn { border-color: var(--ivory3); color: #d4d0c8; background: rgba(255,255,255,0.04); }
   .dark .pcard-status--done { background: rgba(42,107,64,0.15); color: #5CBB76; }
-  .dark .pcard-status--draft { background: rgba(138,106,56,0.15); }
+  .dark .pcard-status--draft { background: rgba(91,140,90,0.15); }
   .dark .pcard-status--confirmed { background: rgba(56,130,210,0.15); color: #6BAAEE; }
   .dark .pcard-confirm-btn { background: rgba(56,130,210,0.1); color: #6BAAEE; border-color: rgba(56,130,210,0.25); }
   .dark .pcard-confirm-btn:hover { background: rgba(56,130,210,0.2); }
@@ -634,8 +634,8 @@ const styles = `
     100% { background-position: 400px 0; }
   }
   @keyframes pulse-gold {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(138,106,56,0.4); }
-    50%       { box-shadow: 0 0 0 6px rgba(138,106,56,0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(91,140,90,0.4); }
+    50%       { box-shadow: 0 0 0 6px rgba(91,140,90,0); }
   }
   @keyframes slideUp {
     from { transform: translateY(12px); opacity: 0; }
@@ -667,8 +667,8 @@ const styles = `
     50%       { transform: translateY(-3px); }
   }
   @keyframes borderGlow {
-    0%, 100% { border-color: rgba(138,106,56,0.25); }
-    50%       { border-color: rgba(138,106,56,0.65); }
+    0%, 100% { border-color: rgba(91,140,90,0.25); }
+    50%       { border-color: rgba(91,140,90,0.65); }
   }
   @keyframes tabSlideIn {
     from { opacity: 0; transform: translateX(10px) scale(0.97); }
@@ -789,7 +789,7 @@ const styles = `
   .btn-primary { background: var(--ewp-slate); color: #fff; }
   .btn-primary:hover { background: var(--ewp-slate2); box-shadow: 0 4px 14px rgba(73,77,77,0.28); transform: translateY(-1px); }
   .btn-gold { background: var(--gold); color: #fff; }
-  .btn-gold:hover { background: #7A5C2C; box-shadow: 0 4px 14px rgba(138,106,56,0.38); transform: translateY(-1px); }
+  .btn-gold:hover { background: #4A7849; box-shadow: 0 4px 14px rgba(91,140,90,0.38); transform: translateY(-1px); }
   .btn-outline { background: transparent; color: var(--char); border: 1px solid var(--rule); }
   .btn-outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); transform: translateY(-1px); }
   .btn-ghost { background: transparent; color: var(--mid); border: none; padding: 6px 10px; }
@@ -815,7 +815,7 @@ const styles = `
   }
   input:focus, select:focus, textarea:focus {
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(138,106,56,0.10);
+    box-shadow: 0 0 0 3px rgba(91,140,90,0.10);
     background: var(--input-focus-bg);
   }
   /* Native date-picker calendar follows the app's colour scheme */
@@ -845,7 +845,7 @@ const styles = `
     animation: cardEnter 0.45s cubic-bezier(0.22,1,0.36,1) both;
   }
   .project-card:hover {
-    box-shadow: 0 12px 36px rgba(0,0,0,0.08), 0 2px 6px rgba(138,106,56,0.06);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.08), 0 2px 6px rgba(91,140,90,0.06);
     transform: translateY(-5px);
     border-color: var(--gold);
   }
@@ -857,7 +857,7 @@ const styles = `
     padding: 4px 12px; border-radius: 20px;
   }
   .pcard-status--done { background: rgba(42,107,64,0.1); color: #2A6B40; }
-  .pcard-status--draft { background: rgba(138,106,56,0.1); color: var(--gold); }
+  .pcard-status--draft { background: rgba(91,140,90,0.1); color: var(--gold); }
   .pcard-status--confirmed { background: rgba(37,99,170,0.1); color: #2563AA; }
   .pcard-total-row {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -915,7 +915,7 @@ const styles = `
   .pcard-act--primary { background: var(--ewp-slate); color: #fff; border-color: var(--ewp-slate); }
   .pcard-act--primary:hover:not(:disabled) { background: var(--ewp-slate2); border-color: var(--ewp-slate2); color: #fff; }
   .pcard-act--gold { background: var(--gold); color: #fff; border-color: var(--gold); }
-  .pcard-act--gold:hover:not(:disabled) { background: #7A5C2C; border-color: #7A5C2C; color: #fff; }
+  .pcard-act--gold:hover:not(:disabled) { background: #4A7849; border-color: #4A7849; color: #fff; }
   .pcard-act--danger { color: var(--red); border-color: rgba(184,59,46,0.25); flex: 0 0 auto; padding: 8px 12px; }
   .pcard-act--danger:hover:not(:disabled) { background: rgba(184,59,46,0.06); border-color: var(--red); color: var(--red); }
 
@@ -936,7 +936,7 @@ const styles = `
     transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
     display: flex; align-items: center; gap: 6px;
   }
-  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); transform: translateY(-2px); box-shadow: 0 3px 12px rgba(138,106,56,0.1); }
+  .room-tab:hover { border-color: var(--gold); color: var(--char); background: var(--gold-bg); transform: translateY(-2px); box-shadow: 0 3px 12px rgba(91,140,90,0.1); }
   .room-tab.active { background: var(--char); color: #fff; border-color: var(--char); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(20,15,5,0.15); }
   .room-tab.dragging { opacity: 0.4; transform: scale(0.95); }
 
@@ -979,7 +979,7 @@ const styles = `
     box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 14px rgba(0,0,0,0.03);
     transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s cubic-bezier(0.22,1,0.36,1);
   }
-  .summary-card:hover { transform: translateY(-3px); box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 2px 8px rgba(138,106,56,0.08); }
+  .summary-card:hover { transform: translateY(-3px); box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 2px 8px rgba(91,140,90,0.08); }
   .summary-card-value {
     font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--char); text-align: center;
     animation: countUp 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1785,7 +1785,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           }}>
             <div style={{
               fontSize: 12,
-              color: view === "dashboard" ? "rgba(255,255,255,0.75)" : (dark ? "#C99E64" : "#8C6A37"),
+              color: view === "dashboard" ? "rgba(255,255,255,0.75)" : (dark ? "#7BAF7A" : "#5B8C5A"),
               fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 8,
             }}>
               <span style={{ fontSize: 14 }}>👤</span>
@@ -1797,7 +1797,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                 background: "transparent",
                 border: view === "dashboard" ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(168,129,71,0.45)",
                 borderRadius: 4, padding: "4px 12px", cursor: "pointer",
-                color: view === "dashboard" ? "rgba(255,255,255,0.8)" : (dark ? "#C99E64" : "#8C6A37"),
+                color: view === "dashboard" ? "rgba(255,255,255,0.8)" : (dark ? "#7BAF7A" : "#5B8C5A"),
                 fontSize: 11,
                 fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
                 letterSpacing: "0.04em", whiteSpace: "nowrap",
@@ -1863,7 +1863,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                 style={{
                   padding: "10px 28px", fontSize: 13, fontWeight: 800,
                   background: quickSaved ? "var(--green)" : undefined,
-                  boxShadow: quickSaved ? "0 4px 14px rgba(42,107,64,0.45)" : "0 4px 14px rgba(138,106,56,0.4)",
+                  boxShadow: quickSaved ? "0 4px 14px rgba(42,107,64,0.45)" : "0 4px 14px rgba(91,140,90,0.4)",
                   transition: "background 0.3s, transform 0.15s",
                   letterSpacing: "0.1em",
                 }}
