@@ -92,7 +92,11 @@ export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
         <div className="card-body">
           <div className="form-grid form-grid-3">
             <Field label="Is there a Contractor?">
-              <select value={project.contractorYN} onChange={e => onChange({ contractorYN: e.target.value })}>
+              <select value={project.contractorYN} onChange={e => {
+                const v = e.target.value;
+                if (v === "No") onChange({ contractorYN: v, contractorName: "", contractorContact: "" });
+                else onChange({ contractorYN: v });
+              }}>
                 <option>No</option><option>Yes</option>
               </select>
             </Field>
@@ -103,10 +107,10 @@ export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
                   onChange={e => {
                     const v = e.target.value;
                     if (v === "" || v === "__custom__") {
-                      onChange({ contractorName: v === "__custom__" ? (project.contractorName || "") : "" });
+                      onChange({ contractorName: v === "__custom__" ? "" : "", contractorContact: "" });
                     } else {
                       const c = contractors.find(c => c.name === v);
-                      onChange({ contractorName: v, contractorContact: c?.contact || project.contractorContact || "" });
+                      onChange({ contractorName: v, contractorContact: c?.contact || "" });
                     }
                   }}>
                   <option value="">— Select contractor —</option>
