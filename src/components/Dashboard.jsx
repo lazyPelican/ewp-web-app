@@ -59,7 +59,7 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
             isConfirmed ? "pcard-status--confirmed"
             : allComplete ? "pcard-status--done" : "pcard-status--draft"
           }`}>
-            {isConfirmed ? "Confirmed" : allComplete ? "Complete" : "Draft"}
+            {isConfirmed ? "★ Confirmed" : allComplete ? "✓ Complete" : "○ Draft"}
           </span>
           <span className="pcard-id">{fmtId(p.project.id)}</span>
         </div>
@@ -91,6 +91,7 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
           <button
             className={`pcard-act-btn ${allComplete ? "pcard-act--primary" : ""}`}
             disabled={!allComplete}
+            aria-disabled={!allComplete}
             title={allComplete ? "Internal PDF" : "Complete all rooms first"}
             onClick={() => allComplete && onGenerateQuote(realIdx)}>
             📄 Internal
@@ -98,18 +99,21 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
           <button
             className={`pcard-act-btn ${allComplete ? "pcard-act--gold" : ""}`}
             disabled={!allComplete}
+            aria-disabled={!allComplete}
             title={allComplete ? "Client PDF" : "Complete all rooms first"}
             onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
             📋 Client
           </button>
           {!isConfirmedSection && (
             <button className="pcard-act-btn" disabled={actionBusy}
+              aria-disabled={actionBusy}
               onClick={() => !actionBusy && onDuplicate(realIdx)} title="Duplicate">
               ⧉ Copy
             </button>
           )}
           {!isConfirmedSection && (
             <button className="pcard-act-btn pcard-act--danger" disabled={actionBusy}
+              aria-disabled={actionBusy}
               onClick={() => !actionBusy && onDelete(realIdx)} title="Delete">
               🗑
             </button>

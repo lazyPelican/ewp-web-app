@@ -121,7 +121,7 @@ export default function Auth({ onGuestLogin }) {
         background: t.card, border: `1px solid ${t.border}`, borderRadius: 12,
         padding: "clamp(28px, 5vw, 48px) clamp(20px, 5vw, 40px)",
         width: "100%",
-        maxWidth: 360,
+        maxWidth: 420,
         boxSizing: "border-box",
         position: "relative", zIndex: 1,
         boxShadow: dark
