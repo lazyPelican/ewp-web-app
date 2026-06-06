@@ -583,11 +583,11 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
                 value={dupeCount}
                 onChange={e => setDupeCount(Math.max(1, parseInt(e.target.value) || 1))}
                 title="Number of copies"
-                style={{ width: 52, padding: "4px 6px", borderRadius: 4, border: "1px solid var(--ivory3)", background: "var(--input-bg)", fontSize: 12, textAlign: "center", color: "var(--char)" }}
+                style={{ width: 52, padding: "4px 6px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.1)", fontSize: 12, textAlign: "center", color: "rgba(255,255,255,0.85)" }}
               />
               <button
                 className="btn btn-outline"
-                style={{ fontSize: 11, padding: "4px 10px", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap" }}
+                style={{ fontSize: 11, padding: "4px 10px", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", color: "rgba(255,255,255,0.85)", borderColor: "rgba(255,255,255,0.25)" }}
                 onClick={() => {
                   if (dupeCount <= 1) {
                     onDuplicateRoom(safeActiveRoom);
