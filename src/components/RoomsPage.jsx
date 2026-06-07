@@ -16,6 +16,8 @@ import {
   blankUpgRow,
   blankCtpRow,
   blankFinRow,
+  ALL_SECTIONS,
+  SECTION_LABELS,
 } from "../appUtils.js"
 
 // ── CabinetrySection ──────────────────────────────────────────────────────────
@@ -458,12 +460,24 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
     onRoomsChange(rooms.map((r, i) => i === safeActiveRoom ? { ...r, [field]: val } : r));
   };
 
-  const cabTotal = calcCabinetry(room.cabinetry);
-  const upgTotal = calcUpgrades(room.upgrades);
-  const ctpTotal = calcCountertops(room.countertops);
-  const finTotal = calcFinishing(room.finishing);
-  const instTotal = calcInstall(room.install, cabTotal);
+  // sections: undefined/null = legacy room (show all), [] = new room (none selected yet), [...] = user choices
+  const isLegacyRoom = room.sections === undefined || room.sections === null;
+  const sections = isLegacyRoom ? ALL_SECTIONS : room.sections;
+  const hasSection = (s) => sections.includes(s);
+
+  const cabTotal = hasSection("cabinetry") ? calcCabinetry(room.cabinetry) : 0;
+  const upgTotal = hasSection("upgrades") ? calcUpgrades(room.upgrades) : 0;
+  const ctpTotal = hasSection("countertops") ? calcCountertops(room.countertops) : 0;
+  const finTotal = hasSection("finishing") ? calcFinishing(room.finishing) : 0;
+  const instTotal = hasSection("install") ? calcInstall(room.install, cabTotal) : 0;
   const roomTotal = cabTotal + upgTotal + ctpTotal + finTotal + instTotal;
+
+  const toggleSection = (key) => {
+    // For legacy rooms (sections undefined), start from ALL_SECTIONS
+    const current = isLegacyRoom ? [...ALL_SECTIONS] : (room.sections || []);
+    const next = current.includes(key) ? current.filter(s => s !== key) : [...current, key];
+    updateRoom("sections", next);
+  };
 
   return (
     <div>
@@ -610,10 +624,55 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
           <div className="form-grid form-grid-3">
             <Field label="Room Name / Label">
               <input value={room.name} placeholder={`e.g. Kitchen, Master Bath, Room ${safeActiveRoom + 1}`}
-                onChange={e => updateRoom("name", toTitleCase(e.target.value))} />
+                onChange={e => updateRoom("name", toTitleCase(e.target.value))} autoFocus={!room.name} />
             </Field>
           </div>
-          {!isRoomComplete(room) && (
+
+          {/* Section Selector — shown after room name is entered */}
+          {room.name.trim() !== "" && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
+                What work is required for this room?
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {ALL_SECTIONS.map(key => {
+                  const checked = sections.includes(key);
+                  return (
+                    <label key={key} style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "10px 16px", borderRadius: 8, cursor: "pointer",
+                      border: `1px solid ${checked ? "var(--gold)" : "var(--ivory3)"}`,
+                      background: checked ? "var(--gold-bg)" : "var(--input-bg)",
+                      color: checked ? "var(--gold)" : "var(--char)",
+                      fontWeight: checked ? 700 : 500, fontSize: 13,
+                      transition: "all 0.2s ease",
+                      userSelect: "none",
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleSection(key)}
+                        style={{ width: 16, height: 16, accentColor: "var(--gold)", cursor: "pointer" }}
+                      />
+                      {SECTION_LABELS[key]}
+                    </label>
+                  );
+                })}
+              </div>
+              {sections.length === 0 && (
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, fontStyle: "italic" }}>
+                  Select at least one section to begin estimating.
+                </div>
+              )}
+            </div>
+          )}
+
+          {!room.name.trim() && (
+            <div style={{ fontSize: 13, color: "var(--mid)", marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>
+              Enter a room name to get started.
+            </div>
+          )}
+          {room.name.trim() && sections.length > 0 && !isRoomComplete(room) && (
             <div style={{ fontSize: 13, color: "var(--mid)", marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>
               For large projects with repeating rooms — complete the data entry for this room and a duplication option will appear, allowing you to copy it multiple times.
             </div>
@@ -621,21 +680,29 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
         </div>
       </div>
 
-      {/* Quick Summary for this room */}
-      <div className="summary-grid">
-        {[["Cabinetry", cabTotal], ["Upgrades", upgTotal], ["Countertops", ctpTotal], ["Finishing", finTotal], ["Installation", instTotal]].map(([lbl, val]) => (
-          <div className="summary-card" key={lbl}>
-            <div className="summary-card-label">{lbl}</div>
-            <div className="summary-card-value">{fmt(val)}</div>
-          </div>
-        ))}
-      </div>
+      {/* Quick Summary for this room — only show enabled sections */}
+      {sections.length > 0 && (
+        <div className="summary-grid">
+          {[
+            hasSection("cabinetry") && ["Cabinetry", cabTotal],
+            hasSection("upgrades") && ["Upgrades", upgTotal],
+            hasSection("countertops") && ["Countertops", ctpTotal],
+            hasSection("finishing") && ["Finishing", finTotal],
+            hasSection("install") && ["Installation", instTotal],
+          ].filter(Boolean).map(([lbl, val]) => (
+            <div className="summary-card" key={lbl}>
+              <div className="summary-card-label">{lbl}</div>
+              <div className="summary-card-value">{fmt(val)}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      <CabinetrySection items={room.cabinetry} masterAdj={project.masterAdj} onChange={v => updateRoom("cabinetry", v)} />
-      <UpgradesSection items={room.upgrades} masterAdj={project.masterAdj} onChange={v => updateRoom("upgrades", v)} />
-      <CountertopsSection items={room.countertops || []} masterAdj={project.masterAdj} onChange={v => updateRoom("countertops", v)} />
-      <FinishingSection items={room.finishing} cabinetry={room.cabinetry} onChange={v => updateRoom("finishing", v)} />
-      <InstallSection data={room.install} cabTotal={cabTotal} onChange={v => updateRoom("install", v)} />
+      {hasSection("cabinetry") && <CabinetrySection items={room.cabinetry} masterAdj={project.masterAdj} onChange={v => updateRoom("cabinetry", v)} />}
+      {hasSection("upgrades") && <UpgradesSection items={room.upgrades} masterAdj={project.masterAdj} onChange={v => updateRoom("upgrades", v)} />}
+      {hasSection("countertops") && <CountertopsSection items={room.countertops || []} masterAdj={project.masterAdj} onChange={v => updateRoom("countertops", v)} />}
+      {hasSection("finishing") && <FinishingSection items={room.finishing} cabinetry={room.cabinetry} onChange={v => updateRoom("finishing", v)} />}
+      {hasSection("install") && <InstallSection data={room.install} cabTotal={cabTotal} onChange={v => updateRoom("install", v)} />}
 
       {(() => {
         const allComplete = rooms.every(isRoomComplete);

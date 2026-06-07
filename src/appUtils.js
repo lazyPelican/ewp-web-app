@@ -78,14 +78,25 @@ export const escHtml = (s) => String(s ?? "")
 // ── Room completeness ─────────────────────────────────────────────────────────
 // Room is complete when it has a name AND at least one data entry in any section.
 // If cabinetry is present, install type must also be selected.
+export const ALL_SECTIONS = ["cabinetry", "upgrades", "countertops", "finishing", "install"];
+export const SECTION_LABELS = {
+  cabinetry: "Cabinetry",
+  upgrades: "Upgrades & Add-ons",
+  countertops: "Countertops",
+  finishing: "Finishing",
+  install: "Installation",
+};
+
 export const isRoomComplete = (room) => {
   if (room.name.trim() === "") return false;
-  const hasCabinetry   = room.cabinetry.some(c => c.product && parseFloat(c.qty) > 0);
-  const hasCountertops = (room.countertops || []).some(c => c.product && parseFloat(c.qty) > 0);
-  const hasUpgrades    = (room.upgrades || []).some(u => u.upgrade && parseFloat(u.qty) > 0);
-  const hasFinishing   = (room.finishing || []).some(f => f.type && parseFloat(f.lf) > 0);
+  const sections = (room.sections === undefined || room.sections === null) ? ALL_SECTIONS : room.sections;
+  if (sections.length === 0) return false;
+  const hasCabinetry   = sections.includes("cabinetry") && room.cabinetry.some(c => c.product && parseFloat(c.qty) > 0);
+  const hasCountertops = sections.includes("countertops") && (room.countertops || []).some(c => c.product && parseFloat(c.qty) > 0);
+  const hasUpgrades    = sections.includes("upgrades") && (room.upgrades || []).some(u => u.upgrade && parseFloat(u.qty) > 0);
+  const hasFinishing   = sections.includes("finishing") && (room.finishing || []).some(f => f.type && parseFloat(f.lf) > 0);
   if (!hasCabinetry && !hasCountertops && !hasUpgrades && !hasFinishing) return false;
-  if (hasCabinetry && room.install.type === "") return false;
+  if (hasCabinetry && sections.includes("install") && room.install.type === "") return false;
   return true;
 };
 
@@ -192,6 +203,7 @@ export const blankFinRow = () => ({ type: "", lf: "", adjPct: "", notes: "" });
 export const blankRoom = (n, masterAdj) => ({
   id: Date.now() + n,
   name: "",
+  sections: [],
   cabinetry: [{ ...blankCabRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
   upgrades:  [{ ...blankUpgRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
   countertops: [{ ...blankCtpRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
