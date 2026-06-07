@@ -482,9 +482,17 @@ function TotalsStrip({ items }) {
 
 function PdfFooter({ preparedBy }) {
   return (
-    <Text style={s.footer}>
-      {`This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.${preparedBy ? `  |  Prepared by ${preparedBy}` : ''}  |  Engstrom Wood Products`}
-    </Text>
+    <View>
+      <View style={{ marginTop: 12, marginBottom: 6, paddingTop: 8, borderTop: `1 solid ${C.border}` }}>
+        <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 7, color: C.stone, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 }}>Disclaimer</Text>
+        <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: C.muted, lineHeight: 1.5 }}>
+          Pricing provided in this proposal is based on preliminary cabinet layouts, specifications, and selections. Final pricing is subject to adjustment upon completion and approval of final cabinet build plans, dimensions, materials, finishes, hardware, accessories, and any other customer-selected options. Any changes to the scope, design, or specifications may result in revisions to the quoted price.
+        </Text>
+      </View>
+      <Text style={s.footer}>
+        {`This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.${preparedBy ? `  |  Prepared by ${preparedBy}` : ''}  |  Engstrom Wood Products`}
+      </Text>
+    </View>
   )
 }
 
