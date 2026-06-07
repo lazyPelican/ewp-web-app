@@ -180,11 +180,11 @@ const styles = `
 
   /* ── CARD (see animation block below) ── */
   .card-header {
-    background: var(--ivory2);
+    background: #F5F3EF;
     padding: 12px 20px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--rule);
+    border-left: 3px solid var(--ivory3);
   }
   .card-title {
     font-family: 'DM Sans', sans-serif;
@@ -280,7 +280,7 @@ const styles = `
 
   /* ── SECTION LABEL ── */
   .section-banner {
-    background: var(--ivory2);
+    background: #F5F3EF;
     color: var(--char);
     font-family: 'DM Sans', sans-serif;
     font-size: 13px; font-weight: 700;
@@ -288,7 +288,7 @@ const styles = `
     text-transform: uppercase;
     padding: 12px 20px;
     border-bottom: 1px solid var(--ivory3);
-    border-left: 3px solid var(--rule);
+    border-left: 3px solid var(--ivory3);
     display: flex; align-items: center; justify-content: space-between;
   }
 
@@ -560,9 +560,10 @@ const styles = `
   .dark .step:hover { background: #262A33; }
   .dark .step-num { background: #262A33; border-color: #3A4050; }
   .dark .step.active .step-label { color: #fff; }
-  .dark .card-header { background: #1F242E; border-left-color: var(--rule); border-bottom-color: var(--ivory3); }
+  .dark .step.active .step-num { background: #E8E4D9; color: #0E1014; border-color: #E8E4D9; }
+  .dark .card-header { background: #222730; border-left-color: var(--ivory3); border-bottom-color: var(--ivory3); }
   .dark .card-title { color: #e8e2d9; }
-  .dark .section-banner { background: #1F242E; color: #E8E4D9; border-left-color: var(--rule); }
+  .dark .section-banner { background: #222730; color: #E8E4D9; border-left-color: var(--ivory3); }
   .dark .grand-total { background: #181610; }
   .dark .data-table th { background: #1F242E; color: var(--mid); border-bottom-color: var(--ivory3); }
   .dark .data-table td { border-bottom-color: var(--ivory3); }
@@ -596,6 +597,8 @@ const styles = `
   .dark .pcard-actions { border-top-color: var(--ivory3); }
   .dark .pcard-act-btn { border-color: var(--ivory3); color: #d4d0c8; background: rgba(255,255,255,0.03); }
   .dark .pcard-act-btn:hover:not(:disabled) { border-color: #d4d0c8; color: #fff; background: rgba(255,255,255,0.06); }
+  .dark .pcard-act--primary { background: var(--ewp-slate); color: #0E1014; border-color: var(--ewp-slate); }
+  .dark .pcard-act--primary:hover:not(:disabled) { background: var(--ewp-slate2); border-color: var(--ewp-slate2); color: #0E1014; }
   .dark .pcard-status--done { background: rgba(42,107,64,0.15); color: #5CBB76; }
   .dark .pcard-status--draft { background: rgba(180,165,130,0.15); color: #B4A882; }
   .dark .pcard-status--confirmed { background: rgba(56,130,210,0.15); color: #6BAAEE; }
@@ -608,7 +611,7 @@ const styles = `
   /* Room tabs in dark mode */
   .dark .room-tab { background: var(--card-bg); border-color: var(--ivory3); color: var(--mid); }
   .dark .room-tab:hover { border-color: var(--mid); color: var(--char); background: #262A33; }
-  .dark .room-tab.active { background: var(--char); color: #0E1014; border-color: var(--char); }
+  .dark .room-tab.active { background: #E8E4D9; color: #0E1014; border-color: #E8E4D9; }
 
   /* ── KEYFRAMES ── */
   @keyframes fadeUp {
@@ -939,7 +942,7 @@ const styles = `
     display: flex; align-items: center; gap: 6px;
   }
   .room-tab:hover { border-color: var(--mid); color: var(--char); background: var(--ivory2); transform: translateY(-2px); box-shadow: 0 3px 12px rgba(0,0,0,0.06); }
-  .room-tab.active { background: var(--ewp-slate); color: #fff; border-color: var(--ewp-slate); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(20,15,5,0.15); }
+  .room-tab.active { background: #1F242E; color: #fff; border-color: #1F242E; transform: translateY(-1px); box-shadow: 0 3px 12px rgba(20,15,5,0.15); }
   .room-tab.dragging { opacity: 0.4; transform: scale(0.95); }
 
   /* ── STEPPER ── */
@@ -966,7 +969,7 @@ const styles = `
     border: 1.5px solid var(--rule);
     transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
   }
-  .step.active .step-num { background: var(--ewp-slate); color: #fff; border-color: var(--ewp-slate); transform: scale(1.1); }
+  .step.active .step-num { background: #1F242E; color: #fff; border-color: #1F242E; transform: scale(1.1); }
   .step.done .step-num { background: var(--green); color: #fff; border-color: var(--green); animation: stepDone 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
 
   /* ── SUMMARY CARDS ── */
