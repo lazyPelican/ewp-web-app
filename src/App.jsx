@@ -917,10 +917,10 @@ const styles = `
   .pcard-act-btn:hover:not(:disabled) { border-color: var(--char); color: var(--char); background: var(--ivory2); transform: translateY(-1px); }
   .pcard-act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .pcard-act-btn:active:not(:disabled) { transform: scale(0.96); }
-  .pcard-act--primary { background: var(--ewp-slate); color: #fff; border-color: var(--ewp-slate); }
-  .pcard-act--primary:hover:not(:disabled) { background: var(--ewp-slate2); border-color: var(--ewp-slate2); color: #fff; }
-  .pcard-act--gold { background: var(--gold); color: #fff; border-color: var(--gold); }
-  .pcard-act--gold:hover:not(:disabled) { background: #4A7849; border-color: #4A7849; color: #fff; }
+  .pcard-act--primary { background: var(--card-bg); color: var(--char); border-color: var(--ivory3); }
+  .pcard-act--primary:hover:not(:disabled) { border-color: var(--char); color: var(--char); background: var(--ivory2); transform: translateY(-1px); }
+  .pcard-act--gold { background: var(--card-bg); color: var(--char); border-color: var(--ivory3); }
+  .pcard-act--gold:hover:not(:disabled) { border-color: var(--char); color: var(--char); background: var(--ivory2); transform: translateY(-1px); }
   .pcard-act--danger { color: var(--red); border-color: rgba(184,59,46,0.25); flex: 0 0 auto; padding: 8px 12px; }
   .pcard-act--danger:hover:not(:disabled) { background: rgba(184,59,46,0.06); border-color: var(--red); color: var(--red); }
 
