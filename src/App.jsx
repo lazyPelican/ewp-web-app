@@ -597,8 +597,8 @@ const styles = `
   .dark .pcard-actions { border-top-color: var(--ivory3); }
   .dark .pcard-act-btn { border-color: var(--ivory3); color: #d4d0c8; background: rgba(255,255,255,0.03); }
   .dark .pcard-act-btn:hover:not(:disabled) { border-color: #d4d0c8; color: #fff; background: rgba(255,255,255,0.06); }
-  .dark .pcard-act--primary { background: var(--ewp-slate); color: #0E1014; border-color: var(--ewp-slate); }
-  .dark .pcard-act--primary:hover:not(:disabled) { background: var(--ewp-slate2); border-color: var(--ewp-slate2); color: #0E1014; }
+  .dark .pcard-act--primary { background: rgba(255,255,255,0.03); color: #d4d0c8; border-color: var(--ivory3); }
+  .dark .pcard-act--primary:hover:not(:disabled) { background: rgba(255,255,255,0.06); border-color: #d4d0c8; color: #fff; }
   .dark .pcard-status--done { background: rgba(42,107,64,0.15); color: #5CBB76; }
   .dark .pcard-status--draft { background: rgba(180,165,130,0.15); color: #B4A882; }
   .dark .pcard-status--confirmed { background: rgba(56,130,210,0.15); color: #6BAAEE; }
