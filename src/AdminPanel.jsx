@@ -507,7 +507,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   const t = dark ? {
     bg: "#141414", card: "#1C1C1C", cardAlt: "#111111", border: "#2A2A2A",
     text: "#E8E2D9", textMid: "#9A9A9A", textMuted: "#666666",
-    gold: "#7BAF7A", inputBg: "#141414", inputText: "#E8E2D9",
+    gold: "#6B6B6B", inputBg: "#141414", inputText: "#E8E2D9",
     tabActiveBg: "#2A2A2A", tabActiveText: "#E8E2D9",
     tabBg: "#111111", tabText: "#666666",
     headerBg: "#111111",
@@ -518,7 +518,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   } : {
     bg: "#FDFAF5", card: "#fff", cardAlt: "#F9F7F3", border: "#EDE8DF",
     text: "#2D2D2D", textMid: "#6B6B6B", textMuted: "#9E9E9E",
-    gold: "#7BAF7A", inputBg: "#FDFAF5", inputText: "#2D2D2D",
+    gold: "#6B6B6B", inputBg: "#FDFAF5", inputText: "#2D2D2D",
     tabActiveBg: "#fff", tabActiveText: "#2D2D2D",
     tabBg: "#F5F0E8", tabText: "#9E9E9E",
     headerBg: "#2D2D2D",

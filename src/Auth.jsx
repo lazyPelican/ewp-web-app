@@ -108,7 +108,7 @@ export default function Auth({ onGuestLogin }) {
           background: "transparent",
           border: `1px solid ${t.border}`,
           borderRadius: 20, padding: "6px 14px",
-          cursor: "pointer", color: t.gold,
+          cursor: "pointer", color: t.muted,
           fontSize: 13, fontFamily: font, fontWeight: 500,
           display: "flex", alignItems: "center", gap: 6,
           transition: "all 0.15s",
@@ -353,7 +353,7 @@ export default function Auth({ onGuestLogin }) {
             }}
             style={{
               marginTop: 12, background: "none", border: "none",
-              color: t.gold, fontSize: 12, cursor: "pointer",
+              color: t.muted, fontSize: 12, cursor: "pointer",
               fontFamily: font, textDecoration: "underline",
             }}
           >
@@ -361,7 +361,7 @@ export default function Auth({ onGuestLogin }) {
           </button>
         )}
 
-        <div style={{ fontSize: 11, color: t.gold, marginTop: 20, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11, color: t.muted, marginTop: 20, lineHeight: 1.6 }}>
           {mode === "signup"
             ? "New accounts require admin approval before access is granted."
             : "Access is restricted to approved team members."}

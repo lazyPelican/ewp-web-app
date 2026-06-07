@@ -43,7 +43,7 @@ body {
   --header-bg: #1F242E;
   --header-text: #ffffff;
   --header-subtext: rgba(255,255,255,0.72);
-  --header-border: var(--gold);
+  --header-border: var(--border-2);
 
   --red: #A93629;
   --green: #357056;
@@ -55,7 +55,7 @@ body {
   --radius-md: 14px;
   --radius-lg: 18px;
 
-  --focus: 0 0 0 4px rgba(168, 129, 71, 0.28);
+  --focus: 0 0 0 4px rgba(0, 0, 0, 0.08);
 
   /* Legacy aliases (keep existing App.jsx styles working) */
   --ivory: var(--bg);
@@ -91,7 +91,7 @@ body {
   --header-bg: #0A0C10;
   --header-text: #ffffff;
   --header-subtext: rgba(255,255,255,0.70);
-  --header-border: var(--gold);
+  --header-border: var(--border-2);
 
   --red: #C5594D;
   --green: #4A9B7E;
@@ -99,7 +99,7 @@ body {
   --shadow-1: 0 10px 40px rgba(0,0,0,0.35);
   --shadow-2: 0 18px 70px rgba(0,0,0,0.5);
 
-  --focus: 0 0 0 4px rgba(201, 158, 100, 0.25);
+  --focus: 0 0 0 4px rgba(255, 255, 255, 0.1);
 
   /* Legacy aliases */
   --ivory: var(--bg);
@@ -122,10 +122,10 @@ input, select, textarea, button {
 }
 input:focus, select:focus, textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(168, 129, 71, 0.35);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
 button:focus-visible {
-  outline: 2px solid var(--gold, #7BAF7A);
+  outline: 2px solid var(--text, #15171C);
   outline-offset: 2px;
 }
 button:focus:not(:focus-visible) {
