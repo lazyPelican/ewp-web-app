@@ -151,7 +151,7 @@ function Root() {
         left: 0,
         right: 0,
         bottom: 0,
-        padding: "5px max(12px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
+        padding: "3px max(12px, env(safe-area-inset-right)) max(3px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
         textAlign: "center",
         fontFamily: "'DM Sans', sans-serif",
         fontSize: "clamp(11px, 2.8vw, 14px)",
@@ -180,8 +180,8 @@ function Root() {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 10,
-            padding: "8px 12px",
+            gap: 6,
+            padding: "4px 10px",
             borderRadius: 999,
             textDecoration: "none",
             color: "inherit",
@@ -189,14 +189,12 @@ function Root() {
             background: dark ? "rgba(55, 51, 38, 0.6)" : "rgba(255, 255, 255, 0.65)",
           }}
         >
-          <span>Created by Bilal Ahmed</span>
-          <span style={{ opacity: dark ? 0.55 : 0.6 }}>|</span>
+          <span style={{ fontSize: "clamp(10px, 2.5vw, 12px)" }}>B. Ahmed</span>
           <img
             src="/upwork_light.png"
-            alt=""
-            aria-hidden="true"
-            width={24}
-            height={24}
+            alt="Upwork"
+            width={18}
+            height={18}
             loading="lazy"
             decoding="async"
             fetchPriority="low"
