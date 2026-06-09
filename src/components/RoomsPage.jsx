@@ -634,26 +634,44 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--mid)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
                 What work is required for this room?
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                 {ALL_SECTIONS.map(key => {
                   const checked = sections.includes(key);
                   return (
                     <label key={key} style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      padding: "10px 16px", borderRadius: 8, cursor: "pointer",
-                      border: `1px solid ${checked ? "var(--char)" : "var(--ivory3)"}`,
-                      background: checked ? "var(--ivory2)" : "var(--input-bg)",
-                      color: "var(--char)",
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 16px", borderRadius: 10, cursor: "pointer",
+                      border: checked ? "1.5px solid var(--gold)" : "1.5px solid var(--ivory3)",
+                      background: checked ? "var(--gold-bg)" : "var(--input-bg)",
+                      color: checked ? "var(--char)" : "var(--muted)",
                       fontWeight: checked ? 700 : 500, fontSize: 13,
-                      transition: "all 0.2s ease",
+                      transition: "all 0.25s ease",
                       userSelect: "none",
+                      boxShadow: checked ? "0 1px 4px rgba(0,0,0,0.06)" : "none",
                     }}>
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleSection(key)}
-                        style={{ width: 16, height: 16, accentColor: "var(--ewp-slate)", cursor: "pointer" }}
+                        style={{ display: "none" }}
                       />
+                      {/* Toggle track */}
+                      <span style={{
+                        display: "inline-flex", alignItems: "center",
+                        width: 36, height: 20, borderRadius: 10,
+                        background: checked ? "var(--gold)" : "var(--rule)",
+                        transition: "background 0.25s ease",
+                        padding: 2, flexShrink: 0,
+                      }}>
+                        {/* Toggle knob */}
+                        <span style={{
+                          width: 16, height: 16, borderRadius: "50%",
+                          background: "#fff",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+                          transform: checked ? "translateX(16px)" : "translateX(0)",
+                          transition: "transform 0.25s ease",
+                        }} />
+                      </span>
                       {SECTION_LABELS[key]}
                     </label>
                   );
