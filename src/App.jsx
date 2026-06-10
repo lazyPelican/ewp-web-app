@@ -1044,20 +1044,6 @@ const styles = `
     transform: none;
   }
 
-  /* ── SECTION BANNER ── */
-  .section-banner {
-    background: #1F242E;
-    color: #ffffff;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px; font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--ivory3);
-    border-left: 4px solid var(--gold);
-    display: flex; align-items: center; justify-content: space-between;
-    transition: border-left-color 0.2s ease;
-  }
 
   /* ── TOAST ── */
   .toast {
