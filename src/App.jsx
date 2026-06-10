@@ -578,7 +578,7 @@ const styles = `
   .dark .btn-primary:hover { background: var(--ewp-slate2); }
   .dark .btn-gold { background: #7BAF7A; color: #0E1014; }
   .dark .btn-gold:hover { background: #93C492; }
-  .dark .btn-outline { color: #D5D0C8; border-color: #3A4050; background: transparent; }
+  .dark .btn-outline { color: #fff; border-color: #3A4050; background: transparent; }
   .dark .btn-outline:hover { background: #262A33; border-color: #D5D0C8; color: #fff; }
   .dark .btn-ghost { color: #A09080; }
   .dark .btn-ghost:hover { color: #D5D0C8; }

@@ -51,7 +51,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>CABINETRY
           <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
         </span>
-        <button className="btn btn-sm btn-outline" style={{ border: "1px solid var(--mid)", color: "var(--char)" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm btn-outline" style={{ border: "1px solid var(--mid)" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
         <table className="data-table" aria-label="Cabinetry items">
@@ -151,7 +151,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>UPGRADES / OVERRIDES
           <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
         </span>
-        <button className="btn btn-sm" style={{ border: "1px solid var(--mid)", background: "transparent", color: "var(--char)" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ border: "1px solid var(--mid)", background: "transparent" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
         <table className="data-table" aria-label="Upgrades and overrides">
@@ -224,7 +224,7 @@ function CountertopsSection({ items, masterAdj, onChange }) {
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>COUNTERTOPS
           <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
         </span>
-        <button className="btn btn-sm" style={{ border: "1px solid var(--mid)", background: "transparent", color: "var(--char)" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ border: "1px solid var(--mid)", background: "transparent" }} onClick={addRow}>+ Add Row</button>
       </div>
       <div className="scrollable">
         <table className="data-table" aria-label="Countertop items">
@@ -300,7 +300,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>FINISHING
           <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
         </span>
-        <button className="btn btn-sm" style={{ border: "1px solid var(--mid)", background: "transparent", color: "var(--char)" }} onClick={addRow}>+ Add Row</button>
+        <button className="btn btn-sm" style={{ border: "1px solid var(--mid)", background: "transparent" }} onClick={addRow}>+ Add Row</button>
       </div>
 
       {/* Estimated LF hint from cabinetry */}
