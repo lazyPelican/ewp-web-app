@@ -113,7 +113,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               </tr>
               {delivery > 0 && (
                 <tr className="total-row">
-                  <td colSpan={5} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
+                  <td colSpan={6} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
                     Delivery{project.deliveryNotes ? ` — ${project.deliveryNotes}` : ""}
                   </td>
                   <td className="num-cell">{fmt(delivery)}</td>
@@ -121,12 +121,18 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               )}
               {taxEnabled && (
                 <tr className="total-row">
-                  <td colSpan={5} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
+                  <td colSpan={6} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
                     Estimated Tax ({taxRate}%)
                   </td>
                   <td className="num-cell">{fmt(taxAmt)}</td>
                 </tr>
               )}
+              <tr className="total-row" style={{ borderTop: "2px solid var(--gold)" }}>
+                <td colSpan={6} style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--gold)" }}>
+                  Grand Total
+                </td>
+                <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, color: "var(--gold)" }}>{fmt(grandTotal)}</td>
+              </tr>
             </tbody>
           </table>
         </div>
