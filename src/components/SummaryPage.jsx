@@ -83,7 +83,6 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               <tr>
                 <th>Room</th>
                 <th className="num-cell">Cabinetry</th>
-                <th className="num-cell">Upgrades</th>
                 <th className="num-cell">Countertops</th>
                 <th className="num-cell">Finishing</th>
                 <th className="num-cell">Installation</th>
@@ -94,8 +93,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               {roomTotals.map((r, i) => (
                 <tr key={i}>
                   <td style={{ fontWeight: 600 }}>{r.name || `Room ${i + 1}`}</td>
-                  <td className="num-cell">{fmt(r.cab)}</td>
-                  <td className="num-cell">{fmt(r.upg)}</td>
+                  <td className="num-cell">{fmt(r.cab + r.upg)}</td>
                   <td className="num-cell">{fmt(r.ctp)}</td>
                   <td className="num-cell">{fmt(r.fin)}</td>
                   <td className="num-cell">{fmt(r.inst)}</td>
@@ -104,8 +102,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               ))}
               <tr className="total-row">
                 <td style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Totals</td>
-                <td className="num-cell">{fmt(grandCab)}</td>
-                <td className="num-cell">{fmt(grandUpg)}</td>
+                <td className="num-cell">{fmt(grandCab + grandUpg)}</td>
                 <td className="num-cell">{fmt(grandCtp)}</td>
                 <td className="num-cell">{fmt(grandFin)}</td>
                 <td className="num-cell">{fmt(grandInst)}</td>
@@ -113,7 +110,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               </tr>
               {delivery > 0 && (
                 <tr className="total-row">
-                  <td colSpan={6} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
+                  <td colSpan={5} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
                     Delivery{project.deliveryNotes ? ` — ${project.deliveryNotes}` : ""}
                   </td>
                   <td className="num-cell">{fmt(delivery)}</td>
@@ -121,14 +118,14 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               )}
               {taxEnabled && (
                 <tr className="total-row">
-                  <td colSpan={6} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
+                  <td colSpan={5} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
                     Estimated Tax ({taxRate}%)
                   </td>
                   <td className="num-cell">{fmt(taxAmt)}</td>
                 </tr>
               )}
               <tr className="total-row" style={{ borderTop: "2px solid var(--gold)" }}>
-                <td colSpan={6} style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--gold)" }}>
+                <td colSpan={5} style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--gold)" }}>
                   Grand Total
                 </td>
                 <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, color: "var(--gold)" }}>{fmt(grandTotal)}</td>
