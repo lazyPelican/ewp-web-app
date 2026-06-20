@@ -91,10 +91,10 @@ export const isRoomComplete = (room) => {
   if (room.name.trim() === "") return false;
   const sections = (room.sections === undefined || room.sections === null) ? ALL_SECTIONS : room.sections;
   if (sections.length === 0) return false;
-  const hasCabinetry   = sections.includes("cabinetry") && room.cabinetry.some(c => c.product && parseFloat(c.qty) > 0);
-  const hasCountertops = sections.includes("countertops") && (room.countertops || []).some(c => c.product && parseFloat(c.qty) > 0);
-  const hasUpgrades    = sections.includes("upgrades") && (room.upgrades || []).some(u => u.upgrade && parseFloat(u.qty) > 0);
-  const hasFinishing   = sections.includes("finishing") && (room.finishing || []).some(f => f.type && parseFloat(f.lf) > 0);
+  const hasCabinetry   = sections.includes("cabinetry") && room.cabinetry.some(c => c.product && parseFloat(c.qty) !== 0);
+  const hasCountertops = sections.includes("countertops") && (room.countertops || []).some(c => c.product && parseFloat(c.qty) !== 0);
+  const hasUpgrades    = sections.includes("upgrades") && (room.upgrades || []).some(u => u.upgrade && parseFloat(u.qty) !== 0);
+  const hasFinishing   = sections.includes("finishing") && (room.finishing || []).some(f => f.type && parseFloat(f.lf) !== 0);
   if (!hasCabinetry && !hasCountertops && !hasUpgrades && !hasFinishing) return false;
   if (hasCabinetry && sections.includes("install") && room.install.type === "") return false;
   return true;
@@ -199,6 +199,18 @@ export const blankCabRow = () => ({
 export const blankUpgRow = () => ({ upgrade: "", qty: "", adjPct: "", notes: "" });
 export const blankCtpRow = () => ({ product: "", qty: "", adjPct: "", notes: "" });
 export const blankFinRow = () => ({ type: "", lf: "", adjPct: "", notes: "" });
+
+// ── Production lifecycle stages ──────────────────────────────────────────────
+export const ACTIVE_STAGES = [
+  { key: "drafting",   label: "Drafting" },
+  { key: "redlines",   label: "Redlines" },
+  { key: "building",   label: "Building & Install" },
+  { key: "punchlist",  label: "Punch List" },
+  { key: "paid",       label: "Paid" },
+]
+export const isActiveStatus = (s) => s && s.startsWith("active:")
+export const getActiveStage = (s) => s ? s.replace("active:", "") : null
+export const isClosedStatus = (s) => s === "closed"
 
 export const blankRoom = (n, masterAdj) => ({
   id: Date.now() + n,

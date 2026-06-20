@@ -1,8 +1,10 @@
-import React, { useState } from "react"
-import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, isRoomComplete } from "../appUtils.js"
+import React, { useState, useMemo } from "react"
+import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, isRoomComplete, ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus } from "../appUtils.js"
 
-export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
-  const [search, setSearch] = useState("");
+export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onUpdateStage, onCloseProject, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
+  const [dashView, setDashView] = useState("hub") // "hub" | "quotations" | "drafts" | "completed" | "active" | "closed"
+  const [search, setSearch] = useState("")
+  const [stageFilter, setStageFilter] = useState(null)
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -12,39 +14,97 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
     return "Welcome back";
   })();
 
-  const allFiltered = projects
-    .filter(p => {
-      const q = search.toLowerCase()
-      return (
-        p.project.name.toLowerCase().includes(q) ||
-        p.project.address.toLowerCase().includes(q) ||
-        (p.project.contactName || '').toLowerCase().includes(q) ||
-        (p.project.contactPhone || '').toLowerCase().includes(q) ||
-        (p.project.id || '').toLowerCase().includes(q)
-      )
-    })
-    .sort((a, b) => {
+  const calcTotal = (p) => p.rooms.reduce((rs, r) => {
+    const cab = calcCabinetry(r.cabinetry);
+    return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
+  }, 0);
+
+  const allComplete = (p) => p.rooms.length > 0 && p.rooms.every(isRoomComplete);
+
+  const { drafts, completed, active, closed } = useMemo(() => {
+    const d = [], c = [], a = [], cl = [];
+    projects.forEach(p => {
+      if (isClosedStatus(p._status)) cl.push(p);
+      else if (isActiveStatus(p._status)) a.push(p);
+      else if (allComplete(p)) c.push(p);
+      else d.push(p);
+    });
+    const sortByIdDesc = (arr) => [...arr].sort((a, b) => {
       const getIdTime = (id = '') => {
         if (id.startsWith('B-')) return '20' + id.slice(2).replace('-', '')
         if (id.startsWith('EWP')) return id.slice(3)
         return id
       }
       return getIdTime(b.project.id || '').localeCompare(getIdTime(a.project.id || ''))
-    })
+    });
+    return { drafts: sortByIdDesc(d), completed: sortByIdDesc(c), active: sortByIdDesc(a), closed: sortByIdDesc(cl) };
+  }, [projects]);
 
-  const confirmed = allFiltered.filter(p => p._status === "confirmed");
-  const filtered  = allFiltered.filter(p => p._status !== "confirmed");
+  const quotationTotal = useMemo(() =>
+    [...drafts, ...completed].reduce((s, p) => s + calcTotal(p), 0),
+  [drafts, completed]);
+  const activeTotal = useMemo(() =>
+    active.reduce((s, p) => s + calcTotal(p), 0),
+  [active]);
 
-  const calcTotal = (p) => p.rooms.reduce((rs, r) => {
-    const cab = calcCabinetry(r.cabinetry);
-    return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
-  }, 0);
+  const filterList = (list) => {
+    if (!search.trim()) return list;
+    const q = search.toLowerCase();
+    return list.filter(p =>
+      p.project.name.toLowerCase().includes(q) ||
+      p.project.address.toLowerCase().includes(q) ||
+      (p.project.contactName || '').toLowerCase().includes(q) ||
+      (p.project.contactPhone || '').toLowerCase().includes(q) ||
+      (p.project.id || '').toLowerCase().includes(q)
+    );
+  };
 
-  const renderCard = (p, i, { isConfirmedSection } = {}) => {
+  // Universal search — searches across ALL buckets
+  const universalResults = useMemo(() => {
+    if (!search.trim()) return null;
+    return {
+      drafts: filterList(drafts),
+      completed: filterList(completed),
+      active: filterList(active),
+      closed: filterList(closed),
+    };
+  }, [search, drafts, completed, active, closed]);
+
+  const goSection = (view) => { setDashView(view); setSearch(""); setStageFilter(null); };
+
+  // ── Hero banner (shared) ──
+  const renderHero = () => (
+    <div className="dash-hero-banner">
+      <div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" />
+      <div className="dash-hero-overlay" />
+      <div className="dash-hero-tagline">Estimate Manager<span>New Age Technology • Old World Craftsmanship</span></div>
+      <div className="dash-hero-content">
+        <div className="dash-hero-left">
+          <span className="dash-greeting">{greeting},</span>
+          <span className="dash-user">{userName || "–"}</span>
+        </div>
+        <button className="btn btn-gold btn-lg dash-new-btn" onClick={onNew}>+ New Estimate</button>
+      </div>
+    </div>
+  );
+
+  // ── Card renderer ──
+  const renderCard = (p, i, { section } = {}) => {
     const gt = calcTotal(p);
-    const allComplete = p.rooms.every(isRoomComplete);
+    const complete = allComplete(p);
     const realIdx = projects.indexOf(p);
-    const isConfirmed = p._status === "confirmed";
+    const isActive = isActiveStatus(p._status);
+    const isClosed = isClosedStatus(p._status);
+
+    let badgeCls = "pcard-status--draft";
+    let badgeText = "○ Draft";
+    if (isClosed) { badgeCls = "pcard-status--closed"; badgeText = "✓ Closed"; }
+    else if (isActive) {
+      badgeCls = "pcard-status--active";
+      const stage = ACTIVE_STAGES.find(s => s.key === getActiveStage(p._status));
+      badgeText = stage ? stage.label : "Active";
+    }
+    else if (complete) { badgeCls = "pcard-status--done"; badgeText = "✓ Complete"; }
 
     return (
       <div key={p.project.id || i} className="project-card" onClick={() => onOpen(realIdx)}
@@ -53,32 +113,42 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
         aria-label={`Open estimate: ${p.project.name}`}
         onKeyDown={e => (e.key === "Enter" || e.key === " ") && onOpen(realIdx)}>
 
-        {/* Status tag */}
         <div className="pcard-status-row">
-          <span className={`pcard-status ${
-            isConfirmed ? "pcard-status--confirmed"
-            : allComplete ? "pcard-status--done" : "pcard-status--draft"
-          }`}>
-            {isConfirmed ? "★ Confirmed" : allComplete ? "✓ Complete" : "○ Draft"}
-          </span>
+          <span className={`pcard-status ${badgeCls}`}>{badgeText}</span>
           <span className="pcard-id">{fmtId(p.project.id)}</span>
         </div>
 
-        {/* Name + total + confirm */}
         <div className="pcard-name">{p.project.name}</div>
         <div className="pcard-total-row">
           <div className="pcard-total">{fmt(gt)}</div>
-          {allComplete && !isConfirmed && (
+          {section === "completed" && (
             <button className="pcard-confirm-btn" onClick={e => {
               e.stopPropagation();
-              if (window.confirm("Confirming this quote will mark it as finalized.\n\nConfirmed quotes become read-only for team members (view & print only).\n\nProceed?")) {
+              if (window.confirm("Marking this quote as Under Contract will finalize it.\n\nUnder Contract quotes become read-only (view & print only).\n\nProceed?")) {
                 onConfirm(realIdx);
               }
-            }}>✓ Mark as Confirmed</button>
+            }}>✓ Mark as Under Contract</button>
           )}
         </div>
 
-        {/* Meta pills */}
+        {/* Stage control for active jobs */}
+        {section === "active" && isActive && (
+          <div className="pcard-stage-row" onClick={e => e.stopPropagation()}>
+            <select
+              className="pcard-stage-select"
+              value={getActiveStage(p._status)}
+              onChange={e => onUpdateStage(realIdx, e.target.value)}
+            >
+              {ACTIVE_STAGES.map(s => (
+                <option key={s.key} value={s.key}>{s.label}</option>
+              ))}
+            </select>
+            <button className="pcard-archive-btn" onClick={() => onCloseProject(realIdx)}>
+              Close
+            </button>
+          </div>
+        )}
+
         <div className="pcard-meta">
           {p.project.contactName && <span className="pcard-pill">👤 {p.project.contactName}</span>}
           <span className="pcard-pill">🏠 {p.rooms.length} {p.rooms.length === 1 ? "room" : "rooms"}</span>
@@ -86,106 +156,373 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
           {p._updatedAt && <span className="pcard-pill">✏️ {fmtDate(p._updatedAt.slice(0, 10))}</span>}
         </div>
 
-        {/* Actions */}
         <div className="pcard-actions" onClick={e => e.stopPropagation()}>
           <button
-            className={`pcard-act-btn ${allComplete ? "pcard-act--primary" : ""}`}
-            disabled={!allComplete}
-            aria-disabled={!allComplete}
-            title={allComplete ? "Internal PDF" : "Complete all rooms first"}
-            onClick={() => allComplete && onGenerateQuote(realIdx)}>
+            className={`pcard-act-btn ${complete || isActive || isClosed ? "pcard-act--primary" : ""}`}
+            disabled={!complete && !isActive && !isClosed}
+            aria-disabled={!complete && !isActive && !isClosed}
+            title={complete || isActive || isClosed ? "Internal PDF" : "Complete all rooms first"}
+            onClick={() => (complete || isActive || isClosed) && onGenerateQuote(realIdx)}>
             📄 Internal
           </button>
           <button
-            className={`pcard-act-btn ${allComplete ? "pcard-act--gold" : ""}`}
-            disabled={!allComplete}
-            aria-disabled={!allComplete}
-            title={allComplete ? "Client PDF" : "Complete all rooms first"}
-            onClick={() => allComplete && onGenerateQuoteCustomer(realIdx)}>
+            className={`pcard-act-btn ${complete || isActive || isClosed ? "pcard-act--gold" : ""}`}
+            disabled={!complete && !isActive && !isClosed}
+            aria-disabled={!complete && !isActive && !isClosed}
+            title={complete || isActive || isClosed ? "Client PDF" : "Complete all rooms first"}
+            onClick={() => (complete || isActive || isClosed) && onGenerateQuoteCustomer(realIdx)}>
             📋 Client
           </button>
-          {!isConfirmedSection && (
+          {section !== "active" && section !== "closed" && (
             <button className="pcard-act-btn" disabled={actionBusy}
               aria-disabled={actionBusy}
               onClick={() => !actionBusy && onDuplicate(realIdx)} title="Duplicate">
               ⧉ Copy
             </button>
           )}
-          {!isConfirmedSection && (
+          {(section !== "active" && section !== "closed") || isAdmin ? (
             <button className="pcard-act-btn pcard-act--danger" disabled={actionBusy}
               aria-disabled={actionBusy}
               onClick={() => !actionBusy && onDelete(realIdx)} title="Delete">
               🗑
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     );
   };
 
-  return (
-    <div>
-      {/* ── Hero Banner (full-bleed, blends with header) ── */}
-      <div className="dash-hero-banner">
-        <div className="dash-hero-slide" />
-        <div className="dash-hero-slide" />
-        <div className="dash-hero-slide" />
-        <div className="dash-hero-overlay" />
-        <div className="dash-hero-tagline">
-          Estimate Manager
-          <span>New Age Technology • Old World Craftsmanship</span>
-        </div>
-        <div className="dash-hero-content">
-          <div className="dash-hero-left">
-            <span className="dash-greeting">{greeting},</span>
-            <span className="dash-user">{userName || "–"}</span>
-          </div>
-          <button className="btn btn-gold btn-lg dash-new-btn" onClick={onNew}>+ New Estimate</button>
-        </div>
-      </div>
+  // ── Section header with back button ──
+  const renderSectionHeader = (title, subtitle, backTo) => (
+    <div style={{ marginBottom: 20 }}>
+      <button className="dash-back-btn" onClick={() => goSection(backTo || "hub")}>← Back</button>
+      <div className="dash-section-title" style={{ marginBottom: 4 }}>{title}</div>
+      {subtitle && <div className="dash-section-sub">{subtitle}</div>}
+    </div>
+  );
 
-      {/* ── Below hero: search + cards ── */}
-      <div className="dash-below-hero">
-      {/* ── Search ── */}
-      <div className="dash-search-row">
-        <div className="dash-search-wrap">
-          <span className="dash-search-icon">🔍</span>
-          <input className="dash-search-input" placeholder="Search projects…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Search estimates" />
-        </div>
-        <div className="dash-result-count">{allFiltered.length} {allFiltered.length === 1 ? "project" : "projects"}</div>
+  const renderSearch = (count, label) => (
+    <div className="dash-search-row">
+      <div className="dash-search-wrap">
+        <span className="dash-search-icon">🔍</span>
+        <input className="dash-search-input" placeholder={`Search ${label}…`} value={search} onChange={e => setSearch(e.target.value)} aria-label={`Search ${label}`} />
       </div>
+      <div className="dash-result-count">{count} {count === 1 ? "project" : "projects"}</div>
+    </div>
+  );
 
-      {/* ── Active Estimates ── */}
-      {filtered.length === 0 && confirmed.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">📋</div>
-          <div className="empty-title">{projects.length === 0 ? "No estimates yet" : "No results found"}</div>
-          <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>{projects.length === 0 ? "Create your first estimate to get started." : "Try a different search."}</div>
-          {projects.length === 0 && <button className="btn btn-gold" onClick={onNew}>+ Create First Estimate</button>}
-        </div>
-      ) : (
-        <>
-          {filtered.length > 0 && (
+  // ── DRAFTS VIEW ──
+  if (dashView === "drafts") {
+    const filteredDrafts = filterList(drafts);
+    return (
+      <div>
+        {renderHero()}
+        <div className="dash-below-hero">
+          {renderSectionHeader("Drafts", `${drafts.length} in-progress quotes`, "quotations")}
+          {renderSearch(filteredDrafts.length, "drafts")}
+          {filteredDrafts.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📋</div>
+              <div className="empty-title">{search ? "No results found" : "No drafts yet"}</div>
+              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>{search ? "Try a different search." : "Create a new estimate to get started."}</div>
+              {!search && <button className="btn btn-gold" onClick={onNew}>+ Create First Estimate</button>}
+            </div>
+          ) : (
             <div className="project-card-grid">
-              {filtered.map((p, i) => renderCard(p, i))}
+              {filteredDrafts.map((p, i) => renderCard(p, i, { section: "drafts" }))}
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
 
-          {/* ── Confirmed Quotes Section ── */}
-          {confirmed.length > 0 && (
-            <>
-              <div className="dash-section-header">
-                <div className="dash-section-title">Confirmed Quotes</div>
-                <div className="dash-section-sub">{isAdmin ? "Admin — full access" : "View & print only"}</div>
-              </div>
-              <div className="project-card-grid">
-                {confirmed.map((p, i) => renderCard(p, i, { isConfirmedSection: true }))}
-              </div>
-            </>
+  // ── COMPLETED VIEW ──
+  if (dashView === "completed") {
+    const filteredCompleted = filterList(completed);
+    return (
+      <div>
+        {renderHero()}
+        <div className="dash-below-hero">
+          {renderSectionHeader("Quotes Ready for Clients", `${completed.length} ready for review`, "quotations")}
+          {renderSearch(filteredCompleted.length, "completed quotes")}
+          {filteredCompleted.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📋</div>
+              <div className="empty-title">{search ? "No results found" : "No completed quotes"}</div>
+              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>{search ? "Try a different search." : "Complete all rooms in a quote to see it here."}</div>
+            </div>
+          ) : (
+            <div className="project-card-grid">
+              {filteredCompleted.map((p, i) => renderCard(p, i, { section: "completed" }))}
+            </div>
           )}
-        </>
-      )}
-      </div>{/* end dash-below-hero */}
+        </div>
+      </div>
+    );
+  }
+
+  // ── QUOTATIONS HUB (sub-cards for Drafts and Completed) ──
+  if (dashView === "quotations") {
+    const allQuotations = [...drafts, ...completed];
+    const filteredQuotations = filterList(allQuotations);
+    const fDrafts = filterList(drafts);
+    const fCompleted = filterList(completed);
+    const hasSearch = search.trim().length > 0;
+
+    return (
+      <div>
+        {renderHero()}
+        <div className="dash-below-hero">
+          {renderSectionHeader("Quotations", `${drafts.length + completed.length} total quotes`)}
+          {renderSearch(filteredQuotations.length, "quotations")}
+          {hasSearch ? (
+            filteredQuotations.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">🔍</div>
+                <div className="empty-title">No results found</div>
+                <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>Try a different search term.</div>
+              </div>
+            ) : (
+              <>
+                {fCompleted.length > 0 && (
+                  <>
+                    <div className="dash-subsection-title">Quotes Ready for Clients ({fCompleted.length})</div>
+                    <div className="project-card-grid">
+                      {fCompleted.map((p, i) => renderCard(p, i, { section: "completed" }))}
+                    </div>
+                  </>
+                )}
+                {fDrafts.length > 0 && (
+                  <>
+                    <div className="dash-subsection-title">Drafts ({fDrafts.length})</div>
+                    <div className="project-card-grid">
+                      {fDrafts.map((p, i) => renderCard(p, i, { section: "drafts" }))}
+                    </div>
+                  </>
+                )}
+              </>
+            )
+          ) : (
+          <div className="dash-hub-grid">
+            <div className="dash-hub-card" onClick={() => goSection("drafts")} role="button" tabIndex={0}
+              onKeyDown={e => (e.key === "Enter" || e.key === " ") && goSection("drafts")}>
+              <span className="dash-hub-icon">✏️</span>
+              <div className="dash-hub-title">Drafts</div>
+              <div className="dash-hub-count">{drafts.length}</div>
+              <div className="dash-hub-sub">
+                {drafts.length} in-progress quote{drafts.length !== 1 ? "s" : ""}
+              </div>
+              <span className="dash-hub-arrow">→</span>
+            </div>
+            <div className="dash-hub-card" onClick={() => goSection("completed")} role="button" tabIndex={0}
+              onKeyDown={e => (e.key === "Enter" || e.key === " ") && goSection("completed")}>
+              <span className="dash-hub-icon">✅</span>
+              <div className="dash-hub-title">Quotes Ready for Clients</div>
+              <div className="dash-hub-count">{completed.length}</div>
+              <div className="dash-hub-sub">
+                {completed.length} ready for review
+                {quotationTotal > 0 && <><br />{fmt(quotationTotal)} total value</>}
+              </div>
+              <span className="dash-hub-arrow">→</span>
+            </div>
+          </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── UNDER CONTRACT VIEW ──
+  if (dashView === "active") {
+    const searchFiltered = filterList(active);
+    const filteredActive = stageFilter
+      ? searchFiltered.filter(p => getActiveStage(p._status) === stageFilter)
+      : searchFiltered;
+    const stageCounts = {};
+    ACTIVE_STAGES.forEach(s => { stageCounts[s.key] = searchFiltered.filter(p => getActiveStage(p._status) === s.key).length });
+    return (
+      <div>
+        {renderHero()}
+        <div className="dash-below-hero">
+          {renderSectionHeader("Under Contract", `${active.length} active jobs — ${fmt(activeTotal)} total`)}
+          {renderSearch(filteredActive.length, "active jobs")}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+            <button
+              onClick={() => setStageFilter(null)}
+              style={{
+                padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                border: `1.5px solid ${!stageFilter ? "var(--gold)" : "var(--border)"}`,
+                background: !stageFilter ? "var(--gold-bg)" : "transparent",
+                color: !stageFilter ? "var(--gold)" : "var(--muted)",
+                transition: "all 0.15s",
+              }}
+            >All ({searchFiltered.length})</button>
+            {ACTIVE_STAGES.map(s => (
+              <button
+                key={s.key}
+                onClick={() => setStageFilter(stageFilter === s.key ? null : s.key)}
+                style={{
+                  padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  border: `1.5px solid ${stageFilter === s.key ? "var(--gold)" : "var(--border)"}`,
+                  background: stageFilter === s.key ? "var(--gold-bg)" : "transparent",
+                  color: stageFilter === s.key ? "var(--gold)" : "var(--muted)",
+                  opacity: stageCounts[s.key] === 0 ? 0.4 : 1,
+                  transition: "all 0.15s",
+                }}
+              >{s.label} ({stageCounts[s.key]})</button>
+            ))}
+          </div>
+          {filteredActive.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📋</div>
+              <div className="empty-title">{search || stageFilter ? "No results found" : "No active jobs"}</div>
+              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>
+                {search || stageFilter ? "Try a different search or filter." : "Mark a completed quote as Under Contract to start tracking it here."}
+              </div>
+            </div>
+          ) : (
+            <div className="project-card-grid">
+              {filteredActive.map((p, i) => renderCard(p, i, { section: "active" }))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── CLOSED VIEW ──
+  if (dashView === "closed") {
+    const filteredClosed = filterList(closed);
+    return (
+      <div>
+        {renderHero()}
+        <div className="dash-below-hero">
+          {renderSectionHeader("Closed / History", `${closed.length} archived jobs`)}
+          {renderSearch(filteredClosed.length, "closed jobs")}
+          {filteredClosed.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📋</div>
+              <div className="empty-title">{search ? "No results found" : "No closed jobs yet"}</div>
+              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>
+                {search ? "Try a different search." : "Jobs moved here after being closed from Under Contract."}
+              </div>
+            </div>
+          ) : (
+            <div className="project-card-grid">
+              {filteredClosed.map((p, i) => renderCard(p, i, { section: "closed" }))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── HUB VIEW (default) ──
+  const universalTotal = universalResults
+    ? universalResults.drafts.length + universalResults.completed.length + universalResults.active.length + universalResults.closed.length
+    : 0;
+
+  return (
+    <div>
+      {renderHero()}
+      <div className="dash-below-hero">
+        {/* Universal search bar */}
+        <div className="dash-search-row" style={{ marginBottom: 20 }}>
+          <div className="dash-search-wrap">
+            <span className="dash-search-icon">🔍</span>
+            <input className="dash-search-input" placeholder="Search all quotes…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Search all quotes" />
+          </div>
+          {search.trim() && <div className="dash-result-count">{universalTotal} result{universalTotal !== 1 ? "s" : ""}</div>}
+        </div>
+
+        {/* If searching, show universal results */}
+        {universalResults ? (
+          universalTotal === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🔍</div>
+              <div className="empty-title">No results found</div>
+              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>Try a different search term.</div>
+            </div>
+          ) : (
+            <>
+              {universalResults.drafts.length > 0 && (
+                <>
+                  <div className="dash-subsection-title">Drafts ({universalResults.drafts.length})</div>
+                  <div className="project-card-grid">
+                    {universalResults.drafts.map((p, i) => renderCard(p, i, { section: "drafts" }))}
+                  </div>
+                </>
+              )}
+              {universalResults.completed.length > 0 && (
+                <>
+                  <div className="dash-subsection-title">Quotes Ready for Clients ({universalResults.completed.length})</div>
+                  <div className="project-card-grid">
+                    {universalResults.completed.map((p, i) => renderCard(p, i, { section: "completed" }))}
+                  </div>
+                </>
+              )}
+              {universalResults.active.length > 0 && (
+                <>
+                  <div className="dash-subsection-title">Under Contract ({universalResults.active.length})</div>
+                  <div className="project-card-grid">
+                    {universalResults.active.map((p, i) => renderCard(p, i, { section: "active" }))}
+                  </div>
+                </>
+              )}
+              {universalResults.closed.length > 0 && (
+                <>
+                  <div className="dash-subsection-title">Closed ({universalResults.closed.length})</div>
+                  <div className="project-card-grid">
+                    {universalResults.closed.map((p, i) => renderCard(p, i, { section: "closed" }))}
+                  </div>
+                </>
+              )}
+            </>
+          )
+        ) : (
+          /* Hub cards */
+          <div className="dash-hub-grid">
+            {/* Quotations */}
+            <div className="dash-hub-card" onClick={() => goSection("quotations")} role="button" tabIndex={0}
+              onKeyDown={e => (e.key === "Enter" || e.key === " ") && goSection("quotations")}>
+              <span className="dash-hub-icon">📝</span>
+              <div className="dash-hub-title">Quotations</div>
+              <div className="dash-hub-count">{drafts.length + completed.length}</div>
+              <div className="dash-hub-sub">
+                {drafts.length} draft{drafts.length !== 1 ? "s" : ""} · {completed.length} completed
+                {quotationTotal > 0 && <><br />{fmt(quotationTotal)} total value</>}
+              </div>
+              <span className="dash-hub-arrow">→</span>
+            </div>
+
+            {/* Under Contract */}
+            <div className="dash-hub-card" onClick={() => goSection("active")} role="button" tabIndex={0}
+              onKeyDown={e => (e.key === "Enter" || e.key === " ") && goSection("active")}>
+              <span className="dash-hub-icon">🏗️</span>
+              <div className="dash-hub-title">Under Contract</div>
+              <div className="dash-hub-count">{active.length}</div>
+              <div className="dash-hub-sub">
+                {active.length} active job{active.length !== 1 ? "s" : ""}
+                {activeTotal > 0 && <><br />{fmt(activeTotal)} total value</>}
+              </div>
+              <span className="dash-hub-arrow">→</span>
+            </div>
+
+            {/* Closed */}
+            <div className="dash-hub-card" onClick={() => goSection("closed")} role="button" tabIndex={0}
+              onKeyDown={e => (e.key === "Enter" || e.key === " ") && goSection("closed")}>
+              <span className="dash-hub-icon">🗄️</span>
+              <div className="dash-hub-title">Closed / History</div>
+              <div className="dash-hub-count">{closed.length}</div>
+              <div className="dash-hub-sub">
+                {closed.length} archived job{closed.length !== 1 ? "s" : ""}
+              </div>
+              <span className="dash-hub-arrow">→</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -138,10 +138,10 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
       {/* Per-room detail */}
       {rooms.map((room, ri) => {
         const rt = roomTotals[ri];
-        const cabItems = room.cabinetry.filter(i => i.product && (parseFloat(i.qty) || 0) > 0);
-        const upgItems = room.upgrades.filter(i => i.upgrade && (parseFloat(i.qty) || 0) > 0);
-        const ctpItems = (room.countertops || []).filter(i => i.product && (parseFloat(i.qty) || 0) > 0);
-        const finItems = room.finishing.filter(i => i.type && (parseFloat(i.lf) || 0) > 0);
+        const cabItems = room.cabinetry.filter(i => i.product && (parseFloat(i.qty) || 0) !== 0);
+        const upgItems = room.upgrades.filter(i => i.upgrade && (parseFloat(i.qty) || 0) !== 0);
+        const ctpItems = (room.countertops || []).filter(i => i.product && (parseFloat(i.qty) || 0) !== 0);
+        const finItems = room.finishing.filter(i => i.type && (parseFloat(i.lf) || 0) !== 0);
         const cabTotal = rt.cab;
         return (
           <div className="report-room" key={room.id}>

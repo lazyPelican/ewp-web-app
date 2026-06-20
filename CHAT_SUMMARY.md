@@ -1,169 +1,112 @@
-# EWP Quote App — Chat Handoff Summary
-> Generated 2026-05-12. Feed this to the next chat to continue seamlessly.
+# EWP Quote App - Session Summary (2026-06-18)
+
+## Project
+**Engstrom Wood Products (EWP) Estimate Manager** — React + Vite frontend, Supabase backend. Live in production at ewpquote.vercel.app.
+
+## Repository
+- GitHub: `https://github.com/lazyPelican/ewp-web-app.git`
+- Branch: `main`
+- Latest commit: `671b4ae` — "Remove duplicate section-banner CSS that hid Add Row buttons"
+
+## Critical Instructions
+- **Do NOT auto commit/push** — only commit/push when explicitly asked
+- **Never** call `preview_start` or mention dev server checks
+- **Never** mention hooks, preview_start, or dev server meta-commentary
+- App is **live in production** — treat pushes accordingly
 
 ---
 
-## 1. Project Overview
+## What Was Done This Session
 
-**App name:** Engstrom Wood Products — Estimate Manager
-**Stack:** React + Vite frontend, Supabase (PostgreSQL + Auth) backend
-**Repo:** `https://github.com/lazyPelican/ewp-web-app.git`
-**Local path:** `C:\Users\SURFACE\Downloads\EWP Quote App\`
-**Live & in production** as of 2026-04-12
+### 1. Dashboard Restructure (`src/components/Dashboard.jsx`)
+- Fully rewritten as a hub with 3 clickable section cards: **Quotations**, **Under Contract**, **Closed/History**
+- Each section has its own view, search bar (center-aligned), and gold-themed back button
+- **Quotations** has 2 sub-cards: **Drafts** and **Quotes Ready for Clients**
+- Navigation state: `dashView: "hub" | "quotations" | "drafts" | "completed" | "active" | "closed"`
+- Under Contract quotes are **read-only for ALL users** (not just non-admins)
 
----
+### 2. Status Lifecycle (`src/appUtils.js`)
+Added at bottom of file (before `blankRoom`):
+- `ACTIVE_STAGES`: drafting → redlines → building → punchlist → paid
+- `isActiveStatus(s)` — checks `s.startsWith("active:")`
+- `getActiveStage(s)` — strips "active:" prefix
+- `isClosedStatus(s)` — checks `s === "closed"`
+- Data loading maps `"confirmed"` → `"active:drafting"` for backward compat
 
-## 2. Source File Map
+### 3. App.jsx Changes
+- Added imports for `ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus`
+- Read-only logic: `isLocked` applies to ALL users on active/closed quotes
+- Added `updateProjectStage` and `closeProject` handlers
+- Added CSS for hub cards, gold back button, center-aligned search, stage controls, dark mode overrides
+- Back button: `background: var(--gold-bg); border: 1.5px solid var(--gold); color: var(--gold)`
 
-```
-src/
-├── App.jsx                  ← Main app shell, CSS styles, routing logic (~1707 lines)
-├── Auth.jsx                 ← Login / signup screen
-├── main.jsx                 ← React root, session + guest routing
-├── BgDots.jsx               ← Animated background dots
-├── supabase.js              ← Supabase client
-├── sanitize.js              ← Input sanitization helpers
-├── global.css               ← Base resets
-├── appUtils.js              ← Shared helpers & constants (fmtDate, fmtId, PRICING, etc.)
-├── pdfExport.js             ← PDF export functions
-├── PDFTemplates.jsx         ← PDF layout templates
-├── AdminPanel.jsx           ← Admin panel (lazy loaded)
-├── BugReports.jsx           ← Bug reports (lazy loaded)
-├── PendingApproval.jsx      ← Pending approval screen
-├── ErrorBoundary.jsx        ← Error boundary wrapper
-├── pricing.js               ← Pricing data
-└── components/
-    ├── Dashboard.jsx        ← Project list / home screen
-    ├── ProjectSetup.jsx     ← Step 1: Project Details form
-    ├── RoomsPage.jsx        ← Step 2: Room Estimates (+ CabinetrySection, UpgradesSection, FinishingSection, InstallSection)
-    ├── FinalDetailsPage.jsx ← Step 3: Delivery + tax
-    ├── SummaryPage.jsx      ← Step 4: Estimate summary
-    ├── PrintEmailPage.jsx   ← Step 5: Print & email
-    ├── EmailModal.jsx       ← Email sending modal
-    ├── Field.jsx            ← Form field wrapper
-    └── Toast.jsx            ← Toast notification
-```
+### 4. Time Tracker Feature (`src/TimeTracker.jsx` — NEW FILE)
+Full time tracking + invoicing subsystem in the Admin Panel:
 
-> **Note:** `App.jsx` was recently split from ~3390 lines into the above structure to reduce token costs. If you need to find something that "should be in App.jsx" and it isn't, check `src/components/` or `src/appUtils.js`.
+**Timer Section:**
+- Start/stop button with elapsed HH:MM:SS counter
+- Description input, today's entries table
+- Timer resumes on page refresh (queries `stopped_at IS NULL`)
 
----
+**Weekly Summaries:**
+- Grouped by Mon–Sun, collapsible cards
+- Current week highlighted green with "THIS WEEK" badge
+- Generate Invoice / Email / PDF buttons per week
 
-## 3. App Architecture
+**Invoice Ledger:**
+- Table with toggle "✓ Paid" / "○ Pending" button
+- PDF, Email, and Delete (🗑) action buttons per row
+- Delete unlinks time entries so the week can be re-invoiced
 
-### View routing (no React Router — state-based)
-The `view` state in `App.jsx` controls what renders:
-- `"dashboard"` — project list
-- `"new"` — multi-step form (steps 0–4)
+**Invoice PDF (branded, matches HTML template exactly):**
+- **Fonts**: Space Grotesk + Archivo (registered from Google Fonts TTF URLs)
+- **Colors**: accent `#c2693c`, accent-deep `#a8542d`, ink `#17181a`, wash `#f7f5f2`
+- **Logo**: Pelican logo at `public/logo.png` (dark circle, transparent bg, auto-detected on load)
+- **Layout**: Masthead with logo + name + "INVOICE" title → copper rule → From/Bill To panels → invoice meta → dark-header data table → Notes + Totals with copper "TOTAL DUE" box → footer
+- **Title**: "Business Automation Consultant" (not "Software Developer & Automation Consultant")
+- **Footer**: "Thank you for your business." removed
+- Invoice number format: `INV-YYYY-MMDD` (year + month+day of week start)
+- Hourly rate: $33.10/hr
+- Email uses existing `send-quote-email` Supabase edge function
+- Client email: kmenzel@engstromwoodproducts.com
 
-### Sticky header structure
-```
-<div style="position:sticky; top:0; zIndex:100; background:var(--ivory2)">
-  <div class="topbar">...</div>
-  {isGuest && <GuestBanner />}
-  {view==="new" && <Stepper />}
-  {view==="new" && project.id && <QuickSaveBar />}
-</div>
-<div class="main">
-  {/* page content */}
-</div>
-```
+### 5. AdminPanel.jsx Changes
+- Added `import { TimeTrackerTab } from "./TimeTracker.jsx"`
+- Tab bar: right-aligned "⏱ Time Tracker" button with `marginLeft: "auto"`
+- Tab content: `{tab === "timetracker" && <TimeTrackerTab ... />}`
 
-### CSS theming
-All CSS lives in a `const styles = \`...\`` string at the top of `App.jsx`, injected via `<style>`. Uses CSS custom properties:
-
-| Variable | Light | Dark | Purpose |
-|----------|-------|------|---------|
-| `--gold` | `#C9A96E` | `#C99E64` | Primary accent (brass) |
-| `--ivory2` | `#EAE8E2` | `#1A1E25` | App surface / section bg |
-| `--ivory3` | `#DCDAD2` | `#262A33` | Borders, dividers |
-| `--char` | `#2D2D2D` | `#E8E4D9` | Body text |
-| `--header-bg` | `rgba(255,255,255,0.92)` | `rgba(14,16,20,0.92)` | Sticky header background |
-| `--card-bg` | `rgba(255,255,255,0.85)` | `rgba(25,29,36,0.82)` | Card backgrounds |
+### 6. Footer (`src/main.jsx`)
+- Padding bumped from `3px` to `6px` top and bottom
 
 ---
 
-## 4. Guest Mode
+## Supabase Tables (already created)
 
-Fully implemented. Key behaviour:
-- "Continue as Guest" button on the signin tab of `Auth.jsx`
-- Guests see **no real saved quotes** — full data isolation
-- Estimates stored in React state only — **discarded on exit**
-- Amber banner shown inside the app with "Sign in to save →" button
+**`time_entries`**: id (uuid PK), user_id, started_at, stopped_at, duration_seconds, description, invoice_id (FK → invoices.id), created_at
 
-### Data flow
-```
-main.jsx  →  isGuest state
-  Auth.jsx     onGuestLogin prop  →  sets isGuest = true
-  App.jsx      isGuest prop
-    loadData:        skips Supabase project/contractor fetch
-    saveProject:     React state only, shows "Saved for this session" toast
-    deleteProject:   React state only
-    duplicateProject: React state only
-    Sign out button: calls onGuestExit instead of supabase.auth.signOut()
-    Report Error:    hidden for guests
-    My Reports:      hidden for guests
-```
+**`invoices`**: id (uuid PK), invoice_number (unique), week_start, week_end, hourly_rate, total_hours, total_amount, status ("pending"/"paid"), paid_on, received_on, emailed_at, created_at
 
-### Guest scroll bug fix (completed this session)
-**Bug:** "Project Details" page title was bleeding up through the sticky header when scrolling in guest mode.
-**Fix:** Added `background: "var(--ivory2)"` to the sticky wrapper div in `App.jsx` so it clips scrolled content cleanly.
+Historical data (15 entries from Google Sheets) was imported via INSERT SQL.
 
----
+## Pending
+- **Supabase migration**: `UPDATE projects SET status = 'active:drafting' WHERE status = 'confirmed';`
+- **Uncommitted changes** — all work is local, nothing pushed yet
+- If logo needs updating, replace `public/logo.png` (square PNG, transparent bg, dark circle with pelican)
 
-## 5. Recent Work Completed
+## Key Files
+- **`src/App.jsx`** (~2000+ lines) — Main app, all CSS in `<style>` tag
+- **`src/components/Dashboard.jsx`** — Hub with section cards
+- **`src/TimeTracker.jsx`** — Time tracking + invoicing
+- **`src/AdminPanel.jsx`** — Admin panel with Time Tracker tab
+- **`src/appUtils.js`** — Status lifecycle helpers
+- **`src/main.jsx`** — App shell, footer, auth
+- **`public/logo.png`** — Pelican logo for invoices
 
-| Task | Status |
-|------|--------|
-| Guest mode (login, isolation, banner, exit) | ✅ Done |
-| Guest scroll bug fix | ✅ Done |
-| App.jsx split into components | ✅ Done & pushed |
-| Cold email outreach .txt files (17 leads) | ✅ Done & pushed |
-| PowerPoint pitch deck with real screenshots | ✅ Done |
+## CSS Variable Reference
+### Light mode
+- `--bg: #F2F1ED`, `--text/--char: #15171C`, `--gold: #5B8C5A`, `--gold-bg: #EBF3EB`
+- `--surface/--card-bg: #ffffff`, `--border/--ivory3: #DCDAD2`
 
----
-
-## 6. Color Palette / UI Redesign (Pending)
-
-The user wants to redesign the color scheme. **This has NOT been implemented yet.**
-
-If this comes up in future:
-- Preview mockups are at: `palette-v2.html`, `palette-v3.html`, `palette-v4.html` in the project root
-- User liked **Burgundy & Rose Gold** and requested 3 matte variants (`palette-v4.html` — D1, D2, D3)
-- **User has not yet chosen a variant**
-- To implement: update CSS vars in `App.jsx` `:root` + `.dark` blocks, update `Auth.jsx` inline `t` theme object, update `BgDots.jsx` dot colors
-
----
-
-## 7. Other Project Files
-
-```
-Root/
-├── build_deck.cjs           ← Node script to generate pitch deck (uses pptxgenjs)
-├── screenshots/             ← App screenshots used in pitch deck
-│   ├── 01_dashboard.png
-│   ├── 02_room_estimates.png
-│   └── 03_summary.png
-├── outreach_emails/         ← 17 cold email .txt files + follow-up template
-├── Quote_App_Pitch_Deck.pptx
-└── CHAT_SUMMARY.md          ← This file
-```
-
----
-
-## 8. Build & Deploy
-
-```bash
-npm run build    # outputs to dist/  (~1.8MB App chunk — expected, no concern)
-```
-
-Deployed to Netlify (static host). The large bundle size warning is pre-existing and harmless.
-
----
-
-## 9. Key Conventions
-
-- **Never mention** dev server, `preview_start`, or hooks in responses
-- Non-technical end users — keep UI language simple
-- All form input sanitized via `src/sanitize.js` before any Supabase call
-- Admin panel and Bug Reports are lazy-loaded (`React.lazy` + `Suspense`)
-- Dark mode state stored in `localStorage` under key `"ewp-theme"`
+### Dark mode
+- `--bg: #0E1014`, `--text/--char: #E8E4D9`, `--gold: #7BAF7A`
+- `--surface/--card-bg: #191D24`, `--border/--ivory3: #262A33`

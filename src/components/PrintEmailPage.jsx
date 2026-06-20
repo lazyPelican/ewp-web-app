@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { fmtDate, fmtId } from "../appUtils.js"
-import { exportPDFInternal, exportPDFCustomer, previewPDFInternal, previewPDFCustomer } from "../pdfExport.js"
+import { exportPDFInternal, exportPDFCustomer, exportPDFSummary, previewPDFInternal, previewPDFCustomer, previewPDFSummary } from "../pdfExport.js"
 
 export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) {
   const [pdfStatus,  setPdfStatus]  = useState("idle");
@@ -10,6 +10,10 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
   const [pdfStatus2, setPdfStatus2] = useState("idle");
   const [pdfError2,  setPdfError2]  = useState(null);
   const [prevStatus2, setPrevStatus2] = useState("idle");
+
+  const [pdfStatus3, setPdfStatus3] = useState("idle");
+  const [pdfError3,  setPdfError3]  = useState(null);
+  const [prevStatus3, setPrevStatus3] = useState("idle");
 
   const handleInternal = () => {
     setPdfError(null);
@@ -43,6 +47,22 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
     });
   };
 
+  const handleSummary = () => {
+    setPdfError3(null);
+    exportPDFSummary(project, rooms, preparedBy, (status, errMsg) => {
+      setPdfStatus3(status);
+      if (errMsg) setPdfError3(errMsg);
+    });
+  };
+
+  const handlePreviewSummary = () => {
+    setPdfError3(null);
+    previewPDFSummary(project, rooms, preparedBy, (status, errMsg) => {
+      setPrevStatus3(status);
+      if (errMsg) setPdfError3(errMsg);
+    });
+  };
+
   const actions = [
     {
       icon: "📄",
@@ -68,6 +88,19 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
       err: pdfError2,
       onClick: handleCustomer,
       onPreview: handlePreviewCustomer,
+      btnClass: "btn-gold",
+    },
+    {
+      icon: "📑",
+      title: "Summary Download",
+      desc: "One-page overview with room totals, delivery, tax, and grand total — no per-room breakout.",
+      btnLabel: { idle: "Download PDF", generating: "⳿ Preparing…", done: "Download Again", error: "⚠ Try Again" }[pdfStatus3] || "Download PDF",
+      prevLabel: { idle: "Preview", generating: "⳿ Loading…", done: "Preview Again", error: "⚠ Try Again" }[prevStatus3] || "Preview",
+      busy: pdfStatus3 === "generating",
+      prevBusy: prevStatus3 === "generating",
+      err: pdfError3,
+      onClick: handleSummary,
+      onPreview: handlePreviewSummary,
       btnClass: "btn-gold",
     },
   ];

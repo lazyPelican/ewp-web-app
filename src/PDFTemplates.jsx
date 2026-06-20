@@ -668,10 +668,10 @@ function InternalSummaryPage({
 const HOURLY_RATE = 'Hourly Rate'
 
 function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, preparedBy }) {
-  const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
-  const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
-  const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) > 0)
-  const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
+  const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) !== 0)
+  const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) !== 0)
+  const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) !== 0)
+  const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) !== 0)
   const instDef  = pricing.installType?.find(i => i.name === room.install.type)
 
   const qs = project.quoteSections || {}
@@ -1073,10 +1073,10 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
   const qd = { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" }
   const cfg = (k) => ({ ...qd, ...(qs[k] || {}) })
 
-  const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) > 0)
-  const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) > 0)
-  const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) > 0)
-  const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) > 0)
+  const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) !== 0)
+  const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) !== 0)
+  const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) !== 0)
+  const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) !== 0)
   const hasInstall = room.install.type && room.install.type !== 'No Install'
 
   const descCols = [
@@ -1085,9 +1085,14 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
   ]
 
   const cabDescCols = [
-    { w: '50%', label: 'Description' },
-    { w: '20%', label: 'Qty', right: true },
-    { w: '30%', label: 'Notes' },
+    { w: '60%', label: 'Description' },
+    { w: '40%', label: 'Notes' },
+  ]
+
+  const upgDescCols = [
+    { w: '45%', label: 'Description' },
+    { w: '15%', label: 'Qty', right: true },
+    { w: '40%', label: 'Notes' },
   ]
 
   // Build summary with roll-up logic from quoteSections
@@ -1157,9 +1162,8 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
                     colDefs={cabDescCols}
                     isEven={i % 2 === 1}
                     cells={[
-                      { val: trunc(item.product, 50) },
-                      { val: String(parseFloat(item.qty) || 0), right: true },
-                      { val: trunc(notes, 40) },
+                      { val: trunc(item.product, 60) },
+                      { val: trunc(notes, 50) },
                     ]}
                   />
                 )
@@ -1176,15 +1180,16 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
           <SectionLabel label="Upgrades / Overrides" />
           {cfg('upgrades').showDetailExt && upgItems.length > 0 && (
             <View style={s.tblWrap}>
-              <TableHeader colDefs={descCols} />
+              <TableHeader colDefs={upgDescCols} />
               {upgItems.map((item, i) => (
                 <TableRow
                   key={i}
-                  colDefs={descCols}
+                  colDefs={upgDescCols}
                   isEven={i % 2 === 1}
                   cells={[
-                    { val: trunc(item.upgrade, 60) },
-                    { val: trunc(item.notes || '', 50) },
+                    { val: trunc(item.upgrade, 50) },
+                    { val: String(parseFloat(item.qty) || 0), right: true },
+                    { val: trunc(item.notes || '', 40) },
                   ]}
                 />
               ))}
@@ -1329,6 +1334,24 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
           preparedBy={preparedBy}
         />
       ))}
+    </Document>
+  )
+}
+
+// ── SUMMARY-ONLY CUSTOMER DOCUMENT (no per-room breakout) ─────────────────
+
+function SummaryPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy }) {
+  return (
+    <Document title={`${project.name || 'Quote'} — Summary`} author="Engstrom Wood Products">
+      <CustomerSummaryPage
+        project={project}
+        roomTotals={roomTotals}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+        preparedBy={preparedBy}
+      />
     </Document>
   )
 }
@@ -1506,6 +1529,86 @@ export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calc
 
   return pdf(
     <CustomerPDFDoc
+      project={project}
+      rooms={rooms}
+      roomTotals={roomTotals}
+      delivery={delivery}
+      pdfTaxRate={pdfTaxRate}
+      pdfTaxAmt={pdfTaxAmt}
+      grandTotal={grandTotal}
+      preparedBy={preparedBy}
+    />
+  ).toBlob()
+}
+
+// Summary PDF — just the overview page, no per-room breakout
+export async function exportPDFSummary(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }, onStatus) {
+  onStatus('generating')
+  try {
+    const roomTotals = rooms.map(r => {
+      const cab  = calcCabinetry(r.cabinetry)
+      const upg  = calcUpgrades(r.upgrades)
+      const ctp  = calcCountertops(r.countertops)
+      const fin  = calcFinishing(r.finishing)
+      const inst = calcInstall(r.install, cab)
+      return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
+    })
+    const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
+    const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+    const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
+    const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
+    const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+    const grandTotal = pdfSubtotal + pdfTaxAmt
+
+    const blob = await pdf(
+      <SummaryPDFDoc
+        project={project}
+        rooms={rooms}
+        roomTotals={roomTotals}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+        preparedBy={preparedBy}
+      />
+    ).toBlob()
+
+    const safeName   = (project.name    || 'Quote').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Quote'
+    const safeClient = (project.contactName || '').replace(/[^a-zA-Z0-9_\- ]/g, '').trim()
+    const filePrefix = safeClient ? `${safeClient} — ${safeName}` : safeName
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${filePrefix} — Summary.pdf`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+    onStatus('done')
+  } catch (err) {
+    console.error('PDF generation error (summary):', err)
+    onStatus('error', err?.message || 'PDF generation failed.')
+  }
+}
+
+export async function buildSummaryPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }) {
+  const roomTotals = rooms.map(r => {
+    const cab  = calcCabinetry(r.cabinetry)
+    const upg  = calcUpgrades(r.upgrades)
+    const ctp  = calcCountertops(r.countertops)
+    const fin  = calcFinishing(r.finishing)
+    const inst = calcInstall(r.install, cab)
+    return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
+  })
+  const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
+  const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+  const pdfTaxRate  = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
+  const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
+  const pdfTaxAmt   = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
+  const grandTotal  = pdfSubtotal + pdfTaxAmt
+
+  return pdf(
+    <SummaryPDFDoc
       project={project}
       rooms={rooms}
       roomTotals={roomTotals}

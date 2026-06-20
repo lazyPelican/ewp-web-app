@@ -151,7 +151,7 @@ function Root() {
         left: 0,
         right: 0,
         bottom: 0,
-        padding: "3px max(12px, env(safe-area-inset-right)) max(3px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
+        padding: "6px max(12px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
         textAlign: "center",
         fontFamily: "'DM Sans', sans-serif",
         fontSize: "clamp(11px, 2.8vw, 14px)",

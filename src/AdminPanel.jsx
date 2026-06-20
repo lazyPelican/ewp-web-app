@@ -4,6 +4,7 @@ import { DEFAULT_PRICING } from "./pricing.js"
 import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
 import { logError } from "./logger.js"
 import { BugReportsTab } from "./BugReports.jsx"
+import { TimeTrackerTab } from "./TimeTracker.jsx"
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
 
@@ -683,6 +684,13 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
             <span style={{ fontSize: 12, color: "#E0C48A", fontStyle: "italic" }}>Unsaved changes</span>
           </div>
         )}
+        {!(dirty && tab === "pricing") && <div style={{ marginLeft: "auto" }} />}
+        <button onClick={() => confirmIfDirty(() => setTab("timetracker"))} style={{
+          padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === "timetracker" ? t.gold : "transparent"}`,
+          background: "transparent", color: tab === "timetracker" ? t.text : t.textMuted,
+          fontWeight: tab === "timetracker" ? 600 : 400, fontSize: 14,
+          cursor: "pointer", fontFamily: font, transition: "all 0.15s",
+        }}>⏱ Time Tracker</button>
       </div>
 
       <div className="admin-main-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px" }}>
@@ -1088,6 +1096,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
         {/* ── BUG REPORTS TAB ── */}
         {tab === "bugs" && (
           <BugReportsTab session={session} isAdmin={isAdmin} />
+        )}
+
+        {/* ── TIME TRACKER TAB ── */}
+        {tab === "timetracker" && (
+          <TimeTrackerTab session={session} t={t} font={font} serif={serif} showToast={showToast} />
         )}
       </div>
 

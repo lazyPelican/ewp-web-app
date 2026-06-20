@@ -9,6 +9,7 @@ import {
   genId, makeCopyName, fmtId, blankRoom, isRoomComplete,
   calcCabinetry, calcUpgrades, calcFinishing, calcInstall,
   DEFAULT_QUOTE_SECTIONS,
+  ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus,
 } from "./appUtils.js"
 import { exportPDFInternal, exportPDFCustomer } from "./pdfExport.js"
 import { Toast } from "./components/Toast.jsx"
@@ -433,12 +434,12 @@ const styles = `
 
   /* ── DASHBOARD SEARCH ── */
   .dash-search-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; margin-bottom: 20px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; margin-bottom: 20px;
     animation: fadeUp 0.45s 0.15s cubic-bezier(0.22,1,0.36,1) both;
   }
   .dash-search-wrap {
-    position: relative; flex: 1; max-width: 380px;
+    position: relative; width: 100%; max-width: 480px;
   }
   .dash-search-icon {
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
@@ -602,8 +603,17 @@ const styles = `
   .dark .pcard-status--done { background: rgba(42,107,64,0.15); color: #5CBB76; }
   .dark .pcard-status--draft { background: rgba(180,165,130,0.15); color: #B4A882; }
   .dark .pcard-status--confirmed { background: rgba(56,130,210,0.15); color: #6BAAEE; }
+  .dark .pcard-status--active { background: rgba(56,130,210,0.15); color: #6BAAEE; }
+  .dark .pcard-status--closed { background: rgba(120,120,120,0.15); color: #999; }
   .dark .pcard-confirm-btn { background: rgba(56,130,210,0.1); color: #6BAAEE; border-color: rgba(56,130,210,0.25); }
   .dark .pcard-confirm-btn:hover { background: rgba(56,130,210,0.2); }
+  .dark .pcard-stage-select { background: var(--surface); border-color: var(--ivory3); color: var(--char); }
+  .dark .pcard-archive-btn { border-color: var(--ivory3); color: var(--muted); }
+  .dark .pcard-archive-btn:hover { border-color: var(--mid); color: var(--char); }
+  .dark .dash-hub-card { background: var(--card-bg); border-color: var(--ivory3); }
+  .dark .dash-hub-card:hover { border-color: var(--mid); }
+  .dark .dash-back-btn { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
+  .dark .dash-back-btn:hover { background: var(--gold); color: #fff; }
   .dark .dash-stat { background: var(--card-bg); border-color: var(--ivory3); }
   .dark .dash-search-input { background: var(--card-bg); border-color: var(--ivory3); color: var(--char); }
   .dark .summary-card { background: var(--card-bg); border-color: var(--ivory3); }
@@ -876,6 +886,84 @@ const styles = `
     transition: all 0.22s ease; white-space: nowrap;
   }
   .pcard-confirm-btn:hover { background: rgba(37,99,170,0.15); border-color: #2563AA; }
+  .pcard-status--active { background: rgba(37,99,170,0.1); color: #2563AA; }
+  .pcard-status--closed { background: rgba(120,120,120,0.1); color: #888; }
+
+  /* Stage controls on active cards */
+  .pcard-stage-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  }
+  .pcard-stage-select {
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
+    padding: 5px 10px; border-radius: 6px;
+    border: 1px solid var(--ivory3); background: var(--card-bg); color: var(--char);
+    cursor: pointer; flex: 1;
+  }
+  .pcard-stage-select:focus { border-color: var(--mid); outline: none; }
+  .pcard-archive-btn {
+    font-size: 11px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+    padding: 5px 12px; border-radius: 6px; cursor: pointer;
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--ivory3);
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .pcard-archive-btn:hover { border-color: var(--mid); color: var(--char); }
+
+  /* Hub section cards */
+  .dash-hub-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px; padding: 0 16px;
+  }
+  .dash-hub-card {
+    background: var(--card-bg); border: 1px solid var(--ivory3); border-radius: 14px;
+    padding: 28px 24px; cursor: pointer;
+    transition: all 0.25s ease; position: relative; overflow: hidden;
+  }
+  .dash-hub-card:hover {
+    border-color: var(--mid); box-shadow: var(--shadow-1);
+    transform: translateY(-2px);
+  }
+  .dash-hub-icon {
+    font-size: 32px; margin-bottom: 14px; display: block;
+  }
+  .dash-hub-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 700; color: var(--char);
+    margin-bottom: 4px;
+  }
+  .dash-hub-count {
+    font-size: 36px; font-weight: 800; color: var(--char);
+    font-family: 'Cormorant Garamond', serif; line-height: 1;
+    margin-bottom: 6px;
+  }
+  .dash-hub-sub {
+    font-size: 12px; color: var(--muted); line-height: 1.5;
+  }
+  .dash-hub-arrow {
+    position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    font-size: 20px; color: var(--ivory3); transition: color 0.2s;
+  }
+  .dash-hub-card:hover .dash-hub-arrow { color: var(--mid); }
+
+  /* Section back button */
+  .dash-back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; color: var(--gold);
+    background: var(--gold-bg); border: 1.5px solid var(--gold);
+    border-radius: 8px; padding: 8px 18px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    margin-bottom: 20px;
+  }
+  .dash-back-btn:hover { background: var(--gold); color: #fff; }
+
+  /* Subsection titles */
+  .dash-subsection-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--muted);
+    margin: 20px 0 10px; padding-left: 4px;
+  }
+  .dash-subsection-title:first-of-type { margin-top: 0; }
+
   .pcard-id {
     font-size: 10px; color: var(--muted); font-family: 'DM Sans', monospace;
     letter-spacing: 0.03em;
@@ -1441,7 +1529,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           setLoadError(true)
           showToast("Failed to load estimates — check your connection")
         } else {
-          setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id, _updatedAt: row.updated_at, _status: row.status || null })))
+          setProjects((projectsRes.data || []).map(row => ({ ...row.data, _rowId: row.id, _updatedAt: row.updated_at, _status: row.status === "confirmed" ? "active:drafting" : (row.status || null) })))
         }
       }
     } catch (err) {
@@ -1509,8 +1597,8 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     setProject({ ...p.project, quoteSections: p.project.quoteSections || { ...DEFAULT_QUOTE_SECTIONS } });
     setRooms(p.rooms.map(r => ({ ...r, countertops: r.countertops || [] })));
     _serverUpdatedAt.current = p._updatedAt || null;
-    const isConfirmed = p._status === "confirmed";
-    setReadOnly(isConfirmed && !isAdmin);
+    const isLocked = isActiveStatus(p._status) || isClosedStatus(p._status);
+    setReadOnly(isLocked);
     setStep(0); setEditIdx(i); setSaved(true); setView("new");
     const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
     const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
@@ -1562,16 +1650,55 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     if (actionBusy) return;
     const p = projects[i];
     if (isGuest) {
-      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "confirmed" } : pr));
-      showToast("Quote marked as confirmed");
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "active:drafting" } : pr));
+      showToast("Quote marked as Under Contract");
       return;
     }
     setActionBusy(true);
-    const { error } = await supabase.from("projects").update({ status: "confirmed" }).eq("id", p.project.id);
-    if (error) { logError("confirmProject", error); showToast("Error confirming quote"); }
+    const { error } = await supabase.from("projects").update({ status: "active:drafting" }).eq("id", p.project.id);
+    if (error) { logError("confirmProject", error); showToast("Error updating quote"); }
     else {
-      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "confirmed" } : pr));
-      showToast("Quote confirmed: " + p.project.name);
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "active:drafting" } : pr));
+      showToast("Under Contract: " + p.project.name);
+    }
+    setActionBusy(false);
+  };
+
+  const updateProjectStage = async (i, stageKey) => {
+    if (actionBusy) return;
+    const p = projects[i];
+    const newStatus = `active:${stageKey}`;
+    const label = ACTIVE_STAGES.find(s => s.key === stageKey)?.label || stageKey;
+    if (isGuest) {
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: newStatus } : pr));
+      showToast(`Stage: ${label}`);
+      return;
+    }
+    setActionBusy(true);
+    const { error } = await supabase.from("projects").update({ status: newStatus }).eq("id", p.project.id);
+    if (error) { logError("updateProjectStage", error); showToast("Error updating stage"); }
+    else {
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: newStatus } : pr));
+      showToast(`${p.project.name} → ${label}`);
+    }
+    setActionBusy(false);
+  };
+
+  const closeProject = async (i) => {
+    if (actionBusy) return;
+    const p = projects[i];
+    if (!window.confirm(`Close "${p.project.name}" and move to history?\n\nThis marks the job as complete and archived.`)) return;
+    if (isGuest) {
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "closed" } : pr));
+      showToast("Job closed");
+      return;
+    }
+    setActionBusy(true);
+    const { error } = await supabase.from("projects").update({ status: "closed" }).eq("id", p.project.id);
+    if (error) { logError("closeProject", error); showToast("Error closing job"); }
+    else {
+      setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "closed" } : pr));
+      showToast("Closed: " + p.project.name);
     }
     setActionBusy(false);
   };
@@ -1881,7 +2008,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             </span>
             <div style={{ textAlign: "right" }}>
               {readOnly ? (
-                <span style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic" }}>Confirmed — view &amp; print only</span>
+                <span style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic" }}>Under Contract — view &amp; print only</span>
               ) : (
               <button
                 className="btn btn-gold btn-lg"
@@ -1915,6 +2042,8 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             onDelete={deleteProject}
             onDuplicate={duplicateProject}
             onConfirm={confirmProject}
+            onUpdateStage={updateProjectStage}
+            onCloseProject={closeProject}
             actionBusy={actionBusy}
             onGenerateQuote={(i) => {
               const p = projects[i];

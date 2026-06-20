@@ -31,6 +31,16 @@ export async function buildCustomerPDFBlob(project, rooms, preparedBy) {
   return mod.buildCustomerPDFBlob(project, rooms, opts(preparedBy, false));
 }
 
+export async function exportPDFSummary(project, rooms, preparedBy, onStatus) {
+  const mod = await getPDF();
+  mod.exportPDFSummary(project, rooms, opts(preparedBy, false), onStatus);
+}
+
+export async function buildSummaryPDFBlob(project, rooms, preparedBy) {
+  const mod = await getPDF();
+  return mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, false));
+}
+
 // Preview helpers — generate blob and open in new browser tab
 export async function previewPDFInternal(project, rooms, preparedBy, onStatus) {
   onStatus('generating');
@@ -58,6 +68,21 @@ export async function previewPDFCustomer(project, rooms, preparedBy, onStatus) {
     onStatus('done');
   } catch (err) {
     console.error('PDF preview error (customer):', err);
+    onStatus('error', err?.message || 'Preview failed.');
+  }
+}
+
+export async function previewPDFSummary(project, rooms, preparedBy, onStatus) {
+  onStatus('generating');
+  try {
+    const mod = await getPDF();
+    const blob = await mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, false));
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+    onStatus('done');
+  } catch (err) {
+    console.error('PDF preview error (summary):', err);
     onStatus('error', err?.message || 'Preview failed.');
   }
 }
