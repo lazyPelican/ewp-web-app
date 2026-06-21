@@ -316,6 +316,8 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
 
   const descSaveTimer = useRef(null)
 
+  const [showTimerPrompt, setShowTimerPrompt] = useState(false)
+
   // ── Load data on mount ──
   useEffect(() => {
     loadData()
@@ -324,6 +326,30 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
       if (descSaveTimer.current) clearTimeout(descSaveTimer.current)
     }
   }, [])
+
+  // ── Auto-stop timer on browser close / shutdown ──
+  useEffect(() => {
+    const stopOnUnload = () => {
+      if (!activeEntry) return
+      const now = new Date().toISOString()
+      const durationSeconds = Math.round((Date.now() - new Date(activeEntry.started_at).getTime()) / 1000)
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/time_entries?id=eq.${activeEntry.id}`
+      const token = session?.access_token
+      fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${token}`,
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify({ stopped_at: now, duration_seconds: durationSeconds }),
+        keepalive: true,
+      })
+    }
+    window.addEventListener("beforeunload", stopOnUnload)
+    return () => window.removeEventListener("beforeunload", stopOnUnload)
+  }, [activeEntry, session])
 
   const loadData = async () => {
     setLoading(true)
@@ -347,6 +373,8 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
         const elapsedSec = Math.round((Date.now() - new Date(running.started_at).getTime()) / 1000)
         setElapsed(elapsedSec)
         startTicking(new Date(running.started_at).getTime())
+      } else if (session?.user?.email?.toLowerCase() === BILAL_EMAIL) {
+        setShowTimerPrompt(true)
       }
     } catch (err) {
       logError("timetracker.load", err)
@@ -690,6 +718,11 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
     return <div style={{ padding: 40, textAlign: "center", color: t.textMuted, fontFamily: font }}>Loading time tracker…</div>
   }
 
+  const handlePromptStart = () => {
+    setShowTimerPrompt(false)
+    handleStart()
+  }
+
   return (
     <div>
       {/* Section title */}
@@ -698,6 +731,30 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
         <div style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>Track hours, generate invoices, manage billing</div>
         <div style={{ height: 2, background: t.gold, width: 48, marginTop: 12 }} />
       </div>
+
+      {/* ── Timer start prompt ── */}
+      {showTimerPrompt && (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "14px 20px", marginBottom: 20, borderRadius: 10,
+          background: "rgba(91,140,90,0.1)", border: `1px solid rgba(91,140,90,0.3)`,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>⏱</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>Do you want to start the timer?</span>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={handlePromptStart} style={{
+              padding: "7px 18px", borderRadius: 6, border: "none", cursor: "pointer",
+              fontSize: 13, fontWeight: 600, fontFamily: font, background: "#2E7D32", color: "#fff",
+            }}>Yes, start</button>
+            <button onClick={() => setShowTimerPrompt(false)} style={{
+              padding: "7px 14px", borderRadius: 6, border: `1px solid ${t.border}`, cursor: "pointer",
+              fontSize: 13, fontWeight: 500, fontFamily: font, background: "transparent", color: t.textMuted,
+            }}>Not now</button>
+          </div>
+        </div>
+      )}
 
       {/* ── SECTION A: TIMER ── */}
       <div style={card}>
@@ -760,7 +817,7 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
                   <span style={{ fontWeight: 600 }}>{e.stopped_at ? fmtDuration(e.duration_seconds || 0) : fmtDuration(elapsed)}</span>
                   <span style={{ color: t.textMid, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{renderEditableCell(e, "description", e.description || "—")}</span>
                   <span>
-                    {e.stopped_at && !e.invoice_id && (
+                    {e.stopped_at && (
                       <button onClick={() => handleDeleteEntry(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: t.textMuted, padding: 2 }} title="Delete">🗑</button>
                     )}
                   </span>
@@ -832,16 +889,19 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
                 {isExpanded && (
                   <div style={{ padding: "0 16px 12px" }}>
                     <div style={{ borderRadius: 6, overflow: "hidden", border: `1px solid ${t.border}`, marginTop: 8 }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr", padding: "8px 12px", background: t.cardAlt, fontSize: 10, fontWeight: 700, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        <span>Date</span><span>Start</span><span>Stop</span><span>Duration</span><span>Description</span>
+                      <div style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr 40px", padding: "8px 12px", background: t.cardAlt, fontSize: 10, fontWeight: 700, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        <span>Date</span><span>Start</span><span>Stop</span><span>Duration</span><span>Description</span><span></span>
                       </div>
                       {[...week.entries].sort((a, b) => new Date(a.started_at) - new Date(b.started_at)).map(e => (
-                        <div key={e.id} style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr", padding: "8px 12px", borderTop: `1px solid ${t.border}`, fontSize: 12, color: t.text, alignItems: "center" }}>
+                        <div key={e.id} style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr 40px", padding: "8px 12px", borderTop: `1px solid ${t.border}`, fontSize: 12, color: t.text, alignItems: "center" }}>
                           <span>{fmtDateShort(e.started_at)}</span>
                           <span>{renderEditableCell(e, "started_at", fmtTime(e.started_at))}</span>
                           <span>{renderEditableCell(e, "stopped_at", fmtTime(e.stopped_at))}</span>
                           <span style={{ fontWeight: 600 }}>{fmtDuration(e.duration_seconds || 0)}</span>
                           <span style={{ color: t.textMid }}>{renderEditableCell(e, "description", e.description || "—")}</span>
+                          <span>
+                            <button onClick={() => handleDeleteEntry(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: t.textMuted, padding: 2 }} title="Delete">🗑</button>
+                          </span>
                         </div>
                       ))}
                     </div>
