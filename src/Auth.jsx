@@ -40,7 +40,7 @@ export default function Auth({ onGuestLogin }) {
     submitBg: "#2D2D2D", submitColor: "#FDFAF5",
   }
 
-  const font = "'DM Sans', sans-serif"
+  const font = "var(--font-body)"
 
   const inputStyle = (hasError) => ({
     width: "100%", padding: "10px 14px", borderRadius: 7,

@@ -82,7 +82,7 @@ export function EmailModal({ project, rooms, preparedBy, operatorEmail, operator
     padding: '32px 28px 24px',
     width: '100%', maxWidth: 500,
     boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--font-body)",
     display: 'flex', flexDirection: 'column', gap: 14,
   }
   const labelStyle = { fontSize: 11, fontWeight: 700, color: 'var(--mid, #9B8E82)',

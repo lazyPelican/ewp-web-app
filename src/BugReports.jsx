@@ -107,7 +107,7 @@ export function BugReportModal({ session, onClose }) {
               rows={5} style={{
                 width: "100%", padding: "10px 12px", borderRadius: 4, resize: "vertical",
                 border: "1px solid var(--ivory3)", background: "var(--input-bg)",
-                fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "var(--char)", boxSizing: "border-box",
+                fontFamily: "var(--font-body)", fontSize: 13, color: "var(--char)", boxSizing: "border-box",
               }} />
           </div>
 
@@ -241,7 +241,7 @@ export function BugThreadModal({ report, session, isAdmin, onClose, onStatusChan
               <button key={s} onClick={() => changeStatus(s)} style={{
                 fontSize: 10, padding: "3px 10px", borderRadius: 10, cursor: "pointer",
                 border: "1px solid var(--ivory3)", background: "transparent", color: "var(--muted)",
-                fontFamily: "'DM Sans',sans-serif", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em",
+                fontFamily: "var(--font-body)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em",
               }}>→ {statusMeta[s].label}</button>
             ))}
           </div>
@@ -292,14 +292,14 @@ export function BugThreadModal({ report, session, isAdmin, onClose, onStatusChan
               rows={3} style={{
                 width: "100%", padding: "9px 12px", borderRadius: 4, resize: "none",
                 border: "1px solid var(--ivory3)", background: "var(--input-bg)",
-                fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "var(--char)",
+                fontFamily: "var(--font-body)", fontSize: 13, color: "var(--char)",
                 boxSizing: "border-box", marginBottom: 8,
               }} />
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button title="Attach file" onClick={() => fileRef.current?.click()} style={{
                 background: "none", border: "1px solid var(--ivory3)", borderRadius: 4,
                 padding: "5px 10px", cursor: "pointer", fontSize: 12, color: "var(--muted)",
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--font-body)",
               }}>
                 📎 {attachment ? attachment.name.slice(0, 18) + (attachment.name.length > 18 ? "…" : "") : "Attach"}
               </button>
@@ -317,7 +317,7 @@ export function BugThreadModal({ report, session, isAdmin, onClose, onStatusChan
         ) : (
           <div style={{ borderTop: "1px solid var(--ivory3)", padding: "12px 20px", textAlign: "center", color: "var(--muted)", fontSize: 13, flexShrink: 0 }}>
             ✅ This report has been resolved.
-            {isAdmin && <button onClick={() => changeStatus("open")} style={{ marginLeft: 10, background: "none", border: "none", color: "var(--gold)", cursor: "pointer", fontSize: 12, fontFamily: "'DM Sans',sans-serif" }}>Reopen</button>}
+            {isAdmin && <button onClick={() => changeStatus("open")} style={{ marginLeft: 10, background: "none", border: "none", color: "var(--gold)", cursor: "pointer", fontSize: 12, fontFamily: "var(--font-body)" }}>Reopen</button>}
           </div>
         )}
       </div>
@@ -435,7 +435,7 @@ export function BugReportsTab({ session, isAdmin }) {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--char)", fontFamily: "'Cormorant Garamond', serif" }}>Bug Reports</div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--char)", fontFamily: "var(--font-display)" }}>Bug Reports</div>
         <div style={{ fontSize: 13, color: "var(--mid)", marginTop: 4 }}>Review and respond to user-submitted error reports</div>
         <div style={{ height: 2, background: "var(--gold)", width: 48, marginTop: 12 }} />
       </div>
@@ -445,7 +445,7 @@ export function BugReportsTab({ session, isAdmin }) {
         {[["all","All"],["open","Open"],["in_progress","In Progress"],["resolved","Resolved"]].map(([key,label]) => (
           <button key={key} onClick={() => setFilter(key)} style={{
             padding: "6px 14px", borderRadius: 16, fontSize: 12, fontWeight: 600,
-            cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
+            cursor: "pointer", fontFamily: "var(--font-body)",
             border: filter === key ? "1px solid var(--gold)" : "1px solid var(--ivory3)",
             background: filter === key ? "var(--gold-bg)" : "transparent",
             color: filter === key ? "var(--gold)" : "var(--mid)",

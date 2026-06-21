@@ -1,4 +1,4 @@
-# EWP Quote App - Session Summary (2026-06-18)
+# EWP Quote App - Session Summary (2026-06-19)
 
 ## Project
 **Engstrom Wood Products (EWP) Estimate Manager** — React + Vite frontend, Supabase backend. Live in production at ewpquote.vercel.app.
@@ -6,7 +6,8 @@
 ## Repository
 - GitHub: `https://github.com/lazyPelican/ewp-web-app.git`
 - Branch: `main`
-- Latest commit: `671b4ae` — "Remove duplicate section-banner CSS that hid Add Row buttons"
+- Latest commit: `7e68e5e` — "Add customer PDF fixes, summary PDF, credit items, time tracker, dashboard filters"
+- **Local and live are in sync** — all changes committed and pushed as of 2026-06-19
 
 ## Critical Instructions
 - **Do NOT auto commit/push** — only commit/push when explicitly asked
@@ -16,89 +17,96 @@
 
 ---
 
-## What Was Done This Session
+## What Was Done (Cumulative)
 
 ### 1. Dashboard Restructure (`src/components/Dashboard.jsx`)
 - Fully rewritten as a hub with 3 clickable section cards: **Quotations**, **Under Contract**, **Closed/History**
-- Each section has its own view, search bar (center-aligned), and gold-themed back button
+- Each section has its own view, search bar, and gold-themed back button
 - **Quotations** has 2 sub-cards: **Drafts** and **Quotes Ready for Clients**
-- Navigation state: `dashView: "hub" | "quotations" | "drafts" | "completed" | "active" | "closed"`
-- Under Contract quotes are **read-only for ALL users** (not just non-admins)
+- Under Contract quotes are **read-only for ALL users**
+- **Stage filter chips** in Under Contract view: All, Drafting, Redlines, Building & Install, Punch List, Paid — each with count badges
+- **Admin delete** enabled on Active and Closed sections (condition: `(section !== "active" && section !== "closed") || isAdmin`)
+- Filter resets when navigating between sections
 
 ### 2. Status Lifecycle (`src/appUtils.js`)
-Added at bottom of file (before `blankRoom`):
 - `ACTIVE_STAGES`: drafting → redlines → building → punchlist → paid
-- `isActiveStatus(s)` — checks `s.startsWith("active:")`
-- `getActiveStage(s)` — strips "active:" prefix
-- `isClosedStatus(s)` — checks `s === "closed"`
-- Data loading maps `"confirmed"` → `"active:drafting"` for backward compat
+- `isActiveStatus(s)`, `getActiveStage(s)`, `isClosedStatus(s)` helpers
+- `isRoomComplete`: all 4 checks changed from `parseFloat > 0` to `parseFloat !== 0` (supports negative/credit items)
 
-### 3. App.jsx Changes
-- Added imports for `ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus`
-- Read-only logic: `isLocked` applies to ALL users on active/closed quotes
-- Added `updateProjectStage` and `closeProject` handlers
-- Added CSS for hub cards, gold back button, center-aligned search, stage controls, dark mode overrides
-- Back button: `background: var(--gold-bg); border: 1.5px solid var(--gold); color: var(--gold)`
+### 3. Summary Table (`src/components/SummaryPage.jsx`) — DEPLOYED
+- **Cabinetry + Upgrades merged** into single "Cabinetry" column (6 columns total)
+- **Grand Total row** with gold border-top and gold text styling
+- **Delivery row** fixed with `colSpan={5}` for proper alignment
+- **Tax row** with proper colspan
+- Item filters changed from `> 0` to `!== 0` for credit support
 
-### 4. Time Tracker Feature (`src/TimeTracker.jsx` — NEW FILE)
-Full time tracking + invoicing subsystem in the Admin Panel:
+### 4. Customer PDF Fixes (`src/PDFTemplates.jsx`)
+- **Hide LF for cabinetry**: `cabDescCols` changed from 3 columns (Description/Qty/Notes) to 2 columns (Description/Notes)
+- **Show upgrade quantities**: Added `upgDescCols` with 3 columns (Description/Qty/Notes)
+- All 4 item filter occurrences changed from `parseFloat(i.qty) > 0` to `!== 0`
 
-**Timer Section:**
-- Start/stop button with elapsed HH:MM:SS counter
-- Description input, today's entries table
-- Timer resumes on page refresh (queries `stopped_at IS NULL`)
+### 5. Summary PDF (`src/PDFTemplates.jsx`, `src/pdfExport.js`, `src/components/PrintEmailPage.jsx`)
+- New `SummaryPDFDoc` component wrapping only `CustomerSummaryPage` (no room pages)
+- `exportPDFSummary`, `buildSummaryPDFBlob`, `previewPDFSummary` functions
+- Third card on Print & Email page: "Summary Download" with download + preview buttons
+- Description: "One-page overview with room totals, delivery, tax, and grand total — no per-room breakout."
 
-**Weekly Summaries:**
-- Grouped by Mon–Sun, collapsible cards
-- Current week highlighted green with "THIS WEEK" badge
-- Generate Invoice / Email / PDF buttons per week
+### 6. Credit / Negative Line Items
+- `src/components/RoomsPage.jsx`: Removed `min="0"` from all 4 qty/lf inputs
+- Line totals display when `qty !== 0` (not `> 0`); negative items styled `color: var(--red)` with `textDecoration: "line-through"`
+- Changes propagated to SummaryPage, PDFTemplates, and appUtils
 
-**Invoice Ledger:**
-- Table with toggle "✓ Paid" / "○ Pending" button
-- PDF, Email, and Delete (🗑) action buttons per row
-- Delete unlinks time entries so the week can be re-invoiced
+### 7. Time Tracker (`src/TimeTracker.jsx` — NEW FILE)
+Full time tracking + invoicing subsystem in Admin Panel:
+- Start/stop timer with elapsed HH:MM:SS, description input
+- **Inline editing**: click start time, stop time, or description to edit; supports multiple time formats
+- **Debounced description save** (800ms) while timer running
+- Invoiced entries locked from editing; running timer start time locked
+- Weekly summaries grouped Mon–Sun, current week highlighted green
+- Invoice ledger with paid/pending toggle, PDF/Email/Delete actions
+- Invoice PDF: Space Grotesk + Archivo fonts, copper accent, pelican logo
+- Hourly rate: $33.10/hr, client email: kmenzel@engstromwoodproducts.com
 
-**Invoice PDF (branded, matches HTML template exactly):**
-- **Fonts**: Space Grotesk + Archivo (registered from Google Fonts TTF URLs)
-- **Colors**: accent `#c2693c`, accent-deep `#a8542d`, ink `#17181a`, wash `#f7f5f2`
-- **Logo**: Pelican logo at `public/logo.png` (dark circle, transparent bg, auto-detected on load)
-- **Layout**: Masthead with logo + name + "INVOICE" title → copper rule → From/Bill To panels → invoice meta → dark-header data table → Notes + Totals with copper "TOTAL DUE" box → footer
-- **Title**: "Business Automation Consultant" (not "Software Developer & Automation Consultant")
-- **Footer**: "Thank you for your business." removed
-- Invoice number format: `INV-YYYY-MMDD` (year + month+day of week start)
-- Hourly rate: $33.10/hr
-- Email uses existing `send-quote-email` Supabase edge function
-- Client email: kmenzel@engstromwoodproducts.com
+### 8. App.jsx Changes
+- Status lifecycle imports and handlers (`updateProjectStage`, `closeProject`)
+- Read-only logic for active/closed quotes
+- CSS for hub cards, stage controls, dark mode overrides
 
-### 5. AdminPanel.jsx Changes
-- Added `import { TimeTrackerTab } from "./TimeTracker.jsx"`
-- Tab bar: right-aligned "⏱ Time Tracker" button with `marginLeft: "auto"`
-- Tab content: `{tab === "timetracker" && <TimeTrackerTab ... />}`
+### 9. AdminPanel.jsx
+- Time Tracker tab added with right-aligned "⏱ Time Tracker" button
 
-### 6. Footer (`src/main.jsx`)
-- Padding bumped from `3px` to `6px` top and bottom
+### 10. Other
+- Footer padding bumped to 6px (`src/main.jsx`)
+- New assets: `public/favicon-512_dark.webp`, `public/logo.png`
+- Outreach emails updated
+- `production_flow_project.md` planning doc added
+- `docx` npm package added as dev dependency
 
 ---
 
-## Supabase Tables (already created)
+## Supabase Tables
 
 **`time_entries`**: id (uuid PK), user_id, started_at, stopped_at, duration_seconds, description, invoice_id (FK → invoices.id), created_at
 
 **`invoices`**: id (uuid PK), invoice_number (unique), week_start, week_end, hourly_rate, total_hours, total_amount, status ("pending"/"paid"), paid_on, received_on, emailed_at, created_at
 
-Historical data (15 entries from Google Sheets) was imported via INSERT SQL.
-
-## Pending
+## Pending / TODO
 - **Supabase migration**: `UPDATE projects SET status = 'active:drafting' WHERE status = 'confirmed';`
-- **Uncommitted changes** — all work is local, nothing pushed yet
-- If logo needs updating, replace `public/logo.png` (square PNG, transparent bg, dark circle with pelican)
+- **Tasks report .docx**: `EWP_Completed_Tasks_Report.docx` was generated but uses old screenshots from `screenshots/` folder — needs fresh screenshots from the live app to be accurate
+- `generate_tasks_doc.cjs` script exists to regenerate the report — update screenshot paths and re-run
+- Keith's remaining feature requests tracked in `.claude/plans/bilal-ahmed-9-09-pm-rosy-island.md`
 
 ## Key Files
 - **`src/App.jsx`** (~2000+ lines) — Main app, all CSS in `<style>` tag
-- **`src/components/Dashboard.jsx`** — Hub with section cards
+- **`src/components/Dashboard.jsx`** — Hub with section cards, stage filters
+- **`src/components/SummaryPage.jsx`** — Summary table with merged columns + Grand Total
+- **`src/components/PrintEmailPage.jsx`** — 3 PDF download cards (Internal, Customer, Summary)
+- **`src/components/RoomsPage.jsx`** — Room estimates with credit item support
+- **`src/PDFTemplates.jsx`** — All PDF templates (Internal, Customer, Summary)
+- **`src/pdfExport.js`** — Lazy-loaded PDF export wrappers
 - **`src/TimeTracker.jsx`** — Time tracking + invoicing
 - **`src/AdminPanel.jsx`** — Admin panel with Time Tracker tab
-- **`src/appUtils.js`** — Status lifecycle helpers
+- **`src/appUtils.js`** — Calculations, helpers, status lifecycle
 - **`src/main.jsx`** — App shell, footer, auth
 - **`public/logo.png`** — Pelican logo for invoices
 

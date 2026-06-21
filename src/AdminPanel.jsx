@@ -529,8 +529,8 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
     badgeRejected: { bg: "#FEE2E2", color: "#991B1B" },
   }
 
-  const font = "'DM Sans', sans-serif"
-  const serif = "'Cormorant Garamond', Georgia, serif"
+  const font = "var(--font-body)"
+  const serif = "var(--font-display)"
 
   if (!isAdmin) {
     return (
@@ -1180,7 +1180,7 @@ function ContractorsTab() {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--char)", fontFamily: "'Cormorant Garamond', serif" }}>Contractors</div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--char)", fontFamily: "var(--font-display)" }}>Contractors</div>
         <div style={{ fontSize: 13, color: "var(--mid)", marginTop: 4 }}>Manage the contractor list shown in the Project Details dropdown</div>
         <div style={{ height: 2, background: "var(--gold)", width: 48, marginTop: 12 }} />
       </div>
@@ -1244,5 +1244,5 @@ function ContractorsTab() {
 const inputStyle = {
   padding: "7px 10px", borderRadius: 4, border: "1px solid var(--ivory3)",
   background: "var(--input-bg)", fontSize: 13, color: "var(--char)",
-  fontFamily: "'DM Sans', sans-serif",
+  fontFamily: "var(--font-body)",
 }

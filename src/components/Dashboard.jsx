@@ -75,9 +75,9 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
   // ── Hero banner (shared) ──
   const renderHero = () => (
     <div className="dash-hero-banner">
-      <div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" />
+      <div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" />
       <div className="dash-hero-overlay" />
-      <div className="dash-hero-tagline">Estimate Manager<span>New Age Technology • Old World Craftsmanship</span></div>
+      <div className="dash-hero-tagline">Estimate Manager<span>New Age Technology<br />Old World Craftsmanship</span></div>
       <div className="dash-hero-content">
         <div className="dash-hero-left">
           <span className="dash-greeting">{greeting},</span>
@@ -224,7 +224,7 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
             <div className="empty-state">
               <div className="empty-icon">📋</div>
               <div className="empty-title">{search ? "No results found" : "No drafts yet"}</div>
-              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>{search ? "Try a different search." : "Create a new estimate to get started."}</div>
+              <div className="empty-hint">{search ? "Try a different search term or check the spelling." : "Start a new estimate to begin pricing a project. You can save and come back anytime."}</div>
               {!search && <button className="btn btn-gold" onClick={onNew}>+ Create First Estimate</button>}
             </div>
           ) : (
@@ -250,7 +250,7 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
             <div className="empty-state">
               <div className="empty-icon">📋</div>
               <div className="empty-title">{search ? "No results found" : "No completed quotes"}</div>
-              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>{search ? "Try a different search." : "Complete all rooms in a quote to see it here."}</div>
+              <div className="empty-hint">{search ? "Try a different search term or check the spelling." : "Once every room in an estimate is filled out, it appears here ready for client review."}</div>
             </div>
           ) : (
             <div className="project-card-grid">
@@ -281,7 +281,7 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
               <div className="empty-state">
                 <div className="empty-icon">🔍</div>
                 <div className="empty-title">No results found</div>
-                <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>Try a different search term.</div>
+                <div className="empty-hint">Try a different search term or check the spelling.</div>
               </div>
             ) : (
               <>
@@ -377,8 +377,8 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
             <div className="empty-state">
               <div className="empty-icon">📋</div>
               <div className="empty-title">{search || stageFilter ? "No results found" : "No active jobs"}</div>
-              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>
-                {search || stageFilter ? "Try a different search or filter." : "Mark a completed quote as Under Contract to start tracking it here."}
+              <div className="empty-hint">
+                {search || stageFilter ? "Try a different search or clear the stage filter." : "When a quote is approved, move it to Under Contract to track its progress through production."}
               </div>
             </div>
           ) : (
@@ -404,8 +404,8 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
             <div className="empty-state">
               <div className="empty-icon">📋</div>
               <div className="empty-title">{search ? "No results found" : "No closed jobs yet"}</div>
-              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>
-                {search ? "Try a different search." : "Jobs moved here after being closed from Under Contract."}
+              <div className="empty-hint">
+                {search ? "Try a different search term or check the spelling." : "Completed jobs from Under Contract are archived here for your records."}
               </div>
             </div>
           ) : (
@@ -442,7 +442,7 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
             <div className="empty-state">
               <div className="empty-icon">🔍</div>
               <div className="empty-title">No results found</div>
-              <div style={{ marginBottom: 20, color: "var(--muted)", fontSize: 14 }}>Try a different search term.</div>
+              <div className="empty-hint">Try a different search term or check the spelling.</div>
             </div>
           ) : (
             <>

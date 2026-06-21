@@ -12,7 +12,7 @@ export default function PendingApproval({ user }) {
       alignItems: "center",
       justifyContent: "center",
       background: "#FDFAF5",
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "var(--font-body)",
       padding: "max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))",
       boxSizing: "border-box",
     }}>
@@ -54,7 +54,7 @@ export default function PendingApproval({ user }) {
             fontWeight: 600,
             color: "#6B6B6B",
             cursor: "pointer",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--font-body)",
           }}
         >
           Sign Out

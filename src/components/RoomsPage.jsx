@@ -49,7 +49,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>CABINETRY
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+          <span className="serif-value-lg" style={{ color: "var(--char)" }}>{fmt(subTotal)}</span>
         </span>
         <button className="btn btn-sm btn-outline" onClick={addRow}>+ Add Row</button>
       </div>
@@ -116,7 +116,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
                       <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, fontWeight: 600, whiteSpace: "nowrap" }}>{fmt(stdPrice * (1 + adjPct / 100))}/LF</div>
                     )}
                   </td>
-                  <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.product && qty !== 0 ? (qty < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: qty < 0 ? "line-through" : "none" }}>
+                  <td className="num-cell serif-value" style={{ color: item.product && qty !== 0 ? (qty < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: qty < 0 ? "line-through" : "none" }}>
                     {item.product && qty !== 0 ? fmt(lineTotal) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
@@ -125,7 +125,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
               );
             })}
             <tr className="total-row">
-              <td colSpan={5} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
+              <td colSpan={5} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
                 Cabinetry Total
               </td>
               <td className="num-cell">{fmt(subTotal)}</td>
@@ -149,7 +149,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>UPGRADES / OVERRIDES
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+          <span className="serif-value-lg" style={{ color: "var(--char)" }}>{fmt(subTotal)}</span>
         </span>
         <button className="btn btn-sm btn-outline" onClick={addRow}>+ Add Row</button>
       </div>
@@ -191,7 +191,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
                       <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, fontWeight: 600, whiteSpace: "nowrap" }}>{fmt(upg.price * (1 + adjPct / 100))}/unit</div>
                     )}
                   </td>
-                  <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.upgrade && qty !== 0 ? (qty < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: qty < 0 ? "line-through" : "none" }}>
+                  <td className="num-cell serif-value" style={{ color: item.upgrade && qty !== 0 ? (qty < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: qty < 0 ? "line-through" : "none" }}>
                     {item.upgrade && qty !== 0 ? fmt(total) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
@@ -200,7 +200,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
               );
             })}
             <tr className="total-row">
-              <td colSpan={3} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Upgrades Total</td>
+              <td colSpan={3} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Upgrades Total</td>
               <td className="num-cell">{fmt(subTotal)}</td>
               <td /><td />
             </tr>
@@ -222,7 +222,7 @@ function CountertopsSection({ items, masterAdj, onChange }) {
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>COUNTERTOPS
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+          <span className="serif-value-lg" style={{ color: "var(--char)" }}>{fmt(subTotal)}</span>
         </span>
         <button className="btn btn-sm btn-outline" onClick={addRow}>+ Add Row</button>
       </div>
@@ -264,7 +264,7 @@ function CountertopsSection({ items, masterAdj, onChange }) {
                       <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, fontWeight: 600, whiteSpace: "nowrap" }}>{fmt(ctp.price * (1 + adjPct / 100))}/unit</div>
                     )}
                   </td>
-                  <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.product && qty !== 0 ? (qty < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: qty < 0 ? "line-through" : "none" }}>
+                  <td className="num-cell serif-value" style={{ color: item.product && qty !== 0 ? (qty < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: qty < 0 ? "line-through" : "none" }}>
                     {item.product && qty !== 0 ? fmt(total) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
@@ -273,7 +273,7 @@ function CountertopsSection({ items, masterAdj, onChange }) {
               );
             })}
             <tr className="total-row">
-              <td colSpan={3} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Countertops Total</td>
+              <td colSpan={3} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Countertops Total</td>
               <td className="num-cell">{fmt(subTotal)}</td>
               <td /><td />
             </tr>
@@ -298,7 +298,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>FINISHING
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(subTotal)}</span>
+          <span className="serif-value-lg" style={{ color: "var(--char)" }}>{fmt(subTotal)}</span>
         </span>
         <button className="btn btn-sm btn-outline" onClick={addRow}>+ Add Row</button>
       </div>
@@ -312,7 +312,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ color: "var(--mid)", fontWeight: 600, fontSize: 13 }}>Estimated Finishing LF from Cabinetry:</span>
-            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 700, color: "var(--char)" }}>
+            <span className="serif-value-lg" style={{ fontSize: 22, color: "var(--char)" }}>
               {estimatedLF.toFixed(1)} LF
             </span>
           </div>
@@ -320,14 +320,14 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ color: "var(--mid)", fontWeight: 600, fontSize: 13 }}>Entered LF:</span>
-                <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 700, color: "var(--text)" }}>
+                <span className="serif-value-lg" style={{ fontSize: 22, color: "var(--text)" }}>
                   {enteredLF.toFixed(1)} LF
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ color: "var(--mid)", fontWeight: 600, fontSize: 13 }}>Difference:</span>
-                <span style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700,
+                <span className="serif-value-lg" style={{
+                  fontSize: 20,
                   color: Math.abs(lfDiff) < 0.1 ? "var(--green, #2D7A4F)" : lfDiff > 0 ? "var(--gold)" : "#C0392B",
                 }}>
                   {lfDiff > 0 ? "+" : ""}{lfDiff.toFixed(1)} LF
@@ -372,7 +372,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
                   </td>
                   <td><input type="number" step="0.5" value={item.lf} onChange={e => update(i, "lf", e.target.value)} /></td>
                   <td><input type="number" step="0.1" value={item.adjPct} placeholder="0" onChange={e => update(i, "adjPct", e.target.value)} /></td>
-                  <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 700, color: item.type && lf !== 0 ? (lf < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: lf < 0 ? "line-through" : "none" }}>
+                  <td className="num-cell serif-value" style={{ color: item.type && lf !== 0 ? (lf < 0 ? "var(--red, #C0392B)" : "var(--char)") : "var(--muted)", textDecoration: lf < 0 ? "line-through" : "none" }}>
                     {item.type && lf !== 0 ? fmt(total) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
@@ -381,7 +381,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
               );
             })}
             <tr className="total-row">
-              <td colSpan={3} style={{ textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Finishing Total</td>
+              <td colSpan={3} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Finishing Total</td>
               <td className="num-cell">{fmt(subTotal)}</td>
               <td /><td />
             </tr>
@@ -399,7 +399,7 @@ function InstallSection({ data, cabTotal, onChange }) {
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>INSTALLATION
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: "var(--char)", letterSpacing: 0 }}>{fmt(instTotal)}</span>
+          <span className="serif-value-lg" style={{ color: "var(--char)" }}>{fmt(instTotal)}</span>
         </span>
       </div>
       <div className="card-body">
@@ -435,7 +435,7 @@ function InstallSection({ data, cabTotal, onChange }) {
         </div>
         {data.type && (
           <div className="mt-16" style={{ textAlign: "right" }}>
-            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 600, color: "var(--char)" }}>
+            <span className="serif-value-lg" style={{ fontSize: 22, color: "var(--char)" }}>
               Install Total: {fmt(instTotal)}
             </span>
             {data.type === "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>No installation included</div>}
@@ -489,8 +489,8 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
             <div className="page-subtitle">{project.name} · {rooms.length} {rooms.length === 1 ? "room" : "rooms"} — use the tabs below to add or switch rooms</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: "var(--muted)" }}>Room Total</div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "var(--char)" }}>{fmt(roomTotal)}</div>
+            <div className="serif-value" style={{ fontSize: 13, color: "var(--muted)", fontWeight: 400 }}>Room Total</div>
+            <div className="serif-value-lg" style={{ fontSize: 26, color: "var(--char)" }}>{fmt(roomTotal)}</div>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ const suspenseFallback = (
       alignItems: "center",
       justifyContent: "center",
       background: "#FDFAF5",
-      fontFamily: "'DM Sans', system-ui, sans-serif",
+      fontFamily: "var(--font-body)",
       color: "#9E9E9E",
       fontSize: 14,
     }}
@@ -151,9 +151,9 @@ function Root() {
         left: 0,
         right: 0,
         bottom: 0,
-        padding: "6px max(12px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
+        padding: "10px max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))",
         textAlign: "center",
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: "var(--font-body)",
         fontSize: "clamp(11px, 2.8vw, 14px)",
         color: dark ? "#A09580" : "rgb(140, 145, 145)",
         background: dark ? "rgba(42, 40, 32, 0.65)" : "rgba(253, 250, 245, 0.65)",
@@ -212,7 +212,7 @@ function Root() {
       <div style={{
         minHeight: "100vh", display: "flex", alignItems: "center",
         justifyContent: "center", background: "#FDFAF5",
-        fontFamily: "'DM Sans', sans-serif", color: "#9E9E9E", fontSize: 14,
+        fontFamily: "var(--font-body)", color: "#9E9E9E", fontSize: 14,
       }}>
         Loading…
       </div>
@@ -246,7 +246,7 @@ function Root() {
       <div style={{
         minHeight: "100vh", display: "flex", alignItems: "center",
         justifyContent: "center", background: "#FDFAF5",
-        fontFamily: "'DM Sans', sans-serif", textAlign: "center",
+        fontFamily: "var(--font-body)", textAlign: "center",
       }}>
         <div style={{
           background: "#fff", border: "1px solid #EDE8DF", borderRadius: 12,
@@ -267,7 +267,7 @@ function Root() {
               padding: "9px 20px", borderRadius: 6,
               border: "1px solid #EDE8DF", background: "#fff",
               fontSize: 13, fontWeight: 600, cursor: "pointer",
-              color: "#6B6B6B", fontFamily: "'DM Sans', sans-serif",
+              color: "#6B6B6B", fontFamily: "var(--font-body)",
             }}
           >
             Sign Out
@@ -299,7 +299,7 @@ function Root() {
         bottom: "max(6px, env(safe-area-inset-bottom, 6px))",
         right: 16,
         fontSize: 10,
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: "var(--font-body)",
         color: dark ? "rgba(160, 149, 128, 0.6)" : "rgba(122, 122, 122, 0.55)",
         pointerEvents: "none",
         zIndex: 10000,

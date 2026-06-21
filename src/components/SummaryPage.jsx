@@ -97,11 +97,11 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                   <td className="num-cell">{fmt(r.ctp)}</td>
                   <td className="num-cell">{fmt(r.fin)}</td>
                   <td className="num-cell">{fmt(r.inst)}</td>
-                  <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, color: "var(--gold)" }}>{fmt(r.total)}</td>
+                  <td className="num-cell serif-value">{fmt(r.total)}</td>
                 </tr>
               ))}
               <tr className="total-row">
-                <td style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>Totals</td>
+                <td className="label-upper">Totals</td>
                 <td className="num-cell">{fmt(grandCab + grandUpg)}</td>
                 <td className="num-cell">{fmt(grandCtp)}</td>
                 <td className="num-cell">{fmt(grandFin)}</td>
@@ -110,7 +110,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               </tr>
               {delivery > 0 && (
                 <tr className="total-row">
-                  <td colSpan={5} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
+                  <td colSpan={5} className="label-upper">
                     Delivery{project.deliveryNotes ? ` — ${project.deliveryNotes}` : ""}
                   </td>
                   <td className="num-cell">{fmt(delivery)}</td>
@@ -118,17 +118,17 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
               )}
               {taxEnabled && (
                 <tr className="total-row">
-                  <td colSpan={5} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--mid)" }}>
+                  <td colSpan={5} className="label-upper">
                     Estimated Tax ({taxRate}%)
                   </td>
                   <td className="num-cell">{fmt(taxAmt)}</td>
                 </tr>
               )}
               <tr className="total-row" style={{ borderTop: "2px solid var(--gold)" }}>
-                <td colSpan={5} style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--gold)" }}>
+                <td colSpan={5} className="serif-total">
                   Grand Total
                 </td>
-                <td className="num-cell" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 700, color: "var(--gold)" }}>{fmt(grandTotal)}</td>
+                <td className="num-cell serif-value">{fmt(grandTotal)}</td>
               </tr>
             </tbody>
           </table>
@@ -148,7 +148,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
             <div className="card">
               <div className="card-header" style={{ justifyContent: "space-between" }}>
                 <span className="card-title">{room.name || `ROOM ${ri + 1}`}</span>
-                <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "var(--gold)", fontWeight: 700 }}>{fmt(rt.total)}</span>
+                <span className="serif-value-lg">{fmt(rt.total)}</span>
               </div>
               <div className="card-body">
                 {cabItems.length > 0 && (

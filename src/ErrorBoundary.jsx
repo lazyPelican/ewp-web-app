@@ -29,7 +29,7 @@ export default class ErrorBoundary extends Component {
       <div style={{
         minHeight: "100vh", display: "flex", alignItems: "center",
         justifyContent: "center", background: "#FDFAF5",
-        fontFamily: "'DM Sans', sans-serif", padding: 24, boxSizing: "border-box",
+        fontFamily: "var(--font-body)", padding: 24, boxSizing: "border-box",
       }}>
         <div style={{
           background: "#fff", border: "1px solid #EDE8DF", borderRadius: 12,
@@ -55,7 +55,7 @@ export default class ErrorBoundary extends Component {
             style={{
               padding: "10px 28px", borderRadius: 7, border: "none",
               background: "#2D2D2D", color: "#fff", fontSize: 13,
-              fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)",
             }}
           >
             Reload App

@@ -250,7 +250,7 @@ export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
               <div key={lbl} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", marginBottom: 6 }}>{lbl}</div>
                 <div style={{
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "var(--font-display)",
                   fontSize: isGrand ? 26 : 20, fontWeight: 700,
                   color: isGrand ? "var(--gold)" : isActive ? "var(--char)" : "var(--rule)",
                   opacity: !isActive ? 0.4 : 1,
