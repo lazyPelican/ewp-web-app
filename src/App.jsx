@@ -2010,7 +2010,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         {/* TOPBAR + STEPPER sticky wrapper */}
         <div className={`topbar-sticky-wrap${view === "dashboard" ? " topbar-sticky-wrap--hero" : ""}${scrolled ? " topbar-sticky-wrap--scrolled" : ""}`} style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}${view === "dashboard" ? " topbar--hero" : ""}`}>
-          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => setView("dashboard")}>
+          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => { setView("dashboard"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
             <img src="/ewp-logo.png" alt="Engstrom Wood Products" className="header-logo" width="44" height="44" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
