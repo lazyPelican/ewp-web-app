@@ -77,12 +77,9 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
     <div className="dash-hero-banner">
       <div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" /><div className="dash-hero-slide" />
       <div className="dash-hero-overlay" />
-      <div className="dash-hero-tagline">Estimate Manager<span>New Age Technology<br />Old World Craftsmanship</span></div>
+      <div className="dash-hero-title">Estimate Manager</div>
+      <div className="dash-hero-tagline">{greeting}, {userName || "–"}</div>
       <div className="dash-hero-content">
-        <div className="dash-hero-left">
-          <span className="dash-greeting">{greeting},</span>
-          <span className="dash-user">{userName || "–"}</span>
-        </div>
         <button className="btn btn-gold btn-lg dash-new-btn" onClick={onNew}>+ New Estimate</button>
       </div>
     </div>

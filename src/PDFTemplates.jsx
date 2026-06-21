@@ -19,8 +19,8 @@ const fmtId = (id = '') => {
 // Logo: must be an absolute URL so @react-pdf/image uses fetchRemoteFile (fetch API)
 // instead of fetchLocalFile (Node fs) which fails in the browser.
 const LOGO_SRC = typeof window !== 'undefined'
-  ? `${window.location.origin}/favicon-512_dark.png`
-  : '/favicon-512_dark.png'
+  ? `${window.location.origin}/ewp-logo-dark.png`
+  : '/ewp-logo-dark.png'
 
 // Built-in PDF standard fonts — no registration needed, no network fetch.
 // IMPORTANT: never combine these with fontWeight; use the explicit Bold variant instead.
@@ -35,17 +35,17 @@ const C = {
   ivoryMid:    '#F2EDE4',
   border:      '#DDD5C8',
   border2:     '#EDE6DC',
-  stone:       '#8C7355',
-  ink:         '#2A2118',
-  body:        '#3D3228',
-  muted:       '#9B8E82',
-  amount:      '#5A3E1A',
-  tableHdr:    '#5A4E42',
+  stone:       '#1A1A1A',
+  ink:         '#1A1A1A',
+  body:        '#1A1A1A',
+  muted:       '#1A1A1A',
+  amount:      '#1A1A1A',
+  tableHdr:    '#1A1A1A',
   grandBg:     '#E8E0D4',
   grandBorder: '#C8B89A',
-  grandAccent: '#6B5030',
-  grandText:   '#1A120A',
-  grandVal:    '#3D2408',
+  grandAccent: '#1A1A1A',
+  grandText:   '#1A1A1A',
+  grandVal:    '#1A1A1A',
   white:       '#FFFFFF',
 }
 
@@ -334,8 +334,8 @@ const s = StyleSheet.create({
   // Footer
   footer: {
     fontFamily: FONT_SANS,
-    fontSize: 7,
-    color: C.muted,
+    fontSize: 8,
+    color: '#1A1A1A',
     textAlign: 'center',
     marginTop: 6,
     paddingTop: 4,
@@ -480,19 +480,193 @@ function TotalsStrip({ items }) {
   )
 }
 
-function PdfFooter({ preparedBy }) {
+function PageFooter({ project, preparedBy }) {
   return (
-    <View>
-      <View style={{ marginTop: 12, marginBottom: 6, paddingTop: 8, borderTop: `1 solid ${C.border}` }}>
-        <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 7, color: C.stone, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 }}>Disclaimer</Text>
-        <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: C.muted, lineHeight: 1.5 }}>
+    <View style={{ position: 'absolute', bottom: 14, left: 34, right: 34 }} fixed>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTop: `1 solid ${C.border}`, paddingTop: 4 }}>
+        <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A' }}>
+          {`${fmtId(project?.id)}  |  ${fmtD(project?.bidDate)}${project?.contactName ? `  |  ${project.contactName}` : ''}`}
+        </Text>
+        <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A' }}>
+          {`${preparedBy ? `Prepared by ${preparedBy}  |  ` : ''}Engstrom Wood Products`}
+        </Text>
+      </View>
+    </View>
+  )
+}
+
+function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy, docType }) {
+  const projectSubtotal = roomTotals.reduce((sum, r) => sum + r.total, 0)
+  const hasTax = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+
+  return (
+    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
+      <View style={[s.hdr, { marginBottom: 14 }]} fixed>
+        <View style={s.coBrand}>
+          <Image style={s.coLogo} src={LOGO_SRC} />
+          <View>
+            <Text style={s.coName}>Engstrom Wood Products</Text>
+            <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
+          </View>
+        </View>
+        <View>
+          <Text style={s.docType}>{docType || 'QUOTE'}</Text>
+          <Text style={s.docId}>{fmtId(project.id)}</Text>
+          <Text style={s.docDate}>{fmtD(project.bidDate)}</Text>
+        </View>
+      </View>
+
+      <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 16, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 10, textAlign: 'center' }}>
+        Executive Summary
+      </Text>
+
+      <View style={[s.infoStrip, { marginBottom: 12 }]}>
+        {[
+          { label: 'Project Name', value: project.name },
+          { label: 'Address', value: project.address },
+          { label: 'Bid Date', value: fmtD(project.bidDate) },
+          { label: 'Contact', value: project.contactName },
+          { label: 'Phone', value: project.contactPhone },
+          { label: 'Email', value: project.email },
+        ].map((cell, i) => (
+          <View key={i} style={[s.ic, i % 2 === 1 ? s.icEven : {}, i >= 4 ? { borderBottom: 'none' } : {}]}>
+            <Text style={s.icLbl}>{cell.label}</Text>
+            <Text style={s.icVal}>{trunc(cell.value, 48) || '—'}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={{ flexDirection: 'row', gap: 14, marginBottom: 12 }}>
+        <View style={{ flex: 1, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, alignItems: 'center' }}>
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 7, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Rooms</Text>
+          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 22, color: '#1A1A1A' }}>{roomTotals.length}</Text>
+        </View>
+        <View style={{ flex: 2, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, alignItems: 'center' }}>
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 7, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Project Subtotal</Text>
+          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 22, color: '#1A1A1A' }}>{fmtN(projectSubtotal)}</Text>
+        </View>
+        <View style={{ flex: 2, border: `1 solid ${C.grandBorder}`, borderTop: `2 solid ${C.grandAccent}`, backgroundColor: C.grandBg, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, alignItems: 'center' }}>
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 7, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Grand Total</Text>
+          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 24, color: '#1A1A1A' }}>{fmtN(grandTotal)}</Text>
+        </View>
+      </View>
+
+      <SectionLabel label="Room Overview" />
+      <View style={s.tblWrap}>
+        <TableHeader colDefs={[
+          { w: '50%', label: 'Room' },
+          { w: '25%', label: 'Subtotal', right: true },
+          { w: '25%', label: 'Room Total', right: true },
+        ]} />
+        {roomTotals.map((r, i) => (
+          <TableRow
+            key={i}
+            colDefs={[{ w: '50%' }, { w: '25%' }, { w: '25%' }]}
+            isEven={i % 2 === 1}
+            cells={[
+              { val: trunc(r.name || `Room ${i + 1}`, 50) },
+              { val: fmtN(r.total), right: true },
+              { val: fmtN(r.total), amt: true },
+            ]}
+          />
+        ))}
+      </View>
+
+      <View style={{ marginTop: 6 }}>
+        {delivery > 0 && (
+          <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
+        )}
+        {hasTax && (
+          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
+        )}
+        <GrandBar
+          label="Grand Total"
+          sub={[
+            `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
+            fmtD(project.bidDate),
+            delivery > 0 ? 'incl. delivery' : '',
+            hasTax ? `incl. ${pdfTaxRate}% tax` : '',
+          ].filter(Boolean).join('  ·  ')}
+          value={grandTotal}
+          standalone
+        />
+      </View>
+
+      <PageFooter project={project} preparedBy={preparedBy} />
+    </Page>
+  )
+}
+
+function AcceptancePage({ project, preparedBy }) {
+  return (
+    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
+      <View style={s.hdr} fixed>
+        <View style={s.coBrand}>
+          <Image style={s.coLogo} src={LOGO_SRC} />
+          <View>
+            <Text style={s.coName}>Engstrom Wood Products</Text>
+            <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
+          </View>
+        </View>
+        <View>
+          <Text style={s.docType}>ACCEPTANCE</Text>
+          <Text style={s.docId}>{fmtId(project.id)}</Text>
+          <Text style={s.docDate}>{fmtD(project.bidDate)}</Text>
+        </View>
+      </View>
+
+      <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 15, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 10, textAlign: 'center' }}>
+        Terms & Acceptance
+      </Text>
+
+      <View style={{ border: `1 solid ${C.border}`, borderLeft: `3 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, marginBottom: 12 }}>
+        <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 8, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Disclaimer</Text>
+        <Text style={{ fontFamily: FONT_SANS, fontSize: 8, color: '#1A1A1A', lineHeight: 1.6 }}>
           Pricing provided in this proposal is based on preliminary cabinet layouts, specifications, and selections. Final pricing is subject to adjustment upon completion and approval of final cabinet build plans, dimensions, materials, finishes, hardware, accessories, and any other customer-selected options. Any changes to the scope, design, or specifications may result in revisions to the quoted price.
         </Text>
       </View>
-      <Text style={s.footer}>
-        {`This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.${preparedBy ? `  |  Prepared by ${preparedBy}` : ''}  |  Engstrom Wood Products`}
+
+      <View style={{ border: `1 solid ${C.border}`, borderLeft: `3 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, marginBottom: 12 }}>
+        <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 8, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Validity</Text>
+        <Text style={{ fontFamily: FONT_SANS, fontSize: 8, color: '#1A1A1A', lineHeight: 1.6 }}>
+          This estimate is valid for 30 days from the bid date shown above. All prices are subject to final measurement verification. Pricing does not include permits, engineering, or items not explicitly listed in this proposal.
+        </Text>
+      </View>
+
+      <View style={{ border: `1 solid ${C.border}`, borderLeft: `3 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, marginBottom: 16 }}>
+        <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 8, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Payment Terms</Text>
+        <Text style={{ fontFamily: FONT_SANS, fontSize: 8, color: '#1A1A1A', lineHeight: 1.6 }}>
+          A deposit of 50% is due upon acceptance. The remaining balance is due upon completion of installation. All payments are non-refundable once materials have been ordered.
+        </Text>
+      </View>
+
+      <Text style={{ fontFamily: FONT_SANS, fontSize: 8, color: '#1A1A1A', marginBottom: 8, lineHeight: 1.5 }}>
+        By signing below, the client acknowledges that they have reviewed the scope of work, pricing, and terms outlined in this proposal and agrees to proceed as described.
       </Text>
-    </View>
+
+      <View style={[s.sigGrid, { marginTop: 4, gap: 30 }]}>
+        <View style={s.sigBlock}>
+          <Text style={[s.sigTitle, { marginBottom: 4 }]}>Client Acceptance</Text>
+          <View style={[s.sigLine, { height: 24 }]} />
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A', marginBottom: 8 }}>Signature</Text>
+          <View style={[s.sigSubLine, { height: 16 }]} />
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A', marginBottom: 8 }}>Printed Name</Text>
+          <View style={[s.sigSubLine, { height: 16 }]} />
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A' }}>Date</Text>
+        </View>
+        <View style={s.sigBlock}>
+          <Text style={[s.sigTitle, { marginBottom: 4 }]}>Authorized by Engstrom Wood Products</Text>
+          <View style={[s.sigLine, { height: 24 }]} />
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A', marginBottom: 8 }}>Signature</Text>
+          <View style={[s.sigSubLine, { height: 16 }]} />
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A', marginBottom: 8 }}>Printed Name</Text>
+          <View style={[s.sigSubLine, { height: 16 }]} />
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6.5, color: '#1A1A1A' }}>Date</Text>
+        </View>
+      </View>
+
+      <PageFooter project={project} preparedBy={preparedBy} />
+    </Page>
   )
 }
 
@@ -562,21 +736,12 @@ function InternalSummaryPage({
   ]
 
   return (
-    <Page size="LETTER" orientation="landscape" style={s.page}>
+    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
       <PageHeader
-        docType="QUOTE — INTERNAL USE"
+        docType="INTERNAL — ROOM BREAKDOWN"
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
       />
-
-      <InfoStrip cells={[
-        { label: 'Project Name', value: project.name },
-        { label: 'Address', value: project.address },
-        { label: 'Bid Date', value: fmtD(project.bidDate) },
-        { label: 'Contact', value: project.contactName },
-        { label: 'Phone', value: project.contactPhone },
-        { label: 'Email', value: project.email },
-      ]} />
 
       <SectionLabel label="Room Breakdown" />
       <View style={s.tblWrap}>
@@ -606,59 +771,26 @@ function InternalSummaryPage({
         />
 
         {delivery > 0 && (
-          <GrandBar
-            label="Delivery"
-            sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined}
-            value={delivery}
-            standalone
-            small
-          />
+          <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
         )}
 
         {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
-          <GrandBar
-            label={`Estimated Tax (${pdfTaxRate}%)`}
-            sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
-            value={pdfTaxAmt}
-            standalone
-            small
-          />
+          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
         )}
 
         <GrandBar
           label="Grand Total"
           sub={[
             `All rooms · ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            fmtD(project.bidDate),
             delivery > 0 ? 'incl. delivery' : '',
             (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
           standalone
         />
-
-        {/* Signature blocks */}
-        <View style={s.sigGrid}>
-          <View style={s.sigBlock}>
-            <Text style={s.sigTitle}>Client Acceptance</Text>
-            <View style={s.sigLine} />
-            <View style={s.sigSubLine} />
-            <Text style={s.sigSubLbl}>Printed Name</Text>
-            <View style={[s.sigSubLine, { marginTop: 10 }]} />
-            <Text style={s.sigSubLbl}>Date</Text>
-          </View>
-          <View style={s.sigBlock}>
-            <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
-            <View style={s.sigLine} />
-            <View style={s.sigSubLine} />
-            <Text style={s.sigSubLbl}>Printed Name</Text>
-            <View style={[s.sigSubLine, { marginTop: 10 }]} />
-            <Text style={s.sigSubLbl}>Date</Text>
-          </View>
-        </View>
-
-        <PdfFooter preparedBy={preparedBy} />
       </View>
+
+      <PageFooter project={project} preparedBy={preparedBy} />
     </Page>
   )
 }
@@ -789,19 +921,12 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
   ]
 
   return (
-    <Page size="LETTER" orientation="landscape" style={s.page}>
+    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
       <PageHeader
-        docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
-        docId={`${fmtId(project.id)}  ·  ${trunc(project.name, 40)}`}
+        docType={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  ${roomIndex + 1} of ${totalRooms}`}
+        docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
       />
-
-      <InfoStrip cells={[
-        { label: 'Room', value: room.name || `Room ${roomIndex + 1}` },
-        { label: 'Room', value: `${roomIndex + 1} of ${totalRooms}` },
-        { label: 'Bid Date', value: fmtD(project.bidDate) },
-        { label: 'Master Adj %', value: `${room.cabinetry[0]?.adjPct || '0'}%` },
-      ]} />
 
       {/* Cabinetry */}
       {cfgI('cabinetry').showInternal && (<>
@@ -915,8 +1040,9 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
           sub={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
           value={rt.total}
         />
-        <PdfFooter preparedBy={preparedBy} />
       </View>
+
+      <PageFooter project={project} preparedBy={preparedBy} />
     </Page>
   )
 }
@@ -926,6 +1052,16 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
 function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandCtp, grandFin, grandInst, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, pricing, preparedBy }) {
   return (
     <Document title={`${project.name || 'Estimate'} — Internal`} author="Engstrom Wood Products">
+      <ExecutiveSummaryPage
+        project={project}
+        roomTotals={roomTotals}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+        preparedBy={preparedBy}
+        docType="QUOTE — INTERNAL"
+      />
       <InternalSummaryPage
         project={project}
         roomTotals={roomTotals}
@@ -952,6 +1088,7 @@ function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandC
           preparedBy={preparedBy}
         />
       ))}
+      <AcceptancePage project={project} preparedBy={preparedBy} />
     </Document>
   )
 }
@@ -961,6 +1098,7 @@ function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandC
 function CustomerSummaryPage({
   project, roomTotals,
   delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
+  compact = false,
 }) {
   const roomTableCols = [
     { w: '40%', label: 'Room' },
@@ -968,22 +1106,17 @@ function CustomerSummaryPage({
     { w: '30%', label: 'Room Total', right: true },
   ]
 
+  const pgStyle = compact
+    ? [s.page, { paddingTop: 18, paddingBottom: 30, paddingLeft: 28, paddingRight: 28 }]
+    : [s.page, { paddingBottom: 40 }]
+
   return (
-    <Page size="LETTER" orientation="landscape" style={s.page}>
+    <Page size="LETTER" orientation="landscape" style={pgStyle}>
       <PageHeader
-        docType="QUOTE"
+        docType="QUOTE — ROOM SUMMARY"
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
       />
-
-      <InfoStrip cells={[
-        { label: 'Project Name', value: project.name },
-        { label: 'Address', value: project.address },
-        { label: 'Bid Date', value: fmtD(project.bidDate) },
-        { label: 'Contact', value: project.contactName },
-        { label: 'Phone', value: project.contactPhone },
-        { label: 'Email', value: project.email },
-      ]} />
 
       <SectionLabel label="Room Summary" />
       <View style={s.tblWrap}>
@@ -1005,63 +1138,30 @@ function CustomerSummaryPage({
       <View wrap={false}>
         <SubBar
           label={`Project Subtotal — ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
-          value={roomTotals.reduce((s, r) => s + r.total, 0)}
+          value={roomTotals.reduce((sum, r) => sum + r.total, 0)}
         />
 
         {delivery > 0 && (
-          <GrandBar
-            label="Delivery"
-            sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined}
-            value={delivery}
-            standalone
-            small
-          />
+          <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
         )}
 
         {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
-          <GrandBar
-            label={`Estimated Tax (${pdfTaxRate}%)`}
-            sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`}
-            value={pdfTaxAmt}
-            standalone
-            small
-          />
+          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
         )}
 
         <GrandBar
           label="Grand Total"
           sub={[
             `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            fmtD(project.bidDate),
             delivery > 0 ? 'incl. delivery' : '',
             (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
           standalone
         />
-
-        {/* Signature blocks */}
-        <View style={s.sigGrid}>
-          <View style={s.sigBlock}>
-            <Text style={s.sigTitle}>Client Acceptance</Text>
-            <View style={s.sigLine} />
-            <View style={s.sigSubLine} />
-            <Text style={s.sigSubLbl}>Printed Name</Text>
-            <View style={[s.sigSubLine, { marginTop: 10 }]} />
-            <Text style={s.sigSubLbl}>Date</Text>
-          </View>
-          <View style={s.sigBlock}>
-            <Text style={s.sigTitle}>Authorized by Engstrom Wood Products</Text>
-            <View style={s.sigLine} />
-            <View style={s.sigSubLine} />
-            <Text style={s.sigSubLbl}>Printed Name</Text>
-            <View style={[s.sigSubLine, { marginTop: 10 }]} />
-            <Text style={s.sigSubLbl}>Date</Text>
-          </View>
-        </View>
-
-        <PdfFooter preparedBy={preparedBy} />
       </View>
+
+      <PageFooter project={project} preparedBy={preparedBy} />
     </Page>
   )
 }
@@ -1131,19 +1231,12 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
   ]
 
   return (
-    <Page size="LETTER" orientation="landscape" style={s.page}>
+    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
       <PageHeader
-        docType={`QUOTE — ${trunc(room.name || `Room ${roomIndex + 1}`, 30)}`}
-        docId={`${fmtId(project.id)}  ·  ${trunc(project.name, 40)}`}
+        docType={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  ${roomIndex + 1} of ${totalRooms}`}
+        docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
       />
-
-      <InfoStrip cells={[
-        { label: 'Room', value: room.name || `Room ${roomIndex + 1}` },
-        { label: 'Room', value: `${roomIndex + 1} of ${totalRooms}` },
-        { label: 'Bid Date', value: fmtD(project.bidDate) },
-        { label: 'Contact', value: project.contactName },
-      ]} />
 
       {/* 1. Cabinets / Casework */}
       {cfg('cabinetry').showExternal && ((cfg('cabinetry').showDetailExt && cabItems.length > 0) || cfg('cabinetry').showPricingExt) && (
@@ -1279,7 +1372,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
       )}
 
       {/* Room Investment Summary — rolled totals */}
-      <SectionLabel label="Room Investment Summary" />
+      <SectionLabel label="Room Summary" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={sumCols} />
         {summaryItems.map((sec, i) => (
@@ -1302,8 +1395,9 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
           value={roomTotalWithDelivery}
           standalone
         />
-        <PdfFooter preparedBy={preparedBy} />
       </View>
+
+      <PageFooter project={project} preparedBy={preparedBy} />
     </Page>
   )
 }
@@ -1313,6 +1407,16 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
 function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy }) {
   return (
     <Document title={`${project.name || 'Quote'} — Quote`} author="Engstrom Wood Products">
+      <ExecutiveSummaryPage
+        project={project}
+        roomTotals={roomTotals}
+        delivery={delivery}
+        pdfTaxRate={pdfTaxRate}
+        pdfTaxAmt={pdfTaxAmt}
+        grandTotal={grandTotal}
+        preparedBy={preparedBy}
+        docType="QUOTE"
+      />
       <CustomerSummaryPage
         project={project}
         roomTotals={roomTotals}
@@ -1334,6 +1438,7 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
           preparedBy={preparedBy}
         />
       ))}
+      <AcceptancePage project={project} preparedBy={preparedBy} />
     </Document>
   )
 }
@@ -1351,7 +1456,9 @@ function SummaryPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTa
         pdfTaxAmt={pdfTaxAmt}
         grandTotal={grandTotal}
         preparedBy={preparedBy}
+        compact
       />
+      <AcceptancePage project={project} preparedBy={preparedBy} />
     </Document>
   )
 }

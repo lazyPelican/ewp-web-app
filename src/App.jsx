@@ -3,7 +3,6 @@ import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { logError } from "./logger.js"
 import { sanitizeProject, sanitizeRooms } from "./sanitize.js"
-import { BugReportModal, MyReportsModal } from "./BugReports.jsx"
 import {
   PRICING, setPRICING,
   genId, makeCopyName, fmtId, blankRoom, isRoomComplete,
@@ -130,10 +129,6 @@ const styles = `
   .topbar.scrolled + .topbar-ribbon .topbar-btn:hover {
     background: rgba(45,48,56,0.14);
   }
-  .topbar.scrolled + .topbar-ribbon .topbar-btn--danger {
-    color: #A93629;
-    border-color: rgba(169,54,41,0.2);
-  }
   .topbar-logo {
     display: flex;
     align-items: center;
@@ -143,14 +138,14 @@ const styles = `
   }
   .topbar-logo > div { min-width: 0; }
   .header-logo {
-    height: 64px;
+    height: 76px;
     width: auto;
     flex-shrink: 0;
     filter: brightness(0) invert(1);
   }
   .topbar-name {
     font-family: var(--font-display);
-    font-size: 32px; font-weight: 600;
+    font-size: 38px; font-weight: 600;
     color: #FFFFFF; letter-spacing: 0.03em;
     line-height: 1.1;
     white-space: nowrap;
@@ -174,12 +169,13 @@ const styles = `
     padding: 0 56px;
   }
   .topbar-ribbon-inner {
-    display: flex; align-items: center; justify-content: flex-end;
+    display: flex; align-items: center; justify-content: space-between;
     gap: 8px; padding: 8px 0;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+  .topbar-ribbon-left, .topbar-ribbon-right { display: flex; align-items: center; gap: 8px; }
   .dark .topbar-ribbon { background: transparent; }
   .topbar--hero + .topbar-ribbon {
     background: transparent;
@@ -197,8 +193,7 @@ const styles = `
   }
   .topbar-btn:hover { background: rgba(255,255,255,0.15); color: #fff; transform: translateY(-1px); }
   .topbar-btn:active { transform: scale(0.96); }
-  .topbar-btn--danger { color: rgba(220,120,100,0.9); border-color: rgba(220,120,100,0.2); }
-  .topbar-btn--danger:hover { background: rgba(220,120,100,0.12); color: #E8836E; }
+  .topbar-btn--active { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.25); }
   .topbar-btn .badge {
     background: #C0392B; color: #fff; border-radius: 50%;
     min-width: 18px; height: 18px; font-size: 10px; font-weight: 700;
@@ -479,26 +474,29 @@ const styles = `
     12%   { opacity: 0; }
     100%  { opacity: 0; }
   }
-  .dash-hero-tagline {
+  .dash-hero-title {
     position: relative; z-index: 3;
     font-family: var(--font-display);
-    font-size: 46px; font-weight: 600;
+    font-size: 52px; font-weight: 700;
     color: #fff; letter-spacing: 0.06em;
-    text-transform: uppercase; line-height: 1.25;
+    text-transform: uppercase; line-height: 1.2;
     text-shadow: 0 2px 30px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);
     animation: fadeUp 0.8s cubic-bezier(0.22,1,0.36,1) both;
     margin-top: 10px;
   }
-  .dash-hero-tagline span {
-    display: block; font-size: 15px; font-weight: 500;
-    letter-spacing: 0.22em; color: rgba(255,255,255,0.7);
-    margin-top: 10px;
-    text-shadow: 0 1px 8px rgba(0,0,0,0.4);
-    font-family: var(--font-body); text-transform: uppercase;
+  .dash-hero-tagline {
+    position: relative; z-index: 3;
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 500;
+    color: rgba(255,255,255,0.8); letter-spacing: 0.03em;
+    line-height: 1.25;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.4);
+    animation: fadeUp 0.8s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+    margin-top: 8px;
   }
   .dash-hero-content {
     position: relative; z-index: 3;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: center;
     width: 100%; max-width: 1200px;
     padding: 0 48px; margin-top: 20px; gap: 16px; flex-wrap: wrap;
     animation: fadeUp 0.7s 0.2s cubic-bezier(0.22,1,0.36,1) both;
@@ -678,6 +676,7 @@ const styles = `
     border-color: rgba(216,212,201,0.12);
     color: #D8D4C9;
   }
+
   .dark .stepper { background: var(--header-bg); border-bottom-color: var(--header-border); }
   .dark .step:hover { background: #262A33; }
   .dark .step-num { background: #262A33; border-color: #3A4050; }
@@ -1299,11 +1298,12 @@ const styles = `
     .main { padding: 28px 20px; }
     .main--dashboard .dash-below-hero { padding: 12px 20px 40px; }
     .dash-hero-banner { margin: -210px -20px 0; padding-top: 210px; min-height: 55vh; }
-    .dash-hero-tagline { font-size: 38px; }
+    .dash-hero-title { font-size: 42px; }
+    .dash-hero-tagline { font-size: 20px; }
     .dash-hero-content { padding: 0 24px; }
     .topbar { padding: 0 24px; }
     .topbar-ribbon { padding: 0 24px; }
-    .topbar-name { font-size: clamp(20px, 3vw, 28px); }
+    .topbar-name { font-size: clamp(22px, 3.5vw, 34px); }
     .topbar-sub { font-size: 10px; letter-spacing: 0.1em; }
     .stepper { padding: 0 20px; }
     .form-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -1342,7 +1342,7 @@ const styles = `
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .header-logo { height: 48px !important; }
+    .header-logo { height: 56px !important; }
     .topbar-sub { font-size: 9px; margin-top: 4px; }
     .topbar-ribbon { padding: 0 14px; }
     .topbar-ribbon-inner { gap: 6px; padding: 6px 0; }
@@ -1422,12 +1422,12 @@ const styles = `
     .project-card { padding: 16px; }
     .topbar { height: 72px; padding: 0 18px; }
     .topbar.topbar--hero { height: 100px; }
-    .header-logo { height: 44px; }
-    .topbar-name { font-size: 22px; }
+    .header-logo { height: 50px; }
+    .topbar-name { font-size: 26px; }
     .topbar-sub { font-size: 9px; }
     .dash-hero-banner { margin: -160px -14px 0; padding-top: 160px; min-height: 45vh; }
-    .dash-hero-tagline { font-size: 28px; margin-top: 20px; }
-    .dash-hero-tagline span { font-size: 11px; letter-spacing: 0.12em; max-width: 260px; line-height: 1.6; }
+    .dash-hero-title { font-size: 32px; margin-top: 20px; }
+    .dash-hero-tagline { font-size: 18px; }
     .dash-hero-content { padding: 0 20px; margin-top: 18px; flex-direction: column; align-items: center; text-align: center; }
     .dash-greeting { font-size: 14px; }
     .dash-user { font-size: 24px; }
@@ -1529,6 +1529,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   const preparedBy = isGuest ? "Guest" : (displayName || session?.user?.email?.split("@")[0] || "");
 
   const [view, setView] = useState("dashboard");
+  const [dashKey, setDashKey] = useState(0);
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
   const [maxStep, setMaxStep] = useState(0);
@@ -1536,9 +1537,6 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   const [quickSaving, setQuickSaving] = useState(false);
   const [quickSaved, setQuickSaved] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
-  const [bugReportOpen, setBugReportOpen] = useState(false);
-  const [myReportsOpen, setMyReportsOpen] = useState(false);
-  const [openBugCount, setOpenBugCount] = useState(0);
 
   // ── Browser back/forward button support ────────────────────────
   const _historyPop = useRef(false);
@@ -1942,8 +1940,6 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     if (!isAdmin) return;
     supabase.from("user_approvals").select("user_id", { count: "exact", head: true }).eq("status", "pending")
       .then(({ count }) => setPendingCount(count || 0));
-    supabase.from("bug_reports").select("id", { count: "exact", head: true }).eq("status", "open")
-      .then(({ count }) => setOpenBugCount(count || 0));
   }, [isAdmin]);
 
   const stepConfig = [
@@ -2082,7 +2078,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         {/* TOPBAR + STEPPER sticky wrapper */}
         <div className={`topbar-sticky-wrap${view === "dashboard" ? " topbar-sticky-wrap--hero" : ""}${scrolled ? " topbar-sticky-wrap--scrolled" : ""}`} style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}${view === "dashboard" ? " topbar--hero" : ""}`}>
-          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => setView("dashboard")}>
+          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => { setView("dashboard"); setDashKey(k => k + 1); }}>
             <img src="/ewp-logo.png" alt="Engstrom Wood Products" className="header-logo" width="44" height="44" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
@@ -2094,39 +2090,32 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         </div>
         <div className="topbar-ribbon">
           <div className="topbar-ribbon-inner">
-            {isAdmin && (
-              <button className="topbar-btn" onClick={onOpenAdmin} aria-label="Open admin panel">
-                👥 Admin
-                {(pendingCount + openBugCount) > 0 && (
-                  <span className="badge">{pendingCount + openBugCount}</span>
-                )}
+            <div className="topbar-ribbon-left">
+            </div>
+            <div className="topbar-ribbon-right">
+              {isAdmin && (
+                <button className="topbar-btn" onClick={onOpenAdmin} aria-label="Open admin panel">
+                  👥 Admin
+                  {pendingCount > 0 && (
+                    <span className="badge">{pendingCount}</span>
+                  )}
+                </button>
+              )}
+              <button
+                className="topbar-btn"
+                onClick={() => setDark(d => !d)}
+                title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+                aria-pressed={dark}>
+                {dark ? "☀ Light" : "☾ Dark"}
               </button>
-            )}
-            {!isGuest && <button
-              className="topbar-btn topbar-btn--danger"
-              onClick={() => setBugReportOpen(true)}
-              title="Report an error or bug">
-              🐛 Report Error
-            </button>}
-            {!isAdmin && !isGuest && (
-              <button className="topbar-btn" onClick={() => setMyReportsOpen(true)} title="View my submitted reports">
-                📋 My Reports
+              <button
+                className="topbar-btn"
+                onClick={isGuest ? onGuestExit : () => import("./supabase.js").then(m => m.supabase.auth.signOut())}
+                aria-label={isGuest ? "Exit guest mode" : "Sign out"}>
+                {isGuest ? "Exit Guest" : "Sign Out"}
               </button>
-            )}
-            <button
-              className="topbar-btn"
-              onClick={() => setDark(d => !d)}
-              title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-              aria-pressed={dark}>
-              {dark ? "☀ Light" : "☾ Dark"}
-            </button>
-            <button
-              className="topbar-btn"
-              onClick={isGuest ? onGuestExit : () => import("./supabase.js").then(m => m.supabase.auth.signOut())}
-              aria-label={isGuest ? "Exit guest mode" : "Sign out"}>
-              {isGuest ? "Exit Guest" : "Sign Out"}
-            </button>
+            </div>
           </div>
         </div>
 
@@ -2184,7 +2173,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             <div className="stepper">
               <button className="btn btn-ghost btn-sm"
                 style={{ color:"var(--mid)", borderRight:"1px solid var(--ivory3)", borderRadius:0, padding:"16px 20px", marginRight:4, whiteSpace:"nowrap", flexShrink:0 }}
-                onClick={() => setView("dashboard")}>
+                onClick={() => { setView("dashboard"); setDashKey(k => k + 1); }}>
                 ← All Projects
               </button>
               {stepConfig.map((s, i) => {
@@ -2242,6 +2231,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         <div className={`main${view === "dashboard" ? " main--dashboard" : ""}${readOnly ? " main--readonly" : ""}`}>
           {view === "dashboard" && (
             <Dashboard
+            key={dashKey}
             userName={preparedBy}
             projects={projects}
             isAdmin={isAdmin}
@@ -2324,13 +2314,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         </div>
 
         {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
-        {bugReportOpen && (
-          <BugReportModal session={session} onClose={() => setBugReportOpen(false)} />
-        )}
-        {myReportsOpen && (
-          <MyReportsModal session={session} isAdmin={isAdmin}
-            onClose={() => { setMyReportsOpen(false); if (isAdmin) supabase.from("bug_reports").select("id", { count: "exact", head: true }).eq("status", "open").then(({ count }) => setOpenBugCount(count || 0)); }} />
-        )}
+
         {emailModal && (
           <EmailModal
             project={emailModal.project}

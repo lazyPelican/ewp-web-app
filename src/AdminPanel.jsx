@@ -3,7 +3,6 @@ import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
 import { logError } from "./logger.js"
-import { BugReportsTab } from "./BugReports.jsx"
 import { TimeTrackerTab } from "./TimeTracker.jsx"
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
@@ -168,6 +167,7 @@ const TABLE_CONFIG = [
 
 export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   const [tab, setTab] = useState("users")         // "users" | "pricing"
+  const [scrolled, setScrolled] = useState(false)
   const [activeTable, setActiveTable] = useState("woodwork")
   const [pricing, setPricing] = useState(null)    // null = loading
   const [dirty, setDirty] = useState(false)
@@ -203,6 +203,12 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
     const handler = () => setDark(localStorage.getItem("ewp-theme") === "dark")
     window.addEventListener("storage", handler)
     return () => window.removeEventListener("storage", handler)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 30)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   useEffect(() => {
@@ -538,7 +544,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
         <div style={{ fontSize: 32, marginBottom: 12 }}>🚫</div>
         <div style={{ fontSize: 16, fontWeight: 600, color: t.text, marginBottom: 8 }}>Access Denied</div>
         <div style={{ fontSize: 14, color: t.textMid }}>You don't have admin privileges.</div>
-        <button onClick={onBack} style={{ marginTop: 24, padding: "8px 20px", borderRadius: 6, border: `1px solid ${t.border}`, background: t.card, color: t.text, cursor: "pointer", fontFamily: font }}>← Back</button>
+        <button className="btn btn-outline" onClick={onBack} style={{ marginTop: 24 }}>← Back</button>
       </div>
     )
   }
@@ -551,146 +557,229 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
     <div style={{ minHeight: "100vh", background: t.bg, fontFamily: font }}>
       <style>{`body { margin: 0; padding: 0; background: ${t.bg}; }`}</style>
 
-      {/* Top bar - matching main app header */}
-      <div 
-        className="admin-topbar"
-        style={{
-          background: dark ? "#12141A" : "#1F242E",
-          borderBottom: "none",
-          padding: "0 56px",
-          height: 150,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "0 2px 20px rgba(0,0,0,0.15)",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <style>{`
-          @keyframes adminFadeDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes adminFadeUp {
-            from { opacity: 0; transform: translateY(18px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes adminSlideRight {
-            from { opacity: 0; transform: translateX(-14px); }
-            to   { opacity: 1; transform: translateX(0); }
-          }
-          @keyframes adminScaleIn {
-            from { opacity: 0; transform: scale(0.96); }
-            to   { opacity: 1; transform: scale(1); }
-          }
-          @keyframes adminGoldPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(91,140,90,0); }
-            50%       { box-shadow: 0 0 0 4px rgba(91,140,90,0.18); }
-          }
+      <style>{`
+        /* ── CSS variables (duplicated from App — AdminPanel replaces App in the tree) ── */
+        :root {
+          --font-body: 'Inter', sans-serif;
+          --font-display: 'Cormorant Garamond', serif;
+          --gold: #5B8C5A;
+          --gold-light: #7BAF7A;
+          --ewp-slate: #1F242E;
+          --ewp-slate2: #15171C;
+          --ivory2: #EAE8E2;
+          --rule: #C8C5BC;
+          --char: #15171C;
+          --muted: #6E7480;
+        }
 
-          /* Header entrance */
-          .admin-topbar { animation: adminFadeDown 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        /* ── Topbar ── */
+        .topbar-sticky-wrap { background: #1F242E; position: sticky; top: 0; z-index: 100; transition: background 0.4s ease; }
+        .dark .topbar-sticky-wrap { background: #12141A; }
+        .topbar-sticky-wrap.scrolled { background: rgba(235,233,226,0.75) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .dark .topbar-sticky-wrap.scrolled { background: rgba(18,20,26,0.75) !important; }
+        .topbar {
+          background: rgba(31,36,46,0.85);
+          backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+          padding: 0 56px; height: 72px;
+          display: flex; align-items: center; justify-content: flex-start;
+          border-bottom: none; box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+          transition: background 0.4s ease, box-shadow 0.4s ease;
+        }
+        .dark .topbar { background: rgba(18,20,26,0.85); }
+        .topbar.scrolled {
+          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+          background: rgba(235,233,226,0.75);
+          backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        }
+        .dark .topbar.scrolled { background: rgba(18,20,26,0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .topbar.scrolled .topbar-name { color: #2D3038; }
+        .topbar.scrolled .topbar-sub { color: #6E7480; }
+        .topbar.scrolled .header-logo { filter: brightness(0.15); }
+        .dark .topbar.scrolled .topbar-name { color: #D8D4C9; }
+        .dark .topbar.scrolled .topbar-sub { color: #8A8E9A; }
+        .dark .topbar.scrolled .header-logo { filter: brightness(0) invert(0.88); }
+        .topbar-logo {
+          display: flex; align-items: center; gap: 20px;
+          min-width: 0; overflow: hidden;
+        }
+        .topbar-logo > div { min-width: 0; }
+        .header-logo {
+          height: 76px; width: auto; flex-shrink: 0;
+          filter: brightness(0) invert(1);
+          transition: filter 0.4s ease;
+        }
+        .topbar-name {
+          font-family: var(--font-display);
+          font-size: 38px; font-weight: 600;
+          color: #FFFFFF; letter-spacing: 0.03em;
+          line-height: 1.1; white-space: nowrap;
+          transition: color 0.4s ease;
+        }
+        .topbar-sub {
+          font-size: 12px; color: rgba(255,255,255,0.5);
+          letter-spacing: 0.18em; text-transform: uppercase;
+          margin-top: 6px; font-weight: 500;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          transition: color 0.4s ease;
+        }
+        .topbar-tag-divider {
+          display: inline-block; width: 5px; height: 5px;
+          background: rgba(255,255,255,0.4); border-radius: 50%;
+          margin: 0 10px; vertical-align: middle; opacity: 0.5;
+        }
 
-          /* Tab bar slides in from left */
-          .admin-tab-bar { animation: adminSlideRight 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        /* ── Ribbon ── */
+        .topbar-ribbon {
+          background: transparent; padding: 0 56px;
+          transition: background 0.4s ease;
+        }
+        .topbar-ribbon-inner {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 8px; padding: 8px 0;
+          max-width: 100%; overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .topbar-ribbon-left, .topbar-ribbon-right { display: flex; align-items: center; gap: 8px; }
+        .topbar-btn {
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 8px; padding: 10px 18px; cursor: pointer;
+          color: rgba(255,255,255,0.85); font-size: 13px;
+          font-family: var(--font-body); font-weight: 600;
+          display: flex; align-items: center; gap: 6px;
+          letter-spacing: 0.04em; text-transform: uppercase;
+          transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
+          white-space: nowrap;
+        }
+        .topbar-btn:hover { background: rgba(255,255,255,0.15); color: #fff; transform: translateY(-1px); }
+        .topbar-btn:active { transform: scale(0.96); }
+        .topbar-btn--active { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.25); }
+        .topbar-btn .badge {
+          background: #C0392B; color: #fff; border-radius: 50%;
+          min-width: 18px; height: 18px; font-size: 10px; font-weight: 700;
+          display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
+        }
+        /* Scrolled ribbon buttons */
+        .topbar.scrolled ~ .topbar-ribbon .topbar-btn {
+          background: rgba(45,48,56,0.08); border-color: rgba(45,48,56,0.12); color: #2D3038;
+        }
+        .topbar.scrolled ~ .topbar-ribbon .topbar-btn:hover { background: rgba(45,48,56,0.14); }
+        .topbar.scrolled ~ .topbar-ribbon .topbar-btn--active {
+          background: rgba(45,48,56,0.15); color: #2D3038; border-color: rgba(45,48,56,0.25);
+        }
+        .dark .topbar.scrolled ~ .topbar-ribbon .topbar-btn {
+          background: rgba(216,212,201,0.08); border-color: rgba(216,212,201,0.12); color: #D8D4C9;
+        }
+        .dark .topbar.scrolled ~ .topbar-ribbon .topbar-btn--active {
+          background: rgba(216,212,201,0.18); color: #D8D4C9; border-color: rgba(216,212,201,0.25);
+        }
 
-          /* Main content fades up */
-          .admin-main-inner { animation: adminFadeUp 0.45s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        /* ── Shared button styles ── */
+        .btn {
+          font-family: var(--font-body);
+          font-size: 12px; font-weight: 700;
+          padding: 10px 20px; border-radius: 8px; border: none;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+          transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+          letter-spacing: 0.06em; text-transform: uppercase;
+          position: relative; overflow: hidden;
+        }
+        .btn::after {
+          content: ''; position: absolute; inset: 0;
+          background: rgba(255,255,255,0.12); opacity: 0; transition: opacity 0.15s;
+        }
+        .btn:hover::after { opacity: 1; }
+        .btn:active { transform: scale(0.97); }
+        .btn-gold { background: var(--gold); color: #fff; }
+        .btn-gold:hover { background: #4A7849; box-shadow: 0 4px 14px rgba(31,36,46,0.25); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--char); border: 1px solid var(--rule); }
+        .btn-outline:hover { border-color: var(--char); color: var(--char); background: var(--ivory2); transform: translateY(-1px); }
+        .btn-ghost { background: transparent; color: var(--muted); border: none; }
+        .btn-ghost:hover { color: var(--char); }
+        .dark .btn-gold { background: #7BAF7A; color: #0E1014; }
+        .dark .btn-gold:hover { background: #93C492; }
 
-          /* User rows stagger in */
-          .admin-user-row { animation: adminFadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
-          .admin-user-row:nth-child(1) { animation-delay: 0.05s; }
-          .admin-user-row:nth-child(2) { animation-delay: 0.10s; }
-          .admin-user-row:nth-child(3) { animation-delay: 0.15s; }
-          .admin-user-row:nth-child(4) { animation-delay: 0.20s; }
-          .admin-user-row:nth-child(5) { animation-delay: 0.25s; }
-          .admin-user-row:nth-child(6) { animation-delay: 0.30s; }
+        /* ── Admin animations ── */
+        @keyframes adminFadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes adminScaleIn {
+          from { opacity: 0; transform: scale(0.96); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        .admin-main-inner { animation: adminFadeUp 0.45s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .admin-user-row { animation: adminFadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .admin-user-row:nth-child(1) { animation-delay: 0.05s; }
+        .admin-user-row:nth-child(2) { animation-delay: 0.10s; }
+        .admin-user-row:nth-child(3) { animation-delay: 0.15s; }
+        .admin-user-row:nth-child(4) { animation-delay: 0.20s; }
+        .admin-user-row:nth-child(5) { animation-delay: 0.25s; }
+        .admin-user-row:nth-child(6) { animation-delay: 0.30s; }
+        .admin-pricing-table-shell { overflow: hidden; animation: adminScaleIn 0.4s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-          /* Pricing table scales in */
-          .admin-pricing-table-shell { overflow: hidden; animation: adminScaleIn 0.4s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both; }
-
-          /* Active tab pulse */
-          .admin-tab-active { animation: adminGoldPulse 2.5s 0.5s ease-in-out infinite; }
-
-          @media (max-width: 900px) {
-            .admin-topbar {
-              padding: 10px 14px !important;
-              height: auto !important;
-              min-height: 72px;
-              flex-wrap: wrap;
-              row-gap: 10px;
-            }
-            .admin-topbar > div:first-child {
-              gap: 12px !important;
-              min-width: 0;
-              flex: 1 1 auto;
-            }
-            .admin-header-name {
-              font-size: clamp(18px, 4.5vw, 28px) !important;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-            .admin-header-logo { height: 48px !important; }
-            .admin-tab-bar { top: auto !important; position: relative !important; }
+        @media (max-width: 900px) {
+          .topbar { padding: 0 24px !important; }
+          .topbar-name { font-size: clamp(22px, 3.5vw, 34px) !important; }
+          .header-logo { height: 56px !important; }
+          .topbar-ribbon { padding: 0 24px !important; }
+        }
+        @media (max-width: 768px) {
+          .topbar { padding: 0 18px !important; }
+          .topbar-name { font-size: 26px !important; }
+          .header-logo { height: 50px !important; }
+          .topbar-ribbon { padding: 0 14px !important; }
+          .topbar-ribbon-inner { flex-wrap: wrap; }
+          .admin-main-inner { padding: 16px 14px !important; }
+          .admin-pricing-layout { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; }
+          .admin-pricing-sidebar { width: 100% !important; flex-shrink: 0 !important; }
+          .admin-user-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+          .admin-user-actions { justify-content: flex-start !important; flex-wrap: wrap !important; }
+          .admin-pricing-table-shell {
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch;
           }
-          @media (max-width: 768px) {
-            .admin-main-inner { padding: 16px 14px !important; }
-            .admin-tab-bar { padding: 0 8px !important; flex-wrap: wrap; }
-            .admin-pricing-layout { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; }
-            .admin-pricing-sidebar { width: 100% !important; flex-shrink: 0 !important; }
-            .admin-user-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
-            .admin-user-actions { justify-content: flex-start !important; flex-wrap: wrap !important; }
-            .admin-pricing-table-shell {
-              overflow-x: auto !important;
-              overflow-y: hidden !important;
-              -webkit-overflow-scrolling: touch;
-            }
-          }
-        `}</style>
-        <div style={{ display: "flex", alignItems: "center", gap: 22, cursor: "pointer" }} onClick={() => confirmIfDirty(onBack)}>
-          <img
-            src="/ewp-logo.png"
-            alt="Engstrom Wood Products"
-            style={{ height: 64, width: "auto", flexShrink: 0, filter: "brightness(0) invert(1)" }}
-            className="admin-header-logo"
-          />
-          <div>
-            <div style={{ fontFamily: serif, fontSize: 32, fontWeight: 600, color: "#FFFFFF", letterSpacing: "0.03em", lineHeight: 1 }} className="admin-header-name">Engstrom Wood Products</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 5, fontWeight: 500 }} className="admin-header-sub">Admin Panel</div>
+        }
+      `}</style>
+
+      {/* Topbar + Ribbon sticky wrapper — same structure as main page */}
+      <div className={`topbar-sticky-wrap${scrolled ? " scrolled" : ""}${dark ? " dark" : ""}`}>
+        <div className={`topbar${scrolled ? " scrolled" : ""}${dark ? " dark" : ""}`}>
+          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => confirmIfDirty(onBack)}>
+            <img src="/ewp-logo.png" alt="Engstrom Wood Products" className="header-logo" />
+            <div>
+              <div className="topbar-name">Engstrom Wood Products</div>
+              <div className="topbar-sub">
+                New Age Technology<span className="topbar-tag-divider"></span>Old World Craftsmanship
+              </div>
+            </div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => confirmIfDirty(onBack)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "6px 16px", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: 13, fontFamily: font, fontWeight: 500 }}>
-            ← Back to App
-          </button>
+        <div className="topbar-ribbon">
+          <div className="topbar-ribbon-inner">
+            <div className="topbar-ribbon-left">
+              <button className="topbar-btn" onClick={() => confirmIfDirty(onBack)}>
+                ← Back
+              </button>
+            </div>
+            <div className="topbar-ribbon-right">
+              {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"], ["contractors", "🏢 Contractors"]].map(([key, label]) => (
+                <button key={key} className={`topbar-btn${tab === key ? " topbar-btn--active" : ""}`} onClick={() => confirmIfDirty(() => setTab(key))}>
+                  {label}
+                </button>
+              ))}
+              <button className={`topbar-btn${tab === "timetracker" ? " topbar-btn--active" : ""}`} onClick={() => confirmIfDirty(() => setTab("timetracker"))}>
+                ⏱ Time Tracker
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Main tab bar */}
-      <div className="admin-tab-bar" style={{ background: t.cardAlt, borderBottom: `1px solid ${t.border}`, padding: "0 32px", display: "flex", gap: 0, position: "sticky", top: 150, zIndex: 99 }}>
-        {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"], ["contractors", "🏢 Contractors"], ["bugs", "🐛 Bug Reports"]].map(([key, label]) => (
-          <button key={key} onClick={() => confirmIfDirty(() => setTab(key))} style={{
-            padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === key ? t.gold : "transparent"}`,
-            background: "transparent", color: tab === key ? t.text : t.textMuted,
-            fontWeight: tab === key ? 600 : 400, fontSize: 14,
-            cursor: "pointer", fontFamily: font, transition: "all 0.15s",
-          }}>{label}</button>
-        ))}
         {dirty && tab === "pricing" && (
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, paddingRight: 0 }}>
+          <div style={{ padding: "4px 56px 8px", textAlign: "right" }}>
             <span style={{ fontSize: 12, color: "#E0C48A", fontStyle: "italic" }}>Unsaved changes</span>
           </div>
         )}
-        {!(dirty && tab === "pricing") && <div style={{ marginLeft: "auto" }} />}
-        <button onClick={() => confirmIfDirty(() => setTab("timetracker"))} style={{
-          padding: "14px 24px", border: "none", borderBottom: `3px solid ${tab === "timetracker" ? t.gold : "transparent"}`,
-          background: "transparent", color: tab === "timetracker" ? t.text : t.textMuted,
-          fontWeight: tab === "timetracker" ? 600 : 400, fontSize: 14,
-          cursor: "pointer", fontFamily: font, transition: "all 0.15s",
-        }}>⏱ Time Tracker</button>
       </div>
 
       <div className="admin-main-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px" }}>
@@ -725,8 +814,8 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                     fontFamily: font, outline: "none",
                   }}
                 />
-                <button onClick={addPreApproved} disabled={addingPreEmail || !newPreEmail.trim()}
-                  style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: t.gold, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: addingPreEmail ? 0.6 : 1, fontFamily: font, whiteSpace: "nowrap" }}>
+                <button className="btn btn-gold" onClick={addPreApproved} disabled={addingPreEmail || !newPreEmail.trim()}
+                  style={{ opacity: addingPreEmail ? 0.6 : 1, whiteSpace: "nowrap" }}>
                   {addingPreEmail ? "Adding…" : "+ Add Email"}
                 </button>
               </div>
@@ -779,16 +868,16 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                     </div>
                   </div>
                   <div className="admin-user-actions" style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
-                      style={{ padding: "7px 16px", borderRadius: 6, border: "none", background: t.pendingApprove, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }}>
+                    <button className="btn btn-gold" onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                      style={{ padding: "7px 16px", opacity: actionLoading === u.user_id ? 0.6 : 1 }}>
                       Approve
                     </button>
-                    <button onClick={() => reject(u.user_id, u.email)} disabled={actionLoading === u.user_id}
-                      style={{ padding: "7px 16px", borderRadius: 6, border: `1px solid ${t.pendingReject}`, background: "transparent", color: t.pendingRejectText, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }}>
+                    <button className="btn btn-outline" onClick={() => reject(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                      style={{ padding: "7px 16px", opacity: actionLoading === u.user_id ? 0.6 : 1 }}>
                       Reject
                     </button>
-                    <button onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
-                      style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${t.border}`, background: "transparent", color: t.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: actionLoading === u.user_id ? 0.6 : 1, fontFamily: font }} title="Delete user">
+                    <button className="btn btn-ghost" onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                      style={{ padding: "7px 12px", opacity: actionLoading === u.user_id ? 0.6 : 1 }} title="Delete user">
                       🗑
                     </button>
                   </div>
@@ -820,17 +909,17 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                       <div className="admin-user-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ ...badge, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "3px 8px", borderRadius: 20 }}>{u.status}</span>
                         {u.status === "rejected" && (
-                          <button onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
-                            style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${t.gold}`, background: "transparent", color: t.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                          <button className="btn btn-gold" onClick={() => approve(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                            style={{ padding: "5px 12px", fontSize: 11 }}>
                             Re-approve
                           </button>
                         )}
-                        <button onClick={() => { setResetModal({ email: u.email }); setResetSent(false) }}
-                          style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${t.border}`, background: "transparent", color: t.textMid, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                        <button className="btn btn-outline" onClick={() => { setResetModal({ email: u.email }); setResetSent(false) }}
+                          style={{ padding: "5px 12px", fontSize: 11 }}>
                           🔑 Reset PW
                         </button>
-                        <button onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
-                          style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${t.pendingReject}`, background: "transparent", color: t.pendingRejectText, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                        <button className="btn btn-outline" onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
+                          style={{ padding: "5px 10px", fontSize: 11, color: t.pendingRejectText, borderColor: t.pendingReject }}>
                           🗑 Delete
                         </button>
                       </div>
@@ -853,8 +942,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                 This account has root-level privileges and cannot be deleted from the Admin Panel.<br /><br />
                 To remove this account, access the <strong style={{ color: t.text }}>Supabase Authentication dashboard</strong> directly using your project credentials.
               </div>
-              <button onClick={() => setRootBlockModal(false)}
-                style={{ padding: "9px 28px", borderRadius: 7, border: "none", background: t.gold, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+              <button className="btn btn-gold" onClick={() => setRootBlockModal(false)}>
                 Understood
               </button>
             </div>
@@ -879,12 +967,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                 </div>
               )}
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <button onClick={() => setResetModal(null)}
-                  style={{ padding: "8px 18px", borderRadius: 6, border: `1px solid ${t.border}`, background: "transparent", color: t.textMid, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: font }}>
+                <button className="btn btn-outline" onClick={() => setResetModal(null)}>
                   Cancel
                 </button>
-                <button onClick={() => sendPasswordReset(resetModal.email)} disabled={resetSent}
-                  style={{ padding: "8px 20px", borderRadius: 6, border: "none", background: resetSent ? "#4caf50" : t.gold, color: "#fff", fontSize: 13, fontWeight: 600, cursor: resetSent ? "default" : "pointer", fontFamily: font, opacity: resetSent ? 0.8 : 1 }}>
+                <button className="btn btn-gold" onClick={() => sendPasswordReset(resetModal.email)} disabled={resetSent}
+                  style={{ opacity: resetSent ? 0.8 : 1, cursor: resetSent ? "default" : "pointer" }}>
                   {resetSent ? "✓ Sent" : "Send Reset Link"}
                 </button>
               </div>
@@ -1060,20 +1147,15 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
 
                     {/* Add row + Save */}
                     <div style={{ borderTop: `1px solid ${t.border}`, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-                      <button onClick={() => addRow(activeTable)} style={{
-                        background: "transparent", border: `1px dashed ${t.gold}`,
-                        borderRadius: 6, padding: "6px 16px", cursor: "pointer",
-                        color: t.gold, fontSize: 12, fontWeight: 600, fontFamily: font,
-                        display: "flex", alignItems: "center", gap: 6,
-                      }}>
+                      <button className="btn btn-outline" onClick={() => addRow(activeTable)}
+                        style={{ padding: "6px 16px", borderStyle: "dashed", borderColor: "var(--gold)", color: "var(--gold)" }}>
                         + Add Row
                       </button>
                       {dirty && (
-                        <button onClick={savePricing} disabled={saving} style={{
-                          padding: "6px 18px", borderRadius: 6, border: "none",
-                          background: t.gold, color: "#fff", fontWeight: 600, fontSize: 12,
-                          cursor: saving ? "not-allowed" : "pointer", fontFamily: font, opacity: saving ? 0.7 : 1,
-                        }}>{saving ? "Saving…" : "Save Changes"}</button>
+                        <button className="btn btn-gold" onClick={savePricing} disabled={saving}
+                          style={{ padding: "6px 18px", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
+                          {saving ? "Saving…" : "Save Changes"}
+                        </button>
                       )}
                     </div>
                   </div>
@@ -1093,10 +1175,6 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           <ContractorsTab />
         )}
 
-        {/* ── BUG REPORTS TAB ── */}
-        {tab === "bugs" && (
-          <BugReportsTab session={session} isAdmin={isAdmin} />
-        )}
 
         {/* ── TIME TRACKER TAB ── */}
         {tab === "timetracker" && (
