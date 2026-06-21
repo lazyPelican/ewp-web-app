@@ -118,15 +118,15 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
         <div className="pcard-name">{p.project.name}</div>
         <div className="pcard-total-row">
           <div className="pcard-total">{fmt(gt)}</div>
-          {section === "completed" && (
-            <button className="pcard-confirm-btn" onClick={e => {
-              e.stopPropagation();
-              if (window.confirm("Marking this quote as Under Contract will finalize it.\n\nUnder Contract quotes become read-only (view & print only).\n\nProceed?")) {
-                onConfirm(realIdx);
-              }
-            }}>✓ Mark as Under Contract</button>
-          )}
         </div>
+        {section === "completed" && (
+          <button className="pcard-confirm-btn" style={{ marginTop: 6, width: "100%" }} onClick={e => {
+            e.stopPropagation();
+            if (window.confirm("Marking this quote as Under Contract will finalize it.\n\nUnder Contract quotes become read-only (view & print only).\n\nProceed?")) {
+              onConfirm(realIdx);
+            }
+          }}>✓ Mark as Under Contract</button>
+        )}
 
         {/* Stage control for active jobs */}
         {section === "active" && isActive && (
