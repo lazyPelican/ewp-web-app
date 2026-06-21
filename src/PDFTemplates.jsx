@@ -500,27 +500,27 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
   const hasTax = project.installationType ? project.installationType === "contractor" : project.taxEnabled
 
   return (
-    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
-      <View style={[s.hdr, { marginBottom: 14 }]} fixed>
+    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingTop: 20, paddingBottom: 34 }]}>
+      <View style={[s.hdr, { paddingTop: 5, paddingBottom: 5, marginBottom: 6 }]} fixed>
         <View style={s.coBrand}>
-          <Image style={s.coLogo} src={LOGO_SRC} />
+          <Image style={{ width: 34, height: 34 }} src={LOGO_SRC} />
           <View>
-            <Text style={s.coName}>Engstrom Wood Products</Text>
-            <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
+            <Text style={[s.coName, { fontSize: 18 }]}>Engstrom Wood Products</Text>
+            <Text style={[s.coTag, { fontSize: 6 }]}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
           </View>
         </View>
         <View>
-          <Text style={s.docType}>{docType || 'QUOTE'}</Text>
+          <Text style={[s.docType, { fontSize: 11 }]}>{docType || 'QUOTE'}</Text>
           <Text style={s.docId}>{fmtId(project.id)}</Text>
-          <Text style={s.docDate}>{fmtD(project.bidDate)}</Text>
+          <Text style={[s.docDate, { fontSize: 6 }]}>{fmtD(project.bidDate)}</Text>
         </View>
       </View>
 
-      <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 16, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 10, textAlign: 'center' }}>
+      <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 14, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 6, textAlign: 'center' }}>
         Executive Summary
       </Text>
 
-      <View style={[s.infoStrip, { marginBottom: 12 }]}>
+      <View style={[s.infoStrip, { marginBottom: 8 }]}>
         {[
           { label: 'Project Name', value: project.name },
           { label: 'Address', value: project.address },
@@ -529,25 +529,25 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
           { label: 'Phone', value: project.contactPhone },
           { label: 'Email', value: project.email },
         ].map((cell, i) => (
-          <View key={i} style={[s.ic, i % 2 === 1 ? s.icEven : {}, i >= 4 ? { borderBottom: 'none' } : {}]}>
-            <Text style={s.icLbl}>{cell.label}</Text>
-            <Text style={s.icVal}>{trunc(cell.value, 48) || '—'}</Text>
+          <View key={i} style={[s.ic, i % 2 === 1 ? s.icEven : {}, i >= 4 ? { borderBottom: 'none' } : {}, { paddingTop: 3, paddingBottom: 3 }]}>
+            <Text style={[s.icLbl, { fontSize: 5.5, marginBottom: 1 }]}>{cell.label}</Text>
+            <Text style={[s.icVal, { fontSize: 8.5 }]}>{trunc(cell.value, 48) || '—'}</Text>
           </View>
         ))}
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 14, marginBottom: 12 }}>
-        <View style={{ flex: 1, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, alignItems: 'center' }}>
-          <Text style={{ fontFamily: FONT_SANS, fontSize: 7, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Rooms</Text>
-          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 22, color: '#1A1A1A' }}>{roomTotals.length}</Text>
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+        <View style={{ flex: 1, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 6, paddingBottom: 6, paddingLeft: 10, paddingRight: 10, alignItems: 'center' }}>
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Rooms</Text>
+          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 18, color: '#1A1A1A' }}>{roomTotals.length}</Text>
         </View>
-        <View style={{ flex: 2, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, alignItems: 'center' }}>
-          <Text style={{ fontFamily: FONT_SANS, fontSize: 7, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Project Subtotal</Text>
-          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 22, color: '#1A1A1A' }}>{fmtN(projectSubtotal)}</Text>
+        <View style={{ flex: 2, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 6, paddingBottom: 6, paddingLeft: 10, paddingRight: 10, alignItems: 'center' }}>
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Project Subtotal</Text>
+          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 18, color: '#1A1A1A' }}>{fmtN(projectSubtotal)}</Text>
         </View>
-        <View style={{ flex: 2, border: `1 solid ${C.grandBorder}`, borderTop: `2 solid ${C.grandAccent}`, backgroundColor: C.grandBg, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, alignItems: 'center' }}>
-          <Text style={{ fontFamily: FONT_SANS, fontSize: 7, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Grand Total</Text>
-          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 24, color: '#1A1A1A' }}>{fmtN(grandTotal)}</Text>
+        <View style={{ flex: 2, border: `1 solid ${C.grandBorder}`, borderTop: `2 solid ${C.grandAccent}`, backgroundColor: C.grandBg, paddingTop: 6, paddingBottom: 6, paddingLeft: 10, paddingRight: 10, alignItems: 'center' }}>
+          <Text style={{ fontFamily: FONT_SANS, fontSize: 6, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Grand Total</Text>
+          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 20, color: '#1A1A1A' }}>{fmtN(grandTotal)}</Text>
         </View>
       </View>
 
@@ -572,7 +572,7 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
         ))}
       </View>
 
-      <View style={{ marginTop: 6 }}>
+      <View wrap={false} style={{ marginTop: 4 }}>
         {delivery > 0 && (
           <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
         )}
@@ -583,7 +583,6 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
           label="Grand Total"
           sub={[
             `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            fmtD(project.bidDate),
             delivery > 0 ? 'incl. delivery' : '',
             hasTax ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
