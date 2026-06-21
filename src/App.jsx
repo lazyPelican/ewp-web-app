@@ -1567,6 +1567,35 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
 
   const [dark, setDark] = useState(() => localStorage.getItem('ewp-theme') === 'dark');
   const [scrolled, setScrolled] = useState(false);
+  const [timerPrompt, setTimerPrompt] = useState(false);
+
+  // ── Check if Bilal needs a timer-start reminder ──
+  useEffect(() => {
+    if (isGuest || !session) return
+    if (session.user?.email?.toLowerCase() !== "11bilalahmed@gmail.com") return
+    const check = async () => {
+      try {
+        const { data } = await supabase.from("time_entries").select("id").is("stopped_at", null).limit(1)
+        if (!data || data.length === 0) setTimerPrompt(true)
+      } catch {}
+    }
+    check()
+  }, [session, isGuest])
+
+  const handleTimerPromptStart = async () => {
+    setTimerPrompt(false)
+    try {
+      const now = new Date().toISOString()
+      await supabase.from("time_entries").insert({
+        user_id: session.user.id,
+        started_at: now,
+        description: null,
+      })
+      setToast("Timer started")
+    } catch {
+      setToast("Failed to start timer")
+    }
+  }
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
@@ -2006,6 +2035,49 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   return (
     <>
       <style>{styles}</style>
+
+      {/* ── Timer start reminder popup ── */}
+      {timerPrompt && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }} onClick={() => setTimerPrompt(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: dark ? "#1F242E" : "#fff",
+            border: dark ? "1px solid #353A45" : "1px solid #E4D9C8",
+            borderRadius: 16, padding: "36px 40px", maxWidth: 400, width: "90%",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            textAlign: "center", fontFamily: "var(--font-sans)",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>&#9201;</div>
+            <div style={{
+              fontSize: 20, fontWeight: 700, marginBottom: 8,
+              color: dark ? "#E8E4D9" : "#1F242E",
+            }}>Start Time Tracking?</div>
+            <div style={{
+              fontSize: 14, lineHeight: 1.6, marginBottom: 28,
+              color: dark ? "#9BA4B6" : "#6E7480",
+            }}>You don't have a timer running. Would you like to start tracking time?</div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button onClick={handleTimerPromptStart} style={{
+                padding: "11px 28px", borderRadius: 8, border: "none", cursor: "pointer",
+                fontSize: 15, fontWeight: 700, fontFamily: "var(--font-sans)",
+                background: "#5B8C5A", color: "#fff",
+                boxShadow: "0 2px 8px rgba(91,140,90,0.3)",
+              }}>Yes, start timer</button>
+              <button onClick={() => setTimerPrompt(false)} style={{
+                padding: "11px 24px", borderRadius: 8, cursor: "pointer",
+                fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
+                background: "transparent",
+                border: dark ? "1px solid #353A45" : "1px solid #DCDAD2",
+                color: dark ? "#9BA4B6" : "#6E7480",
+              }}>Not now</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={`app${dark ? " dark" : ""}`}>
         {/* TOPBAR + STEPPER sticky wrapper */}
         <div className={`topbar-sticky-wrap${view === "dashboard" ? " topbar-sticky-wrap--hero" : ""}${scrolled ? " topbar-sticky-wrap--scrolled" : ""}`} style={{ position: "sticky", top: 0, zIndex: 100 }}>

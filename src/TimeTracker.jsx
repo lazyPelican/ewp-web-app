@@ -316,8 +316,6 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
 
   const descSaveTimer = useRef(null)
 
-  const [showTimerPrompt, setShowTimerPrompt] = useState(false)
-
   // ── Load data on mount ──
   useEffect(() => {
     loadData()
@@ -373,8 +371,6 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
         const elapsedSec = Math.round((Date.now() - new Date(running.started_at).getTime()) / 1000)
         setElapsed(elapsedSec)
         startTicking(new Date(running.started_at).getTime())
-      } else if (session?.user?.email?.toLowerCase() === BILAL_EMAIL) {
-        setShowTimerPrompt(true)
       }
     } catch (err) {
       logError("timetracker.load", err)
@@ -718,11 +714,6 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
     return <div style={{ padding: 40, textAlign: "center", color: t.textMuted, fontFamily: font }}>Loading time tracker…</div>
   }
 
-  const handlePromptStart = () => {
-    setShowTimerPrompt(false)
-    handleStart()
-  }
-
   return (
     <div>
       {/* Section title */}
@@ -731,30 +722,6 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
         <div style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>Track hours, generate invoices, manage billing</div>
         <div style={{ height: 2, background: t.gold, width: 48, marginTop: 12 }} />
       </div>
-
-      {/* ── Timer start prompt ── */}
-      {showTimerPrompt && (
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "14px 20px", marginBottom: 20, borderRadius: 10,
-          background: "rgba(91,140,90,0.1)", border: `1px solid rgba(91,140,90,0.3)`,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 20 }}>⏱</span>
-            <span style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>Do you want to start the timer?</span>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={handlePromptStart} style={{
-              padding: "7px 18px", borderRadius: 6, border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: 600, fontFamily: font, background: "#2E7D32", color: "#fff",
-            }}>Yes, start</button>
-            <button onClick={() => setShowTimerPrompt(false)} style={{
-              padding: "7px 14px", borderRadius: 6, border: `1px solid ${t.border}`, cursor: "pointer",
-              fontSize: 13, fontWeight: 500, fontFamily: font, background: "transparent", color: t.textMuted,
-            }}>Not now</button>
-          </div>
-        </div>
-      )}
 
       {/* ── SECTION A: TIMER ── */}
       <div style={card}>
