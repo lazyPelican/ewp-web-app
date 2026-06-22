@@ -74,11 +74,11 @@ const CL = {
   ink: "#17181a", inkSoft: "#26282b", muted: "#6c6f73", faint: "#a3a6aa",
   line: "#e8e9eb", paper: "#ffffff", accent: "#c2693c", accentDeep: "#a8542d", wash: "#f7f5f2",
 }
-const sg = "Helvetica"
-const ar = "Helvetica"
+const hb = "Helvetica-Bold"
+const hr = "Helvetica"
 
 const ps = StyleSheet.create({
-  page: { fontSize: 10, fontFamily: ar, color: CL.ink },
+  page: { fontSize: 10, fontFamily: hr, color: CL.ink },
   // Masthead
   masthead: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
@@ -87,45 +87,45 @@ const ps = StyleSheet.create({
   },
   ident: { flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 6 },
   logo: { width: 54, height: 54 },
-  identName: { fontFamily: sg, fontWeight: 600, fontSize: 17, color: CL.ink, letterSpacing: -0.2 },
+  identName: { fontFamily: hb, fontSize: 17, color: CL.ink, letterSpacing: -0.2 },
   identRole: { fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", color: CL.muted, marginTop: 4 },
   docBlock: { textAlign: "right" },
-  docWord: { fontFamily: sg, fontWeight: 700, fontSize: 44, lineHeight: 0.9, letterSpacing: -1, textTransform: "uppercase", color: CL.ink },
-  docSub: { fontFamily: sg, fontWeight: 500, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", color: CL.accentDeep, marginTop: 10 },
+  docWord: { fontFamily: hb, fontSize: 44, lineHeight: 0.9, letterSpacing: -1, textTransform: "uppercase", color: CL.ink },
+  docSub: { fontFamily: hr, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", color: CL.accentDeep, marginTop: 10 },
   // Body
   body: { paddingTop: 30, paddingBottom: 60, paddingHorizontal: 50 },
   // From / Bill To panels
   metaGrid: { flexDirection: "row", gap: 20, marginBottom: 0 },
   panel: { backgroundColor: CL.wash, borderRadius: 10, padding: "16 20", flex: 1 },
-  panelLabel: { fontFamily: sg, fontWeight: 600, fontSize: 7.5, letterSpacing: 2, textTransform: "uppercase", color: CL.accentDeep, marginBottom: 9 },
-  panelWho: { fontFamily: sg, fontSize: 16, fontWeight: 600, marginBottom: 7, letterSpacing: -0.1 },
+  panelLabel: { fontFamily: hb, fontSize: 7.5, letterSpacing: 2, textTransform: "uppercase", color: CL.accentDeep, marginBottom: 9 },
+  panelWho: { fontFamily: hb, fontSize: 16, marginBottom: 7, letterSpacing: -0.1 },
   panelLine: { fontSize: 11, lineHeight: 1.7, color: CL.muted },
   // Invoice meta row
   invoiceMeta: { flexDirection: "row", gap: 30, paddingTop: 4, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: CL.line, borderBottomStyle: "solid", marginTop: 20 },
   mi: {},
-  miLabel: { fontFamily: sg, fontWeight: 600, fontSize: 7.5, letterSpacing: 2, textTransform: "uppercase", color: CL.accentDeep, marginBottom: 5 },
-  miVal: { fontFamily: sg, fontSize: 11, fontWeight: 500, color: CL.ink },
+  miLabel: { fontFamily: hb, fontSize: 7.5, letterSpacing: 2, textTransform: "uppercase", color: CL.accentDeep, marginBottom: 5 },
+  miVal: { fontFamily: hr, fontSize: 11, color: CL.ink },
   // Table
   tHead: { flexDirection: "row", backgroundColor: CL.ink, borderRadius: 6, paddingVertical: 8, paddingHorizontal: 12, marginTop: 16, marginBottom: 2 },
-  tHeadCell: { fontFamily: sg, fontSize: 7.5, fontWeight: 600, letterSpacing: 1.5, textTransform: "uppercase", color: "#ffffff" },
+  tHeadCell: { fontFamily: hb, fontSize: 7.5, letterSpacing: 1.5, textTransform: "uppercase", color: "#ffffff" },
   tRow: { flexDirection: "row", paddingVertical: 7, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: CL.line, borderBottomStyle: "solid" },
   tRowLast: { flexDirection: "row", paddingVertical: 7, paddingHorizontal: 12 },
-  tCellDate: { fontFamily: sg, fontSize: 10, color: CL.muted },
-  tCellDesc: { fontSize: 10.5, color: CL.ink, fontWeight: 500 },
-  tCell: { fontFamily: sg, fontSize: 10.5, color: CL.ink },
+  tCellDate: { fontFamily: hr, fontSize: 10, color: CL.muted },
+  tCellDesc: { fontSize: 10.5, color: CL.ink },
+  tCell: { fontFamily: hr, fontSize: 10.5, color: CL.ink },
   // Foot: Notes + Totals
   foot: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", gap: 24, marginTop: 14 },
   terms: { maxWidth: 230 },
-  notesLabel: { fontFamily: sg, fontWeight: 600, fontSize: 7.5, letterSpacing: 2, textTransform: "uppercase", color: CL.accentDeep, marginBottom: 5 },
+  notesLabel: { fontFamily: hb, fontSize: 7.5, letterSpacing: 2, textTransform: "uppercase", color: CL.accentDeep, marginBottom: 5 },
   notesText: { fontSize: 10, lineHeight: 1.7, color: CL.muted },
   totals: { width: 220 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", fontSize: 10.5, paddingVertical: 7, color: CL.muted },
   totalRowDiv: { flexDirection: "row", justifyContent: "space-between", fontSize: 10.5, paddingVertical: 7, color: CL.muted, borderTopWidth: 1, borderTopColor: CL.line, borderTopStyle: "solid" },
   totalLbl: { fontSize: 10.5, color: CL.muted },
-  totalVal: { fontFamily: sg, fontSize: 10.5, color: CL.ink },
+  totalVal: { fontFamily: hb, fontSize: 10.5, color: CL.ink },
   dueBox: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8, paddingVertical: 11, paddingHorizontal: 18, backgroundColor: CL.accent, borderRadius: 8 },
-  dueK: { fontFamily: sg, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.85)" },
-  dueV: { fontFamily: sg, fontSize: 22, fontWeight: 700, letterSpacing: -0.2, color: "#ffffff" },
+  dueK: { fontFamily: hr, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.85)" },
+  dueV: { fontFamily: hb, fontSize: 22, letterSpacing: -0.2, color: "#ffffff" },
   // Footer
   thanks: {
     position: "absolute", bottom: 0, left: 0, right: 0,
@@ -133,7 +133,7 @@ const ps = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: CL.line, borderTopStyle: "solid",
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  thanksMsg: { fontFamily: sg, fontWeight: 600, fontSize: 12, color: CL.ink, letterSpacing: -0.1 },
+  thanksMsg: { fontFamily: hb, fontSize: 12, color: CL.ink, letterSpacing: -0.1 },
   thanksContact: { textAlign: "right" },
   thanksName: { fontSize: 9.5, color: CL.faint },
   thanksEmail: { fontSize: 9.5, color: CL.faint, marginTop: 1 },
