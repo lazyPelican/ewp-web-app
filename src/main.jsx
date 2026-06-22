@@ -1,3 +1,6 @@
+import { Buffer } from "buffer"
+window.Buffer = Buffer
+
 import React, { useState, useEffect, Suspense, lazy } from "react"
 import ReactDOM from "react-dom/client"
 import "./global.css"
