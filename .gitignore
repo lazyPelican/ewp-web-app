@@ -7,3 +7,5 @@ dist/
 *.log
 .DS_Store
 todo.md
+recovery-codes.txt
+summary.md

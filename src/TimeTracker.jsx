@@ -3,25 +3,30 @@ import { supabase } from "./supabase.js"
 import { logError } from "./logger.js"
 import { Document, Page, View, Text, Image, Font, StyleSheet, pdf } from "@react-pdf/renderer"
 
-// ── Register Google Fonts ───────────────────────────────────────
-Font.register({
-  family: "Space Grotesk",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUUsj.ttf", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7aUUsj.ttf", fontWeight: 500 },
-    { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj42Vksj.ttf", fontWeight: 600 },
-    { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj4PVksj.ttf", fontWeight: 700 },
-  ],
-})
-Font.register({
-  family: "Archivo",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTNDNp8A.ttf", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTBjNp8A.ttf", fontWeight: 500 },
-    { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT6jRp8A.ttf", fontWeight: 600 },
-    { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT0zRp8A.ttf", fontWeight: 700 },
-  ],
-})
+// ── Register Google Fonts (with fallback to Helvetica) ──────────
+try {
+  Font.register({
+    family: "Space Grotesk",
+    fonts: [
+      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUUsj.ttf", fontWeight: 400 },
+      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7aUUsj.ttf", fontWeight: 500 },
+      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj42Vksj.ttf", fontWeight: 600 },
+      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj4PVksj.ttf", fontWeight: 700 },
+    ],
+  })
+  Font.register({
+    family: "Archivo",
+    fonts: [
+      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTNDNp8A.ttf", fontWeight: 400 },
+      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTBjNp8A.ttf", fontWeight: 500 },
+      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT6jRp8A.ttf", fontWeight: 600 },
+      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT0zRp8A.ttf", fontWeight: 700 },
+    ],
+  })
+} catch (e) {
+  console.warn("Invoice font registration failed, using fallback:", e)
+}
+Font.registerHyphenationCallback(word => [word])
 
 const HOURLY_RATE = 33.10
 const CLIENT_EMAIL = "kmenzel@engstromwoodproducts.com"
@@ -111,7 +116,7 @@ const ps = StyleSheet.create({
   docWord: { fontFamily: sg, fontWeight: 700, fontSize: 44, lineHeight: 0.9, letterSpacing: -1, textTransform: "uppercase", color: CL.ink },
   docSub: { fontFamily: sg, fontWeight: 500, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", color: CL.accentDeep, marginTop: 10 },
   // Body
-  body: { paddingTop: 30, paddingBottom: 24, paddingHorizontal: 50, flex: 1 },
+  body: { paddingTop: 30, paddingBottom: 60, paddingHorizontal: 50 },
   // From / Bill To panels
   metaGrid: { flexDirection: "row", gap: 20, marginBottom: 0 },
   panel: { backgroundColor: CL.wash, borderRadius: 10, padding: "16 20", flex: 1 },
@@ -146,7 +151,8 @@ const ps = StyleSheet.create({
   dueV: { fontFamily: sg, fontSize: 22, fontWeight: 700, letterSpacing: -0.2, color: "#ffffff" },
   // Footer
   thanks: {
-    marginTop: "auto", paddingTop: 11, paddingBottom: 22, paddingHorizontal: 50,
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    paddingTop: 11, paddingBottom: 22, paddingHorizontal: 50,
     borderTopWidth: 1, borderTopColor: CL.line, borderTopStyle: "solid",
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
@@ -609,16 +615,21 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
 
   // ── Download PDF ──
   const downloadInvoicePDF = async (invoice, weekEntries) => {
-    const sorted = [...weekEntries].sort((a, b) => new Date(a.started_at) - new Date(b.started_at))
-    const blob = await pdf(<InvoicePDFDoc invoice={invoice} entries={sorted} />).toBlob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${invoice.invoice_number}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 30000)
+    try {
+      const sorted = [...weekEntries].sort((a, b) => new Date(a.started_at) - new Date(b.started_at))
+      const blob = await pdf(<InvoicePDFDoc invoice={invoice} entries={sorted} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${invoice.invoice_number}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 30000)
+    } catch (err) {
+      logError("timetracker.downloadPDF", err)
+      showToast("Failed to download invoice PDF")
+    }
   }
 
   // ── Email invoice ──
