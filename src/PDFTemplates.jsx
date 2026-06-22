@@ -685,7 +685,7 @@ function TableHeader({ colDefs }) {
 }
 
 function TableRow({ colDefs, cells, isEven }) {
-  // cells: [{ val, right, amt, muted }]
+  // cells: [{ val, right, amt, muted, bold }]
   return (
     <View style={[s.tRow, isEven ? s.tRowAlt : {}]}>
       {colDefs.map((col, i) => {
@@ -697,6 +697,7 @@ function TableRow({ colDefs, cells, isEven }) {
               cell.right ? s.tCellR : {},
               cell.amt ? s.tCellAmt : {},
               cell.muted ? s.tCellMuted : {},
+              cell.bold ? { fontFamily: FONT_SANS_BD } : {},
             ]}>
               {cell.val ?? ''}
             </Text>
@@ -1099,11 +1100,27 @@ function CustomerSummaryPage({
   delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
   compact = false,
 }) {
-  const roomTableCols = [
-    { w: '40%', label: 'Room' },
-    { w: '30%', label: 'Room Subtotal', right: true },
-    { w: '30%', label: 'Room Total', right: true },
-  ]
+  const hasCab = roomTotals.some(r => r.cab + r.upg > 0)
+  const hasCtp = roomTotals.some(r => r.ctp > 0)
+  const hasFin = roomTotals.some(r => r.fin > 0)
+  const hasInst = roomTotals.some(r => r.inst > 0)
+
+  const cols = [{ w: null, label: 'Room' }]
+  if (hasCab) cols.push({ w: null, label: 'Cabinetry', right: true })
+  if (hasCtp) cols.push({ w: null, label: 'Countertops', right: true })
+  if (hasFin) cols.push({ w: null, label: 'Finishing', right: true })
+  if (hasInst) cols.push({ w: null, label: 'Installation', right: true })
+  cols.push({ w: null, label: 'Room Total', right: true })
+
+  const dataCols = cols.length
+  const nameW = dataCols <= 4 ? '40%' : '28%'
+  const numW = `${Math.floor((100 - parseInt(nameW)) / (dataCols - 1))}%`
+  const roomTableCols = cols.map((c, i) => ({ ...c, w: i === 0 ? nameW : numW }))
+
+  const grandCab = roomTotals.reduce((s, r) => s + r.cab + r.upg, 0)
+  const grandCtp = roomTotals.reduce((s, r) => s + r.ctp, 0)
+  const grandFin = roomTotals.reduce((s, r) => s + r.fin, 0)
+  const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
 
   const pgStyle = compact
     ? [s.page, { paddingTop: 18, paddingBottom: 30, paddingLeft: 28, paddingRight: 28 }]
@@ -1120,26 +1137,35 @@ function CustomerSummaryPage({
       <SectionLabel label="Room Summary" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={roomTableCols} />
-        {roomTotals.map((r, i) => (
-          <TableRow
-            key={i}
-            colDefs={roomTableCols}
-            isEven={i % 2 === 1}
-            cells={[
-              { val: trunc(r.name || `Room ${i + 1}`, 50) },
-              { val: fmtN(r.total), right: true },
-              { val: fmtN(r.total), amt: true },
-            ]}
-          />
-        ))}
+        {roomTotals.map((r, i) => {
+          const cells = [{ val: trunc(r.name || `Room ${i + 1}`, 50) }]
+          if (hasCab) cells.push({ val: fmtN(r.cab + r.upg), right: true })
+          if (hasCtp) cells.push({ val: fmtN(r.ctp), right: true })
+          if (hasFin) cells.push({ val: fmtN(r.fin), right: true })
+          if (hasInst) cells.push({ val: fmtN(r.inst), right: true })
+          cells.push({ val: fmtN(r.total), amt: true })
+          return (
+            <TableRow
+              key={i}
+              colDefs={roomTableCols}
+              isEven={i % 2 === 1}
+              cells={cells}
+            />
+          )
+        })}
+        {/* Totals row */}
+        {(() => {
+          const cells = [{ val: 'TOTALS', bold: true }]
+          if (hasCab) cells.push({ val: fmtN(grandCab), right: true, bold: true })
+          if (hasCtp) cells.push({ val: fmtN(grandCtp), right: true, bold: true })
+          if (hasFin) cells.push({ val: fmtN(grandFin), right: true, bold: true })
+          if (hasInst) cells.push({ val: fmtN(grandInst), right: true, bold: true })
+          cells.push({ val: fmtN(roomTotals.reduce((s, r) => s + r.total, 0)), amt: true, bold: true })
+          return <TableRow colDefs={roomTableCols} cells={cells} />
+        })()}
       </View>
 
       <View wrap={false}>
-        <SubBar
-          label={`Project Subtotal — ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
-          value={roomTotals.reduce((sum, r) => sum + r.total, 0)}
-        />
-
         {delivery > 0 && (
           <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
         )}
