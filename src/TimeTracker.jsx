@@ -3,29 +3,6 @@ import { supabase } from "./supabase.js"
 import { logError } from "./logger.js"
 import { Document, Page, View, Text, Image, Font, StyleSheet, pdf } from "@react-pdf/renderer"
 
-// ── Register Google Fonts (with fallback to Helvetica) ──────────
-try {
-  Font.register({
-    family: "Space Grotesk",
-    fonts: [
-      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUUsj.ttf", fontWeight: 400 },
-      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7aUUsj.ttf", fontWeight: 500 },
-      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj42Vksj.ttf", fontWeight: 600 },
-      { src: "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj4PVksj.ttf", fontWeight: 700 },
-    ],
-  })
-  Font.register({
-    family: "Archivo",
-    fonts: [
-      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTNDNp8A.ttf", fontWeight: 400 },
-      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTBjNp8A.ttf", fontWeight: 500 },
-      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT6jRp8A.ttf", fontWeight: 600 },
-      { src: "https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT0zRp8A.ttf", fontWeight: 700 },
-    ],
-  })
-} catch (e) {
-  console.warn("Invoice font registration failed, using fallback:", e)
-}
 Font.registerHyphenationCallback(word => [word])
 
 const HOURLY_RATE = 33.10
@@ -97,8 +74,8 @@ const CL = {
   ink: "#17181a", inkSoft: "#26282b", muted: "#6c6f73", faint: "#a3a6aa",
   line: "#e8e9eb", paper: "#ffffff", accent: "#c2693c", accentDeep: "#a8542d", wash: "#f7f5f2",
 }
-const sg = "Space Grotesk"
-const ar = "Archivo"
+const sg = "Helvetica"
+const ar = "Helvetica"
 
 const ps = StyleSheet.create({
   page: { fontSize: 10, fontFamily: ar, color: CL.ink },
