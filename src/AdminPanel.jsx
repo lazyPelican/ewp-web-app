@@ -1184,7 +1184,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
 
       {toast && (
         <div style={{
-          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          position: "fixed", bottom: 70, left: "50%", transform: "translateX(-50%)",
           background: dark ? "#1C1C1C" : "#2D2D2D", color: "#fff",
           padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 500,
           borderLeft: `3px solid ${t.gold}`,

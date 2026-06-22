@@ -628,7 +628,7 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
       setTimeout(() => URL.revokeObjectURL(url), 30000)
     } catch (err) {
       logError("timetracker.downloadPDF", err)
-      showToast("Failed to download invoice PDF")
+      showToast("PDF error: " + (err?.message || String(err)))
     }
   }
 
