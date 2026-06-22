@@ -562,6 +562,7 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
                 <button
                   onClick={e => {
                     e.stopPropagation();
+                    if (!window.confirm(`Delete "${r.name || `Room ${i + 1}`}"? This cannot be undone.`)) return;
                     onRemoveRoom(i);
                     setActiveRoom(Math.max(0, i - 1));
                   }}

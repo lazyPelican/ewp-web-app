@@ -175,17 +175,13 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                   <div className="report-section">
                     <div className="report-section-title">Upgrades</div>
                     {upgItems.map((item, i) => {
-                      const upg = PRICING.upgrades.find(u => u.name === item.upgrade);
                       const qty = parseFloat(item.qty) || 0;
-                      const adj = parseFloat(item.adjPct) || 0;
                       return (
                         <div className="report-line" key={i}>
                           <span>{item.upgrade} × {qty}</span>
-                          <span>{fmt((upg?.price || 0) * qty * (1 + adj / 100))}</span>
                         </div>
                       );
                     })}
-                    <div className="report-line report-line-total"><span>Upgrades Total</span><span>{fmt(rt.upg)}</span></div>
                   </div>
                 )}
                 {ctpItems.length > 0 && (
@@ -241,13 +237,12 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
       {/* Grand Total */}
       <div className="grand-total grand-total-float">
         <div className="grand-total-label">GRAND TOTAL</div>
-        {(delivery > 0 || taxAmt > 0) && (
-          <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "0 10px", justifyContent: "center" }}>
-            <span>Rooms {fmt(grandCab + grandUpg + grandCtp + grandFin + grandInst)}</span>
-            {delivery > 0 && <span>+ Delivery {fmt(delivery)}</span>}
-            {taxAmt > 0 && <span>+ Tax ({taxRate}%) {fmt(taxAmt)}</span>}
-          </div>
-        )}
+        <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "0 10px", justifyContent: "center" }}>
+          <span>Materials {fmt(grandCab + grandUpg + grandCtp + grandFin)}</span>
+          {grandInst > 0 && <span>+ Installation {fmt(grandInst)}</span>}
+          {delivery > 0 && <span>+ Delivery {fmt(delivery)}</span>}
+          {taxAmt > 0 && <span>+ Tax ({taxRate}%) {fmt(taxAmt)}</span>}
+        </div>
         <div className="grand-total-value">{fmt(grandTotal)}</div>
       </div>
       <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "var(--muted)" }}>
