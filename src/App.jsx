@@ -1549,7 +1549,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       _historyPop.current = true;
       const s = e.state;
       if (s?.view === "new") { setView("new"); setStep(s.step ?? 0); }
-      else { setView("dashboard"); }
+      else { setView("dashboard"); setReadOnly(false); }
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -2078,7 +2078,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         {/* TOPBAR + STEPPER sticky wrapper */}
         <div className={`topbar-sticky-wrap${view === "dashboard" ? " topbar-sticky-wrap--hero" : ""}${scrolled ? " topbar-sticky-wrap--scrolled" : ""}`} style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <div className={`topbar${scrolled ? " scrolled" : ""}${view === "dashboard" ? " topbar--hero" : ""}`}>
-          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => { setView("dashboard"); setDashKey(k => k + 1); }}>
+          <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => { setView("dashboard"); setReadOnly(false); setDashKey(k => k + 1); }}>
             <img src="/ewp-logo.png" alt="Engstrom Wood Products" className="header-logo" width="44" height="44" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
@@ -2173,7 +2173,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             <div className="stepper">
               <button className="btn btn-ghost btn-sm"
                 style={{ color:"var(--mid)", borderRight:"1px solid var(--ivory3)", borderRadius:0, padding:"16px 20px", marginRight:4, whiteSpace:"nowrap", flexShrink:0 }}
-                onClick={() => { setView("dashboard"); setDashKey(k => k + 1); }}>
+                onClick={() => { setView("dashboard"); setReadOnly(false); setDashKey(k => k + 1); }}>
                 ← All Projects
               </button>
               {stepConfig.map((s, i) => {
@@ -2197,11 +2197,11 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center",
             padding: "8px 32px",
             background: "rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-            fontSize: 13, letterSpacing: "0.04em",
+            fontSize: 13, letterSpacing: "0.04em", color: "var(--char)",
           }}>
             <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14 }}>{fmtId(project.id)}</span>
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--char)", textAlign: "center" }}>{project.name}
-              {readOnly && <span style={{ marginLeft: 10, fontSize: 11, fontWeight: 700, color: "#2563AA", background: "rgba(37,99,170,0.1)", padding: "2px 10px", borderRadius: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>Read Only</span>}
+              {readOnly && <span style={{ marginLeft: 10, fontSize: 11, fontWeight: 700, color: "var(--char)", background: "rgba(128,128,128,0.15)", padding: "2px 10px", borderRadius: 12, letterSpacing: "0.06em", textTransform: "uppercase", border: "1px solid var(--rule)" }}>Read Only</span>}
             </span>
             <div style={{ textAlign: "right" }}>
               {readOnly ? (

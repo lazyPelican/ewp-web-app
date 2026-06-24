@@ -496,31 +496,54 @@ function PageFooter({ project, preparedBy }) {
 }
 
 function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy, docType }) {
-  const projectSubtotal = roomTotals.reduce((sum, r) => sum + r.total, 0)
+  const perRoomDelivery = delivery > 0 && roomTotals.length > 0 ? delivery / roomTotals.length : 0
+  const projectSubtotal = roomTotals.reduce((sum, r) => sum + r.total, 0) + delivery
   const hasTax = project.installationType ? project.installationType === "contractor" : project.taxEnabled
 
+  const hasCab = roomTotals.some(r => r.cab + r.upg > 0)
+  const hasCtp = roomTotals.some(r => r.ctp > 0)
+  const hasFin = roomTotals.some(r => r.fin > 0)
+  const hasInst = roomTotals.some(r => r.inst > 0)
+
+  const cols = [{ w: null, label: 'Room' }]
+  if (hasCab) cols.push({ w: null, label: 'Cabinetry', right: true })
+  if (hasCtp) cols.push({ w: null, label: 'Countertops', right: true })
+  if (hasFin) cols.push({ w: null, label: 'Finishing', right: true })
+  if (hasInst) cols.push({ w: null, label: 'Installation', right: true })
+  cols.push({ w: null, label: 'Room Total', right: true })
+
+  const dataCols = cols.length
+  const nameW = dataCols <= 4 ? '40%' : '28%'
+  const numW = `${Math.floor((100 - parseInt(nameW)) / (dataCols - 1))}%`
+  const roomTableCols = cols.map((c, i) => ({ ...c, w: i === 0 ? nameW : numW }))
+
+  const grandCab = roomTotals.reduce((s, r) => s + r.cab + r.upg, 0)
+  const grandCtp = roomTotals.reduce((s, r) => s + r.ctp, 0)
+  const grandFin = roomTotals.reduce((s, r) => s + r.fin, 0)
+  const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
+
   return (
-    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingTop: 20, paddingBottom: 34 }]}>
-      <View style={[s.hdr, { paddingTop: 5, paddingBottom: 5, marginBottom: 6 }]} fixed>
+    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingTop: 24, paddingBottom: 38 }]}>
+      <View style={[s.hdr, { paddingTop: 8, paddingBottom: 8, marginBottom: 14 }]} fixed>
         <View style={s.coBrand}>
-          <Image style={{ width: 34, height: 34 }} src={LOGO_SRC} />
+          <Image style={{ width: 38, height: 38 }} src={LOGO_SRC} />
           <View>
-            <Text style={[s.coName, { fontSize: 18 }]}>Engstrom Wood Products</Text>
-            <Text style={[s.coTag, { fontSize: 6 }]}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
+            <Text style={[s.coName, { fontSize: 20 }]}>Engstrom Wood Products</Text>
+            <Text style={[s.coTag, { fontSize: 6.5 }]}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
           </View>
         </View>
         <View>
-          <Text style={[s.docType, { fontSize: 11 }]}>{docType || 'QUOTE'}</Text>
+          <Text style={[s.docType, { fontSize: 12 }]}>{docType || 'QUOTE'}</Text>
           <Text style={s.docId}>{fmtId(project.id)}</Text>
-          <Text style={[s.docDate, { fontSize: 6 }]}>{fmtD(project.bidDate)}</Text>
+          <Text style={[s.docDate, { fontSize: 6.5 }]}>{fmtD(project.bidDate)}</Text>
         </View>
       </View>
 
-      <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 14, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 6, textAlign: 'center' }}>
+      <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 16, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 12, textAlign: 'center' }}>
         Executive Summary
       </Text>
 
-      <View style={[s.infoStrip, { marginBottom: 8 }]}>
+      <View style={[s.infoStrip, { marginBottom: 14 }]}>
         {[
           { label: 'Project Name', value: project.name },
           { label: 'Address', value: project.address },
@@ -529,53 +552,46 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
           { label: 'Phone', value: project.contactPhone },
           { label: 'Email', value: project.email },
         ].map((cell, i) => (
-          <View key={i} style={[s.ic, i % 2 === 1 ? s.icEven : {}, i >= 4 ? { borderBottom: 'none' } : {}, { paddingTop: 3, paddingBottom: 3 }]}>
-            <Text style={[s.icLbl, { fontSize: 5.5, marginBottom: 1 }]}>{cell.label}</Text>
-            <Text style={[s.icVal, { fontSize: 8.5 }]}>{trunc(cell.value, 48) || '—'}</Text>
+          <View key={i} style={[s.ic, i % 2 === 1 ? s.icEven : {}, i >= 4 ? { borderBottom: 'none' } : {}, { paddingTop: 5, paddingBottom: 5 }]}>
+            <Text style={[s.icLbl, { fontSize: 6, marginBottom: 2 }]}>{cell.label}</Text>
+            <Text style={[s.icVal, { fontSize: 9.5 }]}>{trunc(cell.value, 48) || '—'}</Text>
           </View>
         ))}
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
-        <View style={{ flex: 1, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 6, paddingBottom: 6, paddingLeft: 10, paddingRight: 10, alignItems: 'center' }}>
-          <Text style={{ fontFamily: FONT_SANS, fontSize: 6, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Rooms</Text>
-          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 18, color: '#1A1A1A' }}>{roomTotals.length}</Text>
-        </View>
-        <View style={{ flex: 2, border: `1 solid ${C.border}`, borderTop: `2 solid ${C.stone}`, backgroundColor: C.ivory, paddingTop: 6, paddingBottom: 6, paddingLeft: 10, paddingRight: 10, alignItems: 'center' }}>
-          <Text style={{ fontFamily: FONT_SANS, fontSize: 6, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Project Subtotal</Text>
-          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 18, color: '#1A1A1A' }}>{fmtN(projectSubtotal)}</Text>
-        </View>
-        <View style={{ flex: 2, border: `1 solid ${C.grandBorder}`, borderTop: `2 solid ${C.grandAccent}`, backgroundColor: C.grandBg, paddingTop: 6, paddingBottom: 6, paddingLeft: 10, paddingRight: 10, alignItems: 'center' }}>
-          <Text style={{ fontFamily: FONT_SANS, fontSize: 6, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Grand Total</Text>
-          <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 20, color: '#1A1A1A' }}>{fmtN(grandTotal)}</Text>
-        </View>
+      <View style={{ marginBottom: 14 }}>
+        <SectionLabel label="Room Summary" />
+      </View>
+      <View style={[s.tblWrap, { marginBottom: 16 }]}>
+        <TableHeader colDefs={roomTableCols} />
+        {roomTotals.map((r, i) => {
+          const cells = [{ val: trunc(r.name || `Room ${i + 1}`, 50) }]
+          if (hasCab) cells.push({ val: fmtN(r.cab + r.upg), right: true })
+          if (hasCtp) cells.push({ val: fmtN(r.ctp), right: true })
+          if (hasFin) cells.push({ val: fmtN(r.fin), right: true })
+          if (hasInst) cells.push({ val: fmtN(r.inst), right: true })
+          cells.push({ val: fmtN(r.total + perRoomDelivery), amt: true })
+          return (
+            <TableRow
+              key={i}
+              colDefs={roomTableCols}
+              isEven={i % 2 === 1}
+              cells={cells}
+            />
+          )
+        })}
+        {(() => {
+          const cells = [{ val: 'TOTALS', bold: true }]
+          if (hasCab) cells.push({ val: fmtN(grandCab), right: true, bold: true })
+          if (hasCtp) cells.push({ val: fmtN(grandCtp), right: true, bold: true })
+          if (hasFin) cells.push({ val: fmtN(grandFin), right: true, bold: true })
+          if (hasInst) cells.push({ val: fmtN(grandInst), right: true, bold: true })
+          cells.push({ val: fmtN(roomTotals.reduce((s, r) => s + r.total, 0) + delivery), amt: true, bold: true })
+          return <TableRow colDefs={roomTableCols} cells={cells} />
+        })()}
       </View>
 
-      <SectionLabel label="Room Overview" />
-      <View style={s.tblWrap}>
-        <TableHeader colDefs={[
-          { w: '50%', label: 'Room' },
-          { w: '25%', label: 'Subtotal', right: true },
-          { w: '25%', label: 'Room Total', right: true },
-        ]} />
-        {roomTotals.map((r, i) => (
-          <TableRow
-            key={i}
-            colDefs={[{ w: '50%' }, { w: '25%' }, { w: '25%' }]}
-            isEven={i % 2 === 1}
-            cells={[
-              { val: trunc(r.name || `Room ${i + 1}`, 50) },
-              { val: fmtN(r.total), right: true },
-              { val: fmtN(r.total), amt: true },
-            ]}
-          />
-        ))}
-      </View>
-
-      <View wrap={false} style={{ marginTop: 4 }}>
-        {delivery > 0 && (
-          <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
-        )}
+      <View wrap={false} style={{ marginTop: 'auto' }}>
         {hasTax && (
           <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
         )}
@@ -583,7 +599,7 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
           label="Grand Total"
           sub={[
             `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            delivery > 0 ? 'incl. delivery' : '',
+            delivery > 0 ? 'delivery included in room totals' : '',
             hasTax ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
@@ -725,6 +741,7 @@ function InternalSummaryPage({
   grandCab, grandUpg, grandCtp, grandFin, grandInst,
   delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
 }) {
+  const perRoomDelivery = delivery > 0 && roomTotals.length > 0 ? delivery / roomTotals.length : 0
   const roomTableCols = [
     { w: '22%', label: 'Room' },
     { w: '13%', label: 'Cabinetry', right: true },
@@ -758,7 +775,7 @@ function InternalSummaryPage({
               { val: fmtN(r.ctp), right: true },
               { val: fmtN(r.fin), right: true },
               { val: fmtN(r.inst), right: true },
-              { val: fmtN(r.total), amt: true },
+              { val: fmtN(r.total + perRoomDelivery), amt: true },
             ]}
           />
         ))}
@@ -766,13 +783,9 @@ function InternalSummaryPage({
 
       <View wrap={false}>
         <SubBar
-          label={`Project Totals — all ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''} combined`}
-          value={grandCab + grandUpg + grandCtp + grandFin + grandInst}
+          label={`Project Totals — all ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''} combined${delivery > 0 ? ' (incl. delivery)' : ''}`}
+          value={grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery}
         />
-
-        {delivery > 0 && (
-          <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
-        )}
 
         {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
           <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
@@ -782,7 +795,7 @@ function InternalSummaryPage({
           label="Grand Total"
           sub={[
             `All rooms · ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            delivery > 0 ? 'incl. delivery' : '',
+            delivery > 0 ? 'delivery included in room totals' : '',
             (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
@@ -799,7 +812,7 @@ function InternalSummaryPage({
 
 const HOURLY_RATE = 'Hourly Rate'
 
-function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, preparedBy }) {
+function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, preparedBy, delivery }) {
   const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) !== 0)
   const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) !== 0)
   const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) !== 0)
@@ -1038,7 +1051,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
         <GrandBar
           label="Room Grand Total"
           sub={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  Room ${roomIndex + 1} of ${totalRooms}`}
-          value={rt.total}
+          value={rt.total + delivery}
         />
       </View>
 
@@ -1086,6 +1099,7 @@ function InternalPDFDoc({ project, rooms, roomTotals, grandCab, grandUpg, grandC
           rt={roomTotals[i]}
           pricing={pricing}
           preparedBy={preparedBy}
+          delivery={rooms.length > 0 ? delivery / rooms.length : 0}
         />
       ))}
       <AcceptancePage project={project} preparedBy={preparedBy} />
@@ -1100,6 +1114,7 @@ function CustomerSummaryPage({
   delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
   compact = false,
 }) {
+  const perRoomDelivery = delivery > 0 && roomTotals.length > 0 ? delivery / roomTotals.length : 0
   const hasCab = roomTotals.some(r => r.cab + r.upg > 0)
   const hasCtp = roomTotals.some(r => r.ctp > 0)
   const hasFin = roomTotals.some(r => r.fin > 0)
@@ -1143,7 +1158,7 @@ function CustomerSummaryPage({
           if (hasCtp) cells.push({ val: fmtN(r.ctp), right: true })
           if (hasFin) cells.push({ val: fmtN(r.fin), right: true })
           if (hasInst) cells.push({ val: fmtN(r.inst), right: true })
-          cells.push({ val: fmtN(r.total), amt: true })
+          cells.push({ val: fmtN(r.total + perRoomDelivery), amt: true })
           return (
             <TableRow
               key={i}
@@ -1160,16 +1175,12 @@ function CustomerSummaryPage({
           if (hasCtp) cells.push({ val: fmtN(grandCtp), right: true, bold: true })
           if (hasFin) cells.push({ val: fmtN(grandFin), right: true, bold: true })
           if (hasInst) cells.push({ val: fmtN(grandInst), right: true, bold: true })
-          cells.push({ val: fmtN(roomTotals.reduce((s, r) => s + r.total, 0)), amt: true, bold: true })
+          cells.push({ val: fmtN(roomTotals.reduce((s, r) => s + r.total, 0) + delivery), amt: true, bold: true })
           return <TableRow colDefs={roomTableCols} cells={cells} />
         })()}
       </View>
 
       <View wrap={false}>
-        {delivery > 0 && (
-          <GrandBar label="Delivery" sub={project.deliveryNotes ? trunc(project.deliveryNotes, 80) : undefined} value={delivery} standalone small />
-        )}
-
         {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
           <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
         )}
@@ -1178,7 +1189,7 @@ function CustomerSummaryPage({
           label="Grand Total"
           sub={[
             `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            delivery > 0 ? 'incl. delivery' : '',
+            delivery > 0 ? 'delivery included in room totals' : '',
             (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
@@ -1441,15 +1452,6 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
         grandTotal={grandTotal}
         preparedBy={preparedBy}
         docType="QUOTE"
-      />
-      <CustomerSummaryPage
-        project={project}
-        roomTotals={roomTotals}
-        delivery={delivery}
-        pdfTaxRate={pdfTaxRate}
-        pdfTaxAmt={pdfTaxAmt}
-        grandTotal={grandTotal}
-        preparedBy={preparedBy}
       />
       {rooms.map((room, i) => (
         <CustomerRoomPage

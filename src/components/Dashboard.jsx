@@ -14,10 +14,18 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
     return "Welcome back";
   })();
 
-  const calcTotal = (p) => p.rooms.reduce((rs, r) => {
-    const cab = calcCabinetry(r.cabinetry);
-    return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
-  }, 0);
+  const calcTotal = (p) => {
+    const roomsTotal = p.rooms.reduce((rs, r) => {
+      const cab = calcCabinetry(r.cabinetry);
+      return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
+    }, 0);
+    const delivery = p.project.noDelivery ? 0 : (parseFloat(p.project.deliveryAmount) || 0);
+    const subtotal = roomsTotal + delivery;
+    const taxEnabled = p.project.installationType ? p.project.installationType === "contractor" : p.project.taxEnabled;
+    const taxRate = p.project.installationType ? 8.53 : (parseFloat(p.project.taxRate) || 8);
+    const tax = taxEnabled ? subtotal * (taxRate / 100) : 0;
+    return subtotal + tax;
+  };
 
   const allComplete = (p) => p.rooms.length > 0 && p.rooms.every(isRoomComplete);
 
