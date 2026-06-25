@@ -299,6 +299,12 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
 
   const descSaveTimer = useRef(null)
 
+  // Idle detection
+  const IDLE_TIMEOUT_MS = 10 * 60 * 1000
+  const lastActivityRef = useRef(Date.now())
+  const idleCheckRef = useRef(null)
+  const [idlePrompt, setIdlePrompt] = useState(null)
+
   // ── Load data on mount ──
   useEffect(() => {
     loadData()
@@ -473,6 +479,61 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
         {displayValue}
       </span>
     )
+  }
+
+  // ── Idle detection: monitor activity when timer is running ──
+  useEffect(() => {
+    if (!activeEntry) {
+      if (idleCheckRef.current) clearInterval(idleCheckRef.current)
+      return
+    }
+    const markActive = () => { lastActivityRef.current = Date.now() }
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"]
+    events.forEach(e => window.addEventListener(e, markActive, { passive: true }))
+    lastActivityRef.current = Date.now()
+
+    idleCheckRef.current = setInterval(() => {
+      const idleMs = Date.now() - lastActivityRef.current
+      if (idleMs >= IDLE_TIMEOUT_MS) {
+        setIdlePrompt({ lastActivity: lastActivityRef.current })
+      }
+    }, 30000)
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, markActive))
+      if (idleCheckRef.current) clearInterval(idleCheckRef.current)
+    }
+  }, [activeEntry])
+
+  const handleIdleStop = async () => {
+    if (!activeEntry || !idlePrompt) return
+    setIdlePrompt(null)
+    setTimerLoading(true)
+    try {
+      const stopAt = new Date(idlePrompt.lastActivity).toISOString()
+      const durationSeconds = Math.round((idlePrompt.lastActivity - new Date(activeEntry.started_at).getTime()) / 1000)
+      const { error } = await supabase.from("time_entries").update({
+        stopped_at: stopAt,
+        duration_seconds: Math.max(durationSeconds, 0),
+        description: description.trim() || null,
+      }).eq("id", activeEntry.id)
+      if (error) throw error
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      setEntries(prev => prev.map(e => e.id === activeEntry.id ? { ...e, stopped_at: stopAt, duration_seconds: Math.max(durationSeconds, 0), description: description.trim() || null } : e))
+      setActiveEntry(null)
+      setElapsed(0)
+      setDescription("")
+      showToast(`Idle detected — logged ${fmtDuration(Math.max(durationSeconds, 0))} (stopped at last activity)`)
+    } catch (err) {
+      logError("timetracker.idleStop", err)
+      showToast("Failed to stop timer")
+    }
+    setTimerLoading(false)
+  }
+
+  const handleIdleContinue = () => {
+    setIdlePrompt(null)
+    lastActivityRef.current = Date.now()
   }
 
   // ── Start timer ──
@@ -704,6 +765,44 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
 
   return (
     <div>
+      {/* ── Idle prompt modal ── */}
+      {idlePrompt && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            background: t.card, border: `1px solid ${t.border}`,
+            borderRadius: 16, padding: "36px 40px", maxWidth: 420, width: "90%",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.3)", textAlign: "center", fontFamily: font,
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>💤</div>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: t.text }}>
+              Are you still working?
+            </div>
+            <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 10, color: t.textMid }}>
+              No keyboard or mouse activity detected for 10 minutes.
+            </div>
+            <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 24 }}>
+              Last activity: {fmtTime(new Date(idlePrompt.lastActivity).toISOString())}
+            </div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button onClick={handleIdleContinue} style={{
+                ...btnBase, padding: "11px 28px", fontSize: 15, fontWeight: 700,
+                background: "#2E7D32", color: "#fff",
+                borderRadius: 8, boxShadow: "0 2px 8px rgba(46,125,50,0.3)",
+              }}>Still working</button>
+              <button onClick={handleIdleStop} style={{
+                ...btnBase, padding: "11px 24px", fontSize: 14, fontWeight: 500,
+                background: "transparent", borderRadius: 8,
+                border: `1px solid ${t.border}`, color: t.textMid,
+              }}>Stop timer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Section title */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 24, fontWeight: 700, color: t.text, fontFamily: serif }}>Time Tracker</div>

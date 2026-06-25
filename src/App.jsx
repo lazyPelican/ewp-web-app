@@ -94,6 +94,7 @@ const styles = `
     justify-content: flex-start;
     border-bottom: none;
     box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+    transition: background 0.4s ease, box-shadow 0.4s ease;
   }
   .topbar.topbar--hero { height: 150px; }
   .topbar.scrolled {
@@ -142,6 +143,7 @@ const styles = `
     width: auto;
     flex-shrink: 0;
     filter: brightness(0) invert(1);
+    transition: filter 0.4s ease;
   }
   .topbar-name {
     font-family: var(--font-display);
@@ -149,6 +151,7 @@ const styles = `
     color: #FFFFFF; letter-spacing: 0.03em;
     line-height: 1.1;
     white-space: nowrap;
+    transition: color 0.4s ease;
   }
   .topbar-sub {
     font-size: 12px; color: rgba(255,255,255,0.5);
@@ -157,6 +160,7 @@ const styles = `
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color 0.4s ease;
   }
   .topbar-tag-divider {
     display: inline-block; width: 5px; height: 5px;
@@ -1571,6 +1575,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   useEffect(() => {
     if (isGuest || !session) return
     if (session.user?.email?.toLowerCase() !== "11bilalahmed@gmail.com") return
+    if (sessionStorage.getItem("ewp-timer-prompted")) return
     const check = async () => {
       try {
         const { data } = await supabase.from("time_entries").select("id").is("stopped_at", null).limit(1)
@@ -1582,7 +1587,13 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
 
   const handleTimerPromptStart = async () => {
     setTimerPrompt(false)
+    sessionStorage.setItem("ewp-timer-prompted", "1")
     try {
+      const { data: running } = await supabase.from("time_entries").select("id").is("stopped_at", null).limit(1)
+      if (running && running.length > 0) {
+        setToast("Timer already running")
+        return
+      }
       const now = new Date().toISOString()
       await supabase.from("time_entries").insert({
         user_id: session.user.id,
@@ -1593,6 +1604,11 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     } catch {
       setToast("Failed to start timer")
     }
+  }
+
+  const handleTimerPromptDismiss = () => {
+    setTimerPrompt(false)
+    sessionStorage.setItem("ewp-timer-prompted", "1")
   }
 
   useEffect(() => {
@@ -2038,7 +2054,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           position: "fixed", inset: 0, zIndex: 99999,
           background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center",
-        }} onClick={() => setTimerPrompt(false)}>
+        }} onClick={handleTimerPromptDismiss}>
           <div onClick={e => e.stopPropagation()} style={{
             background: dark ? "#1F242E" : "#fff",
             border: dark ? "1px solid #353A45" : "1px solid #E4D9C8",
@@ -2062,7 +2078,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                 background: "#5B8C5A", color: "#fff",
                 boxShadow: "0 2px 8px rgba(91,140,90,0.3)",
               }}>Yes, start timer</button>
-              <button onClick={() => setTimerPrompt(false)} style={{
+              <button onClick={handleTimerPromptDismiss} style={{
                 padding: "11px 24px", borderRadius: 8, cursor: "pointer",
                 fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
                 background: "transparent",

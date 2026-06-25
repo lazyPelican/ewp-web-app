@@ -572,11 +572,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           --muted: #6E7480;
         }
 
-        /* ── Topbar ── */
+        /* ── Topbar (matches main App.jsx exactly) ── */
         .topbar-sticky-wrap { background: #1F242E; position: sticky; top: 0; z-index: 100; transition: background 0.4s ease; }
-        .dark .topbar-sticky-wrap { background: #12141A; }
+        .topbar-sticky-wrap.dark { background: #12141A; }
         .topbar-sticky-wrap.scrolled { background: rgba(235,233,226,0.75) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-        .dark .topbar-sticky-wrap.scrolled { background: rgba(18,20,26,0.75) !important; }
+        .topbar-sticky-wrap.dark.scrolled { background: rgba(18,20,26,0.75) !important; }
         .topbar {
           background: rgba(31,36,46,0.85);
           backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -585,19 +585,23 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           border-bottom: none; box-shadow: 0 2px 20px rgba(0,0,0,0.15);
           transition: background 0.4s ease, box-shadow 0.4s ease;
         }
-        .dark .topbar { background: rgba(18,20,26,0.85); }
+        .topbar.dark { background: rgba(18,20,26,0.85); }
         .topbar.scrolled {
           box-shadow: 0 2px 12px rgba(0,0,0,0.06);
           background: rgba(235,233,226,0.75);
           backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
         }
-        .dark .topbar.scrolled { background: rgba(18,20,26,0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .topbar.dark.scrolled {
+          background: rgba(18,20,26,0.75);
+          backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        }
         .topbar.scrolled .topbar-name { color: #2D3038; }
         .topbar.scrolled .topbar-sub { color: #6E7480; }
         .topbar.scrolled .header-logo { filter: brightness(0.15); }
-        .dark .topbar.scrolled .topbar-name { color: #D8D4C9; }
-        .dark .topbar.scrolled .topbar-sub { color: #8A8E9A; }
-        .dark .topbar.scrolled .header-logo { filter: brightness(0) invert(0.88); }
+        .topbar.dark.scrolled .topbar-name { color: #D8D4C9; }
+        .topbar.dark.scrolled .topbar-sub { color: #8A8E9A; }
+        .topbar.dark.scrolled .header-logo { filter: brightness(0) invert(0.88); }
         .topbar-logo {
           display: flex; align-items: center; gap: 20px;
           min-width: 0; overflow: hidden;
@@ -606,21 +610,18 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
         .header-logo {
           height: 76px; width: auto; flex-shrink: 0;
           filter: brightness(0) invert(1);
-          transition: filter 0.4s ease;
         }
         .topbar-name {
           font-family: var(--font-display);
           font-size: 38px; font-weight: 600;
           color: #FFFFFF; letter-spacing: 0.03em;
           line-height: 1.1; white-space: nowrap;
-          transition: color 0.4s ease;
         }
         .topbar-sub {
           font-size: 12px; color: rgba(255,255,255,0.5);
           letter-spacing: 0.18em; text-transform: uppercase;
           margin-top: 6px; font-weight: 500;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          transition: color 0.4s ease;
         }
         .topbar-tag-divider {
           display: inline-block; width: 5px; height: 5px;
@@ -631,7 +632,6 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
         /* ── Ribbon ── */
         .topbar-ribbon {
           background: transparent; padding: 0 56px;
-          transition: background 0.4s ease;
         }
         .topbar-ribbon-inner {
           display: flex; align-items: center; justify-content: space-between;
@@ -648,7 +648,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           font-family: var(--font-body); font-weight: 600;
           display: flex; align-items: center; gap: 6px;
           letter-spacing: 0.04em; text-transform: uppercase;
-          transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
+          transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
           white-space: nowrap;
         }
         .topbar-btn:hover { background: rgba(255,255,255,0.15); color: #fff; transform: translateY(-1px); }
@@ -660,18 +660,12 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
           display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
         }
         /* Scrolled ribbon buttons */
-        .topbar.scrolled ~ .topbar-ribbon .topbar-btn {
+        .topbar.scrolled + .topbar-ribbon .topbar-btn {
           background: rgba(45,48,56,0.08); border-color: rgba(45,48,56,0.12); color: #2D3038;
         }
-        .topbar.scrolled ~ .topbar-ribbon .topbar-btn:hover { background: rgba(45,48,56,0.14); }
-        .topbar.scrolled ~ .topbar-ribbon .topbar-btn--active {
-          background: rgba(45,48,56,0.15); color: #2D3038; border-color: rgba(45,48,56,0.25);
-        }
-        .dark .topbar.scrolled ~ .topbar-ribbon .topbar-btn {
+        .topbar.scrolled + .topbar-ribbon .topbar-btn:hover { background: rgba(45,48,56,0.14); }
+        .topbar.dark.scrolled + .topbar-ribbon .topbar-btn {
           background: rgba(216,212,201,0.08); border-color: rgba(216,212,201,0.12); color: #D8D4C9;
-        }
-        .dark .topbar.scrolled ~ .topbar-ribbon .topbar-btn--active {
-          background: rgba(216,212,201,0.18); color: #D8D4C9; border-color: rgba(216,212,201,0.25);
         }
 
         /* ── Shared button styles ── */
@@ -698,6 +692,15 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
         .btn-ghost:hover { color: var(--char); }
         .dark .btn-gold { background: #7BAF7A; color: #0E1014; }
         .dark .btn-gold:hover { background: #93C492; }
+
+        /* ── Header slide-down (matches main app) ── */
+        @keyframes headerSlideDown {
+          from { opacity: 0; transform: translateY(-100%); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .topbar {
+          animation: headerSlideDown 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
 
         /* ── Admin animations ── */
         @keyframes adminFadeUp {
