@@ -1676,15 +1676,26 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   const loadData = useCallback(async () => {
     setLoading(true); setLoadError(false);
     try {
+      const mergePricing = (dbData) => {
+        const merged = { ...DEFAULT_PRICING }
+        for (const key of Object.keys(DEFAULT_PRICING)) {
+          if (dbData[key]) merged[key] = dbData[key]
+        }
+        for (const key of Object.keys(merged)) {
+          if (Array.isArray(merged[key])) {
+            merged[key] = merged[key].map(row =>
+              row && typeof row.name === "string" ? { ...row, name: row.name.trim() } : row
+            )
+          }
+        }
+        return merged
+      }
+
       if (isGuest) {
         // Guest: only load shared pricing tables (read-only, no auth needed)
         const pricingRes = await supabase.from("pricing").select("data").eq("id", "main").single();
         if (pricingRes.data?.data) {
-          const merged = { ...DEFAULT_PRICING }
-          for (const key of Object.keys(DEFAULT_PRICING)) {
-            if (pricingRes.data.data[key]) merged[key] = pricingRes.data.data[key]
-          }
-          setPRICING(merged)
+          setPRICING(mergePricing(pricingRes.data.data))
         }
         // Guests start with empty projects — nothing loaded from DB
       } else {
@@ -1695,11 +1706,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         ]);
         if (!contractorsRes.error) setContractors(contractorsRes.data || []);
         if (pricingRes.data?.data) {
-          const merged = { ...DEFAULT_PRICING }
-          for (const key of Object.keys(DEFAULT_PRICING)) {
-            if (pricingRes.data.data[key]) merged[key] = pricingRes.data.data[key]
-          }
-          setPRICING(merged)
+          setPRICING(mergePricing(pricingRes.data.data))
         }
         if (projectsRes.error) {
           logError("loadProjects", projectsRes.error)

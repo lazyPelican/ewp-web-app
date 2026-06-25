@@ -12,6 +12,7 @@ import {
   calcFinishing,
   calcInstall,
   calcEstimatedFinishingLF,
+  findByName,
   blankCabRow,
   blankUpgRow,
   blankCtpRow,
@@ -73,9 +74,9 @@ function CabinetrySection({ items, masterAdj, onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const prod = PRICING.woodwork.find(w => w.name === item.product);
-              const con = PRICING.construction.find(c => c.name === item.construction);
-              const wood = PRICING.wood.find(w => w.name === item.wood);
+              const prod = findByName(PRICING.woodwork, item.product);
+              const con = findByName(PRICING.construction, item.construction);
+              const wood = findByName(PRICING.wood, item.wood);
               const basePrice = prod ? prod.price : 0;
               const conPrem = con ? con.premium : 0;
               const woodPrem = wood ? wood.premium : 0;
@@ -169,7 +170,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const upg = PRICING.upgrades.find(u => u.name === item.upgrade);
+              const upg = findByName(PRICING.upgrades, item.upgrade);
               const qty = parseFloat(item.qty) || 0;
               const adjPct = parseFloat(item.adjPct) || 0;
               const total = upg ? upg.price * qty * (1 + adjPct / 100) : 0;
@@ -242,7 +243,7 @@ function CountertopsSection({ items, masterAdj, onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const ctp = PRICING.countertops?.find(c => c.name === item.product);
+              const ctp = findByName(PRICING.countertops || [], item.product);
               const qty = parseFloat(item.qty) || 0;
               const adjPct = parseFloat(item.adjPct) || 0;
               const total = ctp ? ctp.price * qty * (1 + adjPct / 100) : 0;
@@ -355,7 +356,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const fin = PRICING.finishing.find(f => f.name === item.type);
+              const fin = findByName(PRICING.finishing, item.type);
               const lf = parseFloat(item.lf) || 0;
               const adjPct = parseFloat(item.adjPct) || 0;
               const total = fin ? fin.pricePerLF * lf * (1 + adjPct / 100) : 0;
@@ -410,7 +411,7 @@ function InstallSection({ data, cabTotal, onChange }) {
               {PRICING.installType.map(i => <option key={i.name}>{i.name}</option>)}
             </select>
             {data.type && data.type !== "No Install" && (() => {
-              const inst = PRICING.installType.find(i => i.name === data.type);
+              const inst = findByName(PRICING.installType, data.type);
               return inst ? (
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>
                   {data.type === HOURLY_RATE ? `${fmt(inst.rate)}/hr` : `${(inst.rate * 100).toFixed(0)}% of cabinetry`}
@@ -439,7 +440,7 @@ function InstallSection({ data, cabTotal, onChange }) {
               Install Total: {fmt(instTotal)}
             </span>
             {data.type === "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>No installation included</div>}
-            {data.type !== HOURLY_RATE && data.type !== "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {PRICING.installType.find(i => i.name === data.type)?.rate * 100}% of cabinetry total</div>}
+            {data.type !== HOURLY_RATE && data.type !== "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {findByName(PRICING.installType, data.type)?.rate * 100}% of cabinetry total</div>}
           </div>
         )}
       </div>

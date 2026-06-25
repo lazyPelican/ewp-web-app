@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
-import { PRICING, fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "../appUtils.js"
+import { PRICING, fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, findByName } from "../appUtils.js"
 
 export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy }) {
   const [saving, setSaving]           = useState(false);
@@ -155,9 +155,9 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                   <div className="report-section">
                     <div className="report-section-title">Cabinetry</div>
                     {cabItems.map((item, i) => {
-                      const prod = PRICING.woodwork.find(w => w.name === item.product);
-                      const con = PRICING.construction.find(c => c.name === item.construction);
-                      const wood = PRICING.wood.find(w => w.name === item.wood);
+                      const prod = findByName(PRICING.woodwork, item.product);
+                      const con = findByName(PRICING.construction, item.construction);
+                      const wood = findByName(PRICING.wood, item.wood);
                       const sp = prod ? prod.price * (1 + (con?.premium || 0)) * (1 + (wood?.premium || 0)) : 0;
                       const qty = parseFloat(item.qty) || 0;
                       const adj = parseFloat(item.adjPct) || 0;
@@ -188,7 +188,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                   <div className="report-section">
                     <div className="report-section-title">Countertops</div>
                     {ctpItems.map((item, i) => {
-                      const ctp = PRICING.countertops?.find(c => c.name === item.product);
+                      const ctp = findByName(PRICING.countertops || [], item.product);
                       const qty = parseFloat(item.qty) || 0;
                       const adj = parseFloat(item.adjPct) || 0;
                       return (
@@ -205,7 +205,7 @@ export function SummaryPage({ project, rooms, onBack, onSave, onNext, preparedBy
                   <div className="report-section">
                     <div className="report-section-title">Finishing</div>
                     {finItems.map((item, i) => {
-                      const fin = PRICING.finishing.find(f => f.name === item.type);
+                      const fin = findByName(PRICING.finishing, item.type);
                       const lf = parseFloat(item.lf) || 0;
                       const adj = parseFloat(item.adjPct) || 0;
                       return (

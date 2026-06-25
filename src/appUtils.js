@@ -4,6 +4,7 @@ import { DEFAULT_PRICING } from "./pricing.js"
 // Module-level pricing variable — replaced once loaded from Supabase; falls back to defaults.
 export let PRICING = DEFAULT_PRICING;
 export const setPRICING = (p) => { PRICING = p; };
+export const findByName = (arr, name) => arr.find(r => r.name === name) || arr.find(r => r.name.trim() === (name || "").trim());
 
 // Install type constant — avoids magic string scattered throughout
 export const HOURLY_RATE = "Hourly Rate";
@@ -104,9 +105,9 @@ export const isRoomComplete = (room) => {
 export const calcCabinetry = (items) => {
   return items.reduce((sum, item) => {
     if (!item.product) return sum;
-    const prod = PRICING.woodwork.find(w => w.name === item.product);
-    const con  = PRICING.construction.find(c => c.name === item.construction);
-    const wood = PRICING.wood.find(w => w.name === item.wood);
+    const prod = findByName(PRICING.woodwork, item.product);
+    const con  = findByName(PRICING.construction, item.construction);
+    const wood = findByName(PRICING.wood, item.wood);
     if (!prod) return sum;
     const basePrice = prod.price;
     const conPrem   = con  ? con.premium  : 0;
@@ -123,7 +124,7 @@ export const calcCabinetry = (items) => {
 export const calcUpgrades = (items) => {
   return items.reduce((sum, item) => {
     if (!item.upgrade) return sum;
-    const upg = PRICING.upgrades.find(u => u.name === item.upgrade);
+    const upg = findByName(PRICING.upgrades, item.upgrade);
     if (!upg) return sum;
     const qty    = parseFloat(item.qty)    || 0;
     const adjPct = parseFloat(item.adjPct) || 0;
@@ -136,7 +137,7 @@ export const calcCountertops = (items) => {
   if (!items) return 0;
   return items.reduce((sum, item) => {
     if (!item.product) return sum;
-    const ctp = PRICING.countertops?.find(c => c.name === item.product);
+    const ctp = findByName(PRICING.countertops || [], item.product);
     if (!ctp) return sum;
     const qty    = parseFloat(item.qty)    || 0;
     const adjPct = parseFloat(item.adjPct) || 0;
@@ -147,7 +148,7 @@ export const calcCountertops = (items) => {
 export const calcFinishing = (items) => {
   return items.reduce((sum, item) => {
     if (!item.type) return sum;
-    const fin = PRICING.finishing.find(f => f.name === item.type);
+    const fin = findByName(PRICING.finishing, item.type);
     if (!fin) return sum;
     const lf     = parseFloat(item.lf)     || 0;
     const adjPct = parseFloat(item.adjPct) || 0;
@@ -158,7 +159,7 @@ export const calcFinishing = (items) => {
 
 export const calcInstall = (installData, cabTotal) => {
   if (!installData.type || installData.type === "No Install") return 0;
-  const inst = PRICING.installType.find(i => i.name === installData.type);
+  const inst = findByName(PRICING.installType, installData.type);
   if (!inst) return 0;
   const adjPct = parseFloat(installData.adjPct) || 0;
   let base;
@@ -174,7 +175,7 @@ export const calcInstall = (installData, cabTotal) => {
 export const calcEstimatedFinishingLF = (cabinetryItems) => {
   return cabinetryItems.reduce((sum, item) => {
     if (!item.product) return sum;
-    const prod = PRICING.woodwork.find(w => w.name === item.product);
+    const prod = findByName(PRICING.woodwork, item.product);
     if (!prod) return sum;
     const qty = parseFloat(item.qty) || 0;
     return sum + (prod.finLF * qty);

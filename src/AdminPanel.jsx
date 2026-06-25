@@ -282,6 +282,18 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
       }
     }
 
+    // Trim text fields before saving
+    for (const tc of TABLE_CONFIG) {
+      const rows = pricing[tc.key] || []
+      for (const row of rows) {
+        for (const col of tc.columns) {
+          if (col.type === "text" && typeof row[col.key] === "string") {
+            row[col.key] = row[col.key].trim()
+          }
+        }
+      }
+    }
+
     // Sort every table by first column before saving
     const sorted = {}
     for (const tc of TABLE_CONFIG) {
