@@ -171,6 +171,112 @@ CREATE INDEX IF NOT EXISTS idx_projects_updated_at   ON public.projects (updated
 CREATE INDEX IF NOT EXISTS idx_user_approvals_email  ON public.user_approvals (lower(email));
 CREATE INDEX IF NOT EXISTS idx_pre_approved_email    ON public.pre_approved_emails (email);
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 8. PROJECT STAGE META — per-stage dates + notes for Under Contract projects
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.project_stage_meta (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id   TEXT NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  stage_key    TEXT NOT NULL,
+  started_at   TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  notes        TEXT DEFAULT '',
+  updated_at   TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(project_id, stage_key)
+);
+
+ALTER TABLE public.project_stage_meta ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read project_stage_meta"   ON public.project_stage_meta;
+DROP POLICY IF EXISTS "Authenticated users can insert project_stage_meta" ON public.project_stage_meta;
+DROP POLICY IF EXISTS "Authenticated users can update project_stage_meta" ON public.project_stage_meta;
+DROP POLICY IF EXISTS "Authenticated users can delete project_stage_meta" ON public.project_stage_meta;
+
+CREATE POLICY "Authenticated users can read project_stage_meta"
+  ON public.project_stage_meta FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated users can insert project_stage_meta"
+  ON public.project_stage_meta FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Authenticated users can update project_stage_meta"
+  ON public.project_stage_meta FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated users can delete project_stage_meta"
+  ON public.project_stage_meta FOR DELETE TO authenticated USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_stage_meta_project ON public.project_stage_meta(project_id);
+
+DROP TRIGGER IF EXISTS trg_stage_meta_updated_at ON public.project_stage_meta;
+CREATE TRIGGER trg_stage_meta_updated_at
+  BEFORE UPDATE ON public.project_stage_meta
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 9. PROJECT TIMELINE — activity log (stage changes, notes, milestones)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.project_timeline (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id   TEXT NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  event_type   TEXT NOT NULL,
+  title        TEXT NOT NULL DEFAULT '',
+  body         TEXT DEFAULT '',
+  metadata     JSONB DEFAULT '{}',
+  created_by   TEXT,
+  created_at   TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.project_timeline ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read project_timeline"   ON public.project_timeline;
+DROP POLICY IF EXISTS "Authenticated users can insert project_timeline" ON public.project_timeline;
+DROP POLICY IF EXISTS "Authenticated users can delete project_timeline" ON public.project_timeline;
+
+CREATE POLICY "Authenticated users can read project_timeline"
+  ON public.project_timeline FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated users can insert project_timeline"
+  ON public.project_timeline FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Authenticated users can delete project_timeline"
+  ON public.project_timeline FOR DELETE TO authenticated USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_timeline_project ON public.project_timeline(project_id, created_at DESC);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 10. PROJECT CHECKLISTS — per-stage task items
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.project_checklists (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id   TEXT NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  stage_key    TEXT NOT NULL,
+  label        TEXT NOT NULL,
+  checked      BOOLEAN DEFAULT false,
+  sort_order   INTEGER DEFAULT 0,
+  created_at   TIMESTAMPTZ DEFAULT now(),
+  updated_at   TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.project_checklists ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read project_checklists"   ON public.project_checklists;
+DROP POLICY IF EXISTS "Authenticated users can insert project_checklists" ON public.project_checklists;
+DROP POLICY IF EXISTS "Authenticated users can update project_checklists" ON public.project_checklists;
+DROP POLICY IF EXISTS "Authenticated users can delete project_checklists" ON public.project_checklists;
+
+CREATE POLICY "Authenticated users can read project_checklists"
+  ON public.project_checklists FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated users can insert project_checklists"
+  ON public.project_checklists FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Authenticated users can update project_checklists"
+  ON public.project_checklists FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated users can delete project_checklists"
+  ON public.project_checklists FOR DELETE TO authenticated USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_checklists_project_stage ON public.project_checklists(project_id, stage_key);
+
+DROP TRIGGER IF EXISTS trg_checklists_updated_at ON public.project_checklists;
+CREATE TRIGGER trg_checklists_updated_at
+  BEFORE UPDATE ON public.project_checklists
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
 -- =============================================================================
 -- DONE. Verify with:
 --   SELECT schemaname, tablename, rowsecurity FROM pg_tables

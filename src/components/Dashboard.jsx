@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react"
-import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, isRoomComplete, ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus } from "../appUtils.js"
+import { fmt, fmtDate, fmtId, calcTotal, isRoomComplete, ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus } from "../appUtils.js"
 
-export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onUpdateStage, onCloseProject, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName }) {
-  const [dashView, setDashView] = useState("hub") // "hub" | "quotations" | "drafts" | "completed" | "active" | "closed"
+export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onUpdateStage, onCloseProject, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName, initialView }) {
+  const [dashView, setDashView] = useState(initialView || "hub") // "hub" | "quotations" | "drafts" | "completed" | "active" | "closed"
   const [search, setSearch] = useState("")
   const [stageFilter, setStageFilter] = useState(null)
 
@@ -13,19 +13,6 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
     if (h >= 17 && h < 21) return "Good evening";
     return "Welcome back";
   })();
-
-  const calcTotal = (p) => {
-    const roomsTotal = p.rooms.reduce((rs, r) => {
-      const cab = calcCabinetry(r.cabinetry);
-      return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
-    }, 0);
-    const delivery = p.project.noDelivery ? 0 : (parseFloat(p.project.deliveryAmount) || 0);
-    const subtotal = roomsTotal + delivery;
-    const taxEnabled = p.project.installationType ? p.project.installationType === "contractor" : p.project.taxEnabled;
-    const taxRate = p.project.installationType ? 8.53 : (parseFloat(p.project.taxRate) || 8);
-    const tax = taxEnabled ? subtotal * (taxRate / 100) : 0;
-    return subtotal + tax;
-  };
 
   const allComplete = (p) => p.rooms.length > 0 && p.rooms.every(isRoomComplete);
 
@@ -136,18 +123,9 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
           }}>✓ Mark as Under Contract</button>
         )}
 
-        {/* Stage control for active jobs */}
+        {/* Close button for active jobs */}
         {section === "active" && isActive && (
           <div className="pcard-stage-row" onClick={e => e.stopPropagation()}>
-            <select
-              className="pcard-stage-select"
-              value={getActiveStage(p._status)}
-              onChange={e => onUpdateStage(realIdx, e.target.value)}
-            >
-              {ACTIVE_STAGES.map(s => (
-                <option key={s.key} value={s.key}>{s.label}</option>
-              ))}
-            </select>
             <button className="pcard-archive-btn" onClick={() => onCloseProject(realIdx)}>
               Close
             </button>
