@@ -18,11 +18,9 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
   const [viewer, setViewer] = useState({ open: false, url: null, label: "" });
   const [viewerBusy, setViewerBusy] = useState(null);
   const [previewError, setPreviewError] = useState(null);
-  const [debugLog, setDebugLog] = useState([]);
   const mounted = useRef(true);
   const viewerUrlRef = useRef(null);
   const viewerPanelRef = useRef(null);
-  const dbg = (msg) => { setDebugLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]); };
 
   useEffect(() => { return () => { mounted.current = false; if (viewerUrlRef.current) URL.revokeObjectURL(viewerUrlRef.current) } }, []);
 
@@ -51,9 +49,7 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
   };
 
   const handlePreview = async (type) => {
-    dbg(`handlePreview called with type="${type}"`);
     if (viewer.open && viewer.label === type) {
-      dbg("Toggling off — already viewing this type");
       if (viewerUrlRef.current) { URL.revokeObjectURL(viewerUrlRef.current); viewerUrlRef.current = null; }
       setViewer({ open: false, url: null, label: "" });
       return;
@@ -61,14 +57,8 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
     setViewerBusy(type);
     setPreviewError(null);
     try {
-      dbg("Loading PDFTemplates module...");
       const mod = await getPDF();
-      dbg(`Module loaded. Keys: ${Object.keys(mod).join(", ")}`);
-
-      dbg("Loading appUtils...");
       const utils = await import("../appUtils.js");
-      dbg(`appUtils loaded. PRICING type: ${typeof utils.PRICING}, woodwork count: ${utils.PRICING?.woodwork?.length ?? "N/A"}`);
-
       const withPricing = type === "internal";
       const opts = {
         calcCabinetry: utils.calcCabinetry,
@@ -79,33 +69,22 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
         preparedBy,
         ...(withPricing ? { pricing: utils.PRICING } : {}),
       };
-      dbg(`Opts built. preparedBy="${preparedBy}", withPricing=${withPricing}`);
 
-      let blob;
       const fnName = type === "internal" ? "buildInternalPDFBlob" : type === "customer" ? "buildCustomerPDFBlob" : "buildSummaryPDFBlob";
-      dbg(`Calling mod.${fnName}...`);
-      const fnRef = mod[fnName];
-      dbg(`Function exists: ${typeof fnRef === "function"}`);
-
-      blob = await fnRef(project, rooms, opts);
-      dbg(`Blob received. type=${blob?.type}, size=${blob?.size}`);
+      const blob = await mod[fnName](project, rooms, opts);
 
       if (!blob) throw new Error("PDF generation returned empty");
       if (viewerUrlRef.current) URL.revokeObjectURL(viewerUrlRef.current);
       const url = URL.createObjectURL(blob);
       viewerUrlRef.current = url;
-      dbg(`Blob URL created: ${url.slice(0, 40)}...`);
       if (mounted.current) {
         setViewer({ open: true, url, label: type });
-        dbg("Viewer state set to open");
         setTimeout(() => { viewerPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 100);
       }
     } catch (err) {
-      dbg(`ERROR: ${err?.message || err}`);
       console.error("PDF preview error:", err);
       if (mounted.current) setPreviewError(err?.message || "Preview failed");
     } finally {
-      dbg("Finally block — clearing viewerBusy");
       if (mounted.current) setViewerBusy(null);
     }
   };
@@ -207,17 +186,6 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
             </div>
           </div>
           <div className="pv-pdf-wrap"><iframe src={viewer.url} className="pv-pdf-frame" title="PDF Preview" /></div>
-        </div>
-      )}
-
-      {/* Debug panel — remove after fixing */}
-      {debugLog.length > 0 && (
-        <div style={{ marginTop: 20, padding: 12, background: "#1a1a2e", color: "#0f0", fontFamily: "monospace", fontSize: 11, borderRadius: 8, maxHeight: 200, overflowY: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ color: "#aaa", fontWeight: 700 }}>DEBUG LOG</span>
-            <button onClick={() => setDebugLog([])} style={{ background: "none", border: "none", color: "#f55", cursor: "pointer", fontSize: 11 }}>Clear</button>
-          </div>
-          {debugLog.map((line, i) => <div key={i}>{line}</div>)}
         </div>
       )}
 
