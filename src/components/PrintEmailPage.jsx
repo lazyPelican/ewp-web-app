@@ -215,7 +215,7 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
               <button className="btn btn-sm" onClick={() => { if (viewerUrlRef.current) { URL.revokeObjectURL(viewerUrlRef.current); viewerUrlRef.current = null; } setViewer({ open: false, url: null, label: "" }) }}>Close</button>
             </div>
           </div>
-          <iframe src={viewer.url} className="pv-pdf-frame" title="PDF Preview" />
+          <embed src={viewer.url} className="pv-pdf-frame" type="application/pdf" />
         </div>
       )}
 

@@ -297,7 +297,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
               <button className="btn btn-sm" onClick={() => setPdfViewer({ open: false, url: null, label: "" })}>Close</button>
             </div>
           </div>
-          <iframe src={pdfViewer.url} className="pv-pdf-frame" title="PDF Preview" />
+          <embed src={pdfViewer.url} className="pv-pdf-frame" type="application/pdf" />
         </div>
       )}
 
