@@ -41,6 +41,11 @@ export async function buildSummaryPDFBlob(project, rooms, preparedBy) {
   return mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, false));
 }
 
+export async function buildInternalPDFBlob(project, rooms, preparedBy) {
+  const mod = await getPDF();
+  return mod.buildInternalPDFBlob(project, rooms, opts(preparedBy, true));
+}
+
 // Preview helpers — generate blob and open in new browser tab
 export async function previewPDFInternal(project, rooms, preparedBy, onStatus) {
   onStatus('generating');

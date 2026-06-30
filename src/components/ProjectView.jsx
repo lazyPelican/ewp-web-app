@@ -5,7 +5,7 @@ import {
   calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall,
   SECTION_LABELS,
 } from "../appUtils.js"
-import { exportPDFInternal, exportPDFCustomer } from "../pdfExport.js"
+import { buildInternalPDFBlob } from "../pdfExport.js"
 
 export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGuest, isAdmin, onStageChange, onBack, onShowToast, onEmail }) {
   const projectId = project.id
@@ -20,10 +20,11 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
   const [newTaskLabel, setNewTaskLabel] = useState("")
   const [noteForm, setNoteForm] = useState({ open: false, title: "", body: "", type: "note" })
   const [pdfBusy, setPdfBusy] = useState(null)
+  const [pdfViewer, setPdfViewer] = useState({ open: false, url: null, label: "" })
   const notesTimer = useRef(null)
   const mounted = useRef(true)
 
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url) } }, [])
   useEffect(() => { setViewingStage(currentStage) }, [currentStage])
 
   // ── Load data on mount ──
@@ -189,10 +190,19 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
 
   // ── PDF handlers ──
   const handlePDF = async (type) => {
+    if (pdfViewer.open && pdfViewer.label === type) {
+      if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url)
+      setPdfViewer({ open: false, url: null, label: "" })
+      return
+    }
     setPdfBusy(type)
     try {
-      if (type === "internal") await exportPDFInternal(project, rooms, preparedBy, () => {})
-      else await exportPDFCustomer(project, rooms, preparedBy, () => {})
+      const blob = type === "internal"
+        ? await buildInternalPDFBlob(project, rooms, preparedBy)
+        : await buildCustomerPDFBlob(project, rooms, preparedBy)
+      if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url)
+      const url = URL.createObjectURL(blob)
+      if (mounted.current) setPdfViewer({ open: true, url, label: type })
     } catch { onShowToast("PDF generation failed") }
     if (mounted.current) setPdfBusy(null)
   }
@@ -218,11 +228,8 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
           <h2 className="pv-header-title">{project.name}</h2>
           <span className="pv-header-id">{fmtId(project.id)}</span>
           <div className="pv-header-actions">
-            <button className="btn btn-sm" onClick={() => handlePDF("internal")} disabled={!!pdfBusy}>
-              {pdfBusy === "internal" ? "Generating..." : "Internal PDF"}
-            </button>
-            <button className="btn btn-sm" onClick={() => handlePDF("customer")} disabled={!!pdfBusy}>
-              {pdfBusy === "customer" ? "Generating..." : "Client PDF"}
+            <button className={`btn btn-sm${pdfViewer.open && pdfViewer.label === "internal" ? " btn-gold" : ""}`} onClick={() => handlePDF("internal")} disabled={!!pdfBusy}>
+              {pdfBusy === "internal" ? "Generating..." : pdfViewer.open && pdfViewer.label === "internal" ? "Hide Quote" : "View Quote"}
             </button>
           </div>
         </div>
@@ -277,6 +284,20 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
         </div>
 
       </div>
+
+      {/* ── INLINE PDF VIEWER ── */}
+      {pdfViewer.open && pdfViewer.url && (
+        <div className="pv-pdf-viewer">
+          <div className="pv-pdf-toolbar">
+            <span className="pv-pdf-toolbar-label">{pdfViewer.label === "internal" ? "Internal Quote" : "Client Quote"}</span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <a href={pdfViewer.url} download={`${project.name || "quote"}-${pdfViewer.label}.pdf`} className="btn btn-sm">Download</a>
+              <button className="btn btn-sm" onClick={() => { if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url); setPdfViewer({ open: false, url: null, label: "" }) }}>Close</button>
+            </div>
+          </div>
+          <iframe src={pdfViewer.url} className="pv-pdf-frame" title="PDF Preview" />
+        </div>
+      )}
 
       {/* ── PROGRESS BAR ── */}
       <div className="pv-progress">
