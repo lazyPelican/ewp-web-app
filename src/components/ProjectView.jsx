@@ -24,7 +24,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
   const notesTimer = useRef(null)
   const mounted = useRef(true)
 
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url) } }, [])
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   useEffect(() => { setViewingStage(currentStage) }, [currentStage])
 
   // ── Load data on mount ──
@@ -191,7 +191,6 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
   // ── PDF handlers ──
   const handlePDF = async (type) => {
     if (pdfViewer.open && pdfViewer.label === type) {
-      if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url)
       setPdfViewer({ open: false, url: null, label: "" })
       return
     }
@@ -200,9 +199,12 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
       const blob = type === "internal"
         ? await buildInternalPDFBlob(project, rooms, preparedBy)
         : await buildCustomerPDFBlob(project, rooms, preparedBy)
-      if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url)
-      const url = URL.createObjectURL(blob)
-      if (mounted.current) setPdfViewer({ open: true, url, label: type })
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      if (mounted.current) setPdfViewer({ open: true, url: dataUrl, label: type })
     } catch { onShowToast("PDF generation failed") }
     if (mounted.current) setPdfBusy(null)
   }
@@ -292,7 +294,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
             <span className="pv-pdf-toolbar-label">{pdfViewer.label === "internal" ? "Internal Quote" : "Client Quote"}</span>
             <div style={{ display: "flex", gap: 8 }}>
               <a href={pdfViewer.url} download={`${project.name || "quote"}-${pdfViewer.label}.pdf`} className="btn btn-sm">Download</a>
-              <button className="btn btn-sm" onClick={() => { if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url); setPdfViewer({ open: false, url: null, label: "" }) }}>Close</button>
+              <button className="btn btn-sm" onClick={() => setPdfViewer({ open: false, url: null, label: "" })}>Close</button>
             </div>
           </div>
           <iframe src={pdfViewer.url} className="pv-pdf-frame" title="PDF Preview" />

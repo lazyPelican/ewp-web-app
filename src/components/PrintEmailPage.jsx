@@ -95,8 +95,17 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
       const url = URL.createObjectURL(blob);
       viewerUrlRef.current = url;
       dbg(`Blob URL created: ${url.slice(0, 40)}...`);
+      dbg("Converting blob to data URL...");
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      dbg(`Data URL ready, length=${dataUrl.length}`);
+      if (viewerUrlRef.current?.startsWith("blob:")) URL.revokeObjectURL(viewerUrlRef.current);
+      viewerUrlRef.current = dataUrl;
       if (mounted.current) {
-        setViewer({ open: true, url, label: type });
+        setViewer({ open: true, url: dataUrl, label: type });
         dbg("Viewer state set to open");
         setTimeout(() => { viewerPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 100);
       }
