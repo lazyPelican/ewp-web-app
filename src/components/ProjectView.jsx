@@ -199,12 +199,8 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
       const blob = type === "internal"
         ? await buildInternalPDFBlob(project, rooms, preparedBy)
         : await buildCustomerPDFBlob(project, rooms, preparedBy)
-      const dataUrl = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-      if (mounted.current) setPdfViewer({ open: true, url: dataUrl, label: type })
+      const url = URL.createObjectURL(blob);
+      if (mounted.current) setPdfViewer({ open: true, url, label: type })
     } catch { onShowToast("PDF generation failed") }
     if (mounted.current) setPdfBusy(null)
   }
@@ -297,7 +293,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
               <button className="btn btn-sm" onClick={() => setPdfViewer({ open: false, url: null, label: "" })}>Close</button>
             </div>
           </div>
-          <embed src={pdfViewer.url} className="pv-pdf-frame" type="application/pdf" />
+          <iframe src={pdfViewer.url} className="pv-pdf-frame" title="PDF Preview" />
         </div>
       )}
 
