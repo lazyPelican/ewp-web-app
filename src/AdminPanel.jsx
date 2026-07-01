@@ -762,7 +762,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
       <div className={`topbar-sticky-wrap${scrolled ? " scrolled" : ""}${dark ? " dark" : ""}`}>
         <div className={`topbar${scrolled ? " scrolled" : ""}${dark ? " dark" : ""}`}>
           <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => confirmIfDirty(onBack)}>
-            <img src="/ewp-logo.png" alt="Engstrom Wood Products" className="header-logo" />
+            <img src="/ewp-logo.png" alt="Engstrom Wood Products" className="header-logo" width="44" height="44" />
             <div>
               <div className="topbar-name">Engstrom Wood Products</div>
               <div className="topbar-sub">

@@ -18,6 +18,8 @@ export default defineConfig({
     __BUILD_DATE__: JSON.stringify(buildDate),
   },
   build: {
+    target: 'es2020',
+    cssTarget: 'chrome80',
     rollupOptions: {
       output: {
         manualChunks(id) {

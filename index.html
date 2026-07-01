@@ -9,7 +9,7 @@
     />
     <title>EWP Estimate Manager</title>
 
-    <!-- Fonts: preload then apply as stylesheet so Google Fonts CSS is not render-blocking -->
+    <!-- Fonts: preconnect + non-blocking load; display=swap already in URL -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -24,6 +24,9 @@
         rel="stylesheet"
       />
     </noscript>
+
+    <!-- Preload the logo (LCP candidate) -->
+    <link rel="preload" as="image" href="/ewp-logo.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/E-symbol.png" />
