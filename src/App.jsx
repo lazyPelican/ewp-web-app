@@ -1653,7 +1653,9 @@ const styles = `
   .dark .pv-pdf-toolbar .btn, .dark .pv-pdf-toolbar a.btn, .dark .pv-pdf-toolbar button { color: #fff !important; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
   .dark .pv-pdf-toolbar .btn:hover, .dark .pv-pdf-toolbar a.btn:hover, .dark .pv-pdf-toolbar button:hover { color: #fff !important; background: rgba(255,255,255,0.2); }
   .pv-pdf-wrap { overflow: hidden; }
-  .dark .pv-pdf-wrap { background: #1a1a2e; filter: invert(0.88) hue-rotate(180deg); }
+  .pv-pdf-wrap--light { background: #fff; filter: none; }
+  .pv-pdf-wrap--dark { background: #1a1a2e; filter: invert(0.88) hue-rotate(180deg); }
+  .pv-pdf-theme-toggle { min-width: 92px; justify-content: center; }
   .dark .pv-header, .dark .pv-progress, .dark .pv-stage-panel, .dark .pv-quote-bar, .dark .pv-timeline-form { background: var(--surface); border-color: var(--ivory3); }
   .dark .pv-header-id { background: var(--ivory3); }
   .dark .pv-detail-card { background: var(--ivory3); }

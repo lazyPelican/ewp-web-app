@@ -19,11 +19,13 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
   const [viewer, setViewer] = useState({ open: false, url: null, label: "" });
   const [viewerBusy, setViewerBusy] = useState(null);
   const [previewError, setPreviewError] = useState(null);
+  const [pdfTheme, setPdfTheme] = useState(() => localStorage.getItem("ewp-pdf-theme") || "light");
   const mounted = useRef(true);
   const viewerUrlRef = useRef(null);
   const viewerPanelRef = useRef(null);
 
   useEffect(() => { return () => { mounted.current = false; if (viewerUrlRef.current) URL.revokeObjectURL(viewerUrlRef.current) } }, []);
+  useEffect(() => { localStorage.setItem("ewp-pdf-theme", pdfTheme) }, [pdfTheme]);
 
   const handleInternal = () => {
     setPdfError(null);
@@ -186,11 +188,19 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
           <div className="pv-pdf-toolbar">
             <span className="pv-pdf-toolbar-label">{viewerTitle}</span>
             <div style={{ display: "flex", gap: 8 }}>
+              <button
+                className="btn btn-sm pv-pdf-theme-toggle"
+                onClick={() => setPdfTheme(pdfTheme === "dark" ? "light" : "dark")}
+                title={`Switch PDF preview to ${pdfTheme === "dark" ? "white" : "dark"} mode`}
+                aria-label={`Switch PDF preview to ${pdfTheme === "dark" ? "white" : "dark"} mode`}
+              >
+                {pdfTheme === "dark" ? "White PDF" : "Dark PDF"}
+              </button>
               <a href={viewer.url} download={`${project.name || "quote"}-${viewer.label}.pdf`} className="btn btn-sm">Download</a>
               <button className="btn btn-sm" onClick={() => { if (viewerUrlRef.current) { URL.revokeObjectURL(viewerUrlRef.current); viewerUrlRef.current = null; } setViewer({ open: false, url: null, label: "" }) }}>Close</button>
             </div>
           </div>
-          <div className="pv-pdf-wrap"><iframe src={viewer.url} className="pv-pdf-frame" title="PDF Preview" /></div>
+          <div className={`pv-pdf-wrap pv-pdf-wrap--${pdfTheme}`}><iframe src={viewer.url} className="pv-pdf-frame" title="PDF Preview" /></div>
         </div>
       )}
 
