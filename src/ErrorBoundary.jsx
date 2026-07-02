@@ -1,4 +1,5 @@
 import { Component } from "react"
+import { isChunkLoadError, reloadForFreshAssets } from "./chunkRecovery.js"
 
 const isDev = import.meta.env?.DEV ?? true
 
@@ -15,6 +16,8 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    if (isChunkLoadError(error) && reloadForFreshAssets()) return
+
     // Only log to console in development; in production only Sentry (when added) should capture this
     if (isDev) {
       console.error("[ErrorBoundary] Uncaught error:", error, info)

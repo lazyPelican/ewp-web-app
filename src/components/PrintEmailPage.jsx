@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { fmtDate, fmtId } from "../appUtils.js"
 import { exportPDFInternal, exportPDFCustomer, exportPDFSummary } from "../pdfExport.js"
+import { isChunkLoadError, reloadForFreshAssets } from "../chunkRecovery.js"
 
 let _pdfMod = null;
 const getPDF = () => { if (!_pdfMod) _pdfMod = import("../PDFTemplates.jsx"); return _pdfMod; };
@@ -83,7 +84,11 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
       }
     } catch (err) {
       console.error("PDF preview error:", err);
-      if (mounted.current) setPreviewError(err?.message || "Preview failed");
+      if (isChunkLoadError(err) && reloadForFreshAssets()) {
+        if (mounted.current) setPreviewError("The app was updated. Reloading the latest version...");
+      } else if (mounted.current) {
+        setPreviewError(err?.message || "Preview failed");
+      }
     } finally {
       if (mounted.current) setViewerBusy(null);
     }

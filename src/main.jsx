@@ -7,6 +7,12 @@ import "./global.css"
 import { supabase } from "./supabase.js"
 import ErrorBoundary from "./ErrorBoundary.jsx"
 import { logError } from "./logger.js"
+import { reloadForFreshAssets } from "./chunkRecovery.js"
+
+window.addEventListener("vite:preloadError", (event) => {
+  event.preventDefault()
+  reloadForFreshAssets()
+})
 
 const Auth = lazy(() => import("./Auth.jsx"))
 const PendingApproval = lazy(() => import("./PendingApproval.jsx"))
