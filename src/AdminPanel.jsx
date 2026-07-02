@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
 import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
 import { logError } from "./logger.js"
 import { TimeTrackerTab } from "./TimeTracker.jsx"
+import { ACTIVE_STAGES, fmtDate, fmtId, getActiveStage, isActiveStatus, isClosedStatus, isRoomComplete } from "./appUtils.js"
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
 
@@ -165,7 +166,48 @@ const TABLE_CONFIG = [
   },
 ]
 
-export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
+const allRoomsComplete = (quote) => Array.isArray(quote.rooms) && quote.rooms.length > 0 && quote.rooms.every(isRoomComplete)
+
+const getQuoteStatusMeta = (quote) => {
+  const status = quote._status
+  if (isClosedStatus(status)) return { group: "closed", label: "Closed", tone: "muted" }
+  if (isActiveStatus(status)) {
+    const stage = ACTIVE_STAGES.find(s => s.key === getActiveStage(status))
+    return { group: "underContract", label: `Under Contract - ${stage?.label || "Active"}`, tone: "active" }
+  }
+  if (allRoomsComplete(quote)) return { group: "ready", label: "Ready for Client", tone: "ready" }
+  return { group: "draft", label: "Draft", tone: "draft" }
+}
+
+const getQuoteSortValue = (quote, key) => {
+  const project = quote.project || {}
+  if (key === "id") return project.id || quote._rowId || ""
+  if (key === "quote") return project.name || ""
+  if (key === "client") return project.contactName || project.contactPhone || project.contactEmail || ""
+  if (key === "status") return getQuoteStatusMeta(quote).label
+  if (key === "bidDate") return project.bidDate || ""
+  if (key === "updated") return quote._updatedAt || ""
+  return ""
+}
+
+const quoteMatchesSearch = (quote, search) => {
+  const q = search.trim().toLowerCase()
+  if (!q) return true
+  const project = quote.project || {}
+  return [
+    project.id,
+    quote._rowId,
+    project.name,
+    project.address,
+    project.contactName,
+    project.contactPhone,
+    project.contactEmail,
+    getQuoteStatusMeta(quote).label,
+    project.bidDate,
+  ].some(v => String(v || "").toLowerCase().includes(q))
+}
+
+export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOpenQuote }) {
   const [tab, setTab] = useState("users")         // "users" | "pricing"
   const [scrolled, setScrolled] = useState(false)
   const [activeTable, setActiveTable] = useState("woodwork")
@@ -196,6 +238,14 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   // Root-access blocked modal
   const [rootBlockModal, setRootBlockModal] = useState(false)
 
+  // Quotes state
+  const [quotes, setQuotes] = useState([])
+  const [quotesLoading, setQuotesLoading] = useState(true)
+  const [quotesError, setQuotesError] = useState("")
+  const [quoteSearch, setQuoteSearch] = useState("")
+  const [quoteStatusFilters, setQuoteStatusFilters] = useState([])
+  const [quoteSort, setQuoteSort] = useState({ key: "updated", dir: "desc" })
+
   const [toast, setToast] = useState(null)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
 
@@ -216,6 +266,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
     fetchUsers()
     fetchPricing()
     fetchPreApproved()
+    fetchQuotes()
   }, [])
 
   const fetchUsers = async () => {
@@ -247,6 +298,38 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
       }
     } catch (err) { logError("fetchPricing", err); setPricing(JSON.parse(JSON.stringify(DEFAULT_PRICING))) }
   }
+
+  const fetchQuotes = async () => {
+    setQuotesLoading(true)
+    setQuotesError("")
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, data, status, updated_at, created_at")
+        .order("updated_at", { ascending: false })
+      if (error) {
+        logError("fetchQuotes", error)
+        setQuotesError("Unable to load quotes.")
+      } else {
+        setQuotes((data || []).map(row => ({
+          ...(row.data || {}),
+          _rowId: row.id,
+          _updatedAt: row.updated_at,
+          _createdAt: row.created_at,
+          _status: row.status === "confirmed" ? "active:drafting" : (row.status || null),
+        })))
+      }
+    } catch (err) {
+      logError("fetchQuotes", err)
+      setQuotesError("Unable to load quotes.")
+    }
+    setQuotesLoading(false)
+  }
+
+  useEffect(() => {
+    if (!isAdmin || tab !== "quotes") return
+    fetchQuotes()
+  }, [isAdmin, tab])
 
   const savePricing = async () => {
     // Validate: no blank names, no blank/zero numeric values
@@ -548,7 +631,38 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
   }
 
   const font = "var(--font-body)"
-  const serif = "var(--font-display)"
+  const serif = "var(--font-body)"
+
+  const quoteCounts = quotes.reduce((acc, quote) => {
+    acc[getQuoteStatusMeta(quote).group] += 1
+    return acc
+  }, { draft: 0, ready: 0, underContract: 0, closed: 0 })
+  const visibleQuotes = useMemo(() => {
+    const filtered = quotes.filter(quote =>
+      quoteMatchesSearch(quote, quoteSearch) &&
+      (quoteStatusFilters.length === 0 || quoteStatusFilters.includes(getQuoteStatusMeta(quote).group))
+    )
+    return [...filtered].sort((a, b) => {
+      const av = getQuoteSortValue(a, quoteSort.key)
+      const bv = getQuoteSortValue(b, quoteSort.key)
+      const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" })
+      return quoteSort.dir === "asc" ? cmp : -cmp
+    })
+  }, [quotes, quoteSearch, quoteStatusFilters, quoteSort])
+  const updateQuoteSort = (key) => {
+    setQuoteSort(prev => prev.key === key
+      ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+      : { key, dir: key === "updated" || key === "bidDate" ? "desc" : "asc" })
+  }
+  const toggleQuoteStatusFilter = (group) => {
+    setQuoteStatusFilters(prev => prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group])
+  }
+  const renderQuoteSortArrows = (key) => (
+    <span style={{ display: "inline-flex", flexDirection: "column", gap: 0, marginLeft: 5, fontSize: 8, lineHeight: 0.8, verticalAlign: "middle" }}>
+      <span style={{ opacity: quoteSort.key === key && quoteSort.dir === "asc" ? 1 : 0.42 }}>▲</span>
+      <span style={{ opacity: quoteSort.key === key && quoteSort.dir === "desc" ? 1 : 0.42 }}>▼</span>
+    </span>
+  )
 
   if (!isAdmin) {
     return (
@@ -573,7 +687,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
         /* ── CSS variables (duplicated from App — AdminPanel replaces App in the tree) ── */
         :root {
           --font-body: 'Inter', sans-serif;
-          --font-display: 'Cormorant Garamond', serif;
+          --font-display: 'Inter', sans-serif;
           --gold: #5B8C5A;
           --gold-light: #7BAF7A;
           --ewp-slate: #1F242E;
@@ -704,6 +818,8 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
         .btn-ghost:hover { color: var(--char); }
         .dark .btn-gold { background: #7BAF7A; color: #0E1014; }
         .dark .btn-gold:hover { background: #93C492; }
+        .dark .btn-outline { color: #F4F1EA; border-color: #5A6070; background: rgba(255,255,255,0.03); }
+        .dark .btn-outline:hover { color: #FFFFFF; border-color: #D5D0C8; background: #262A33; }
 
         /* ── Header slide-down (matches main app) ── */
         @keyframes headerSlideDown {
@@ -755,6 +871,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
             overflow-y: hidden !important;
             -webkit-overflow-scrolling: touch;
           }
+          .admin-quotes-header { display: none !important; }
+          .admin-quotes-row {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+          }
         }
       `}</style>
 
@@ -779,7 +900,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
               </button>
             </div>
             <div className="topbar-ribbon-right">
-              {[["users", "👥 Users"], ["pricing", "💲 Pricing Tables"], ["contractors", "🏢 Contractors"]].map(([key, label]) => (
+              {[["users", "Users"], ["quotes", "Quotes List"], ["pricing", "Pricing Tables"], ["contractors", "Contractors"]].map(([key, label]) => (
                 <button key={key} className={`topbar-btn${tab === key ? " topbar-btn--active" : ""}`} onClick={() => confirmIfDirty(() => setTab(key))}>
                   {label}
                 </button>
@@ -990,6 +1111,142 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session }) {
                   {resetSent ? "✓ Sent" : "Send Reset Link"}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quotes List Tab */}
+        {tab === "quotes" && (
+          <div>
+            <div style={{ marginBottom: 24 }}>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: t.text, fontFamily: font }}>Quotes List</div>
+                <div style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>All quotes with their current lifecycle status</div>
+                <div style={{ height: 2, background: t.gold, width: 48, marginTop: 12 }} />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 18 }}>
+              {[
+                ["draft", "Draft", quoteCounts.draft],
+                ["ready", "Ready for Client", quoteCounts.ready],
+                ["underContract", "Under Contract", quoteCounts.underContract],
+                ["closed", "Closed", quoteCounts.closed],
+              ].map(([group, label, count]) => {
+                const active = quoteStatusFilters.includes(group)
+                return (
+                  <button key={group} onClick={() => toggleQuoteStatusFilter(group)} style={{
+                    background: active ? (dark ? "#1F1A10" : "#FDF5E6") : t.card,
+                    border: `1px solid ${active ? t.gold : t.border}`,
+                    borderRadius: 8, padding: "14px 16px", cursor: "pointer",
+                    textAlign: "center", fontFamily: font, transition: "all 0.15s",
+                    boxShadow: active ? `0 0 0 1px ${t.gold}` : "none",
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: active ? t.gold : t.textMuted }}>{label}</div>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: t.text, marginTop: 4 }}>{count}</div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {quotesError && (
+              <div style={{ background: "rgba(184,59,46,0.08)", border: "1px solid rgba(184,59,46,0.25)", color: "#B83B2E", padding: "10px 12px", borderRadius: 6, fontSize: 13, marginBottom: 12 }}>
+                {quotesError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: 18 }}>
+              <div style={{ position: "relative", width: "min(100%, 560px)" }}>
+                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: t.textMuted, fontSize: 13 }}>Search</span>
+                <input
+                  value={quoteSearch}
+                  onChange={e => setQuoteSearch(e.target.value)}
+                  placeholder="Search quotes by name, client, status, ID, or address"
+                  aria-label="Search quotes"
+                  style={{
+                    width: "100%", padding: "10px 12px 10px 68px", borderRadius: 8,
+                    border: `1px solid ${t.border}`, background: t.inputBg, color: t.inputText,
+                    fontSize: 13, fontFamily: font, outline: "none",
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: 12, color: t.textMuted, textAlign: "center" }}>
+                {visibleQuotes.length} of {quotes.length} quote{quotes.length !== 1 ? "s" : ""}
+              </div>
+            </div>
+
+            <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, overflow: "hidden" }}>
+              <div className="admin-quotes-row admin-quotes-header" style={{
+                display: "grid", gridTemplateColumns: "120px minmax(180px, 1.3fr) minmax(160px, 1fr) minmax(180px, 1fr) 140px 140px",
+                gap: 12, padding: "11px 16px", background: t.headerBg, color: "#fff",
+                fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em",
+              }}>
+                {[
+                  ["id", "ID"],
+                  ["quote", "Quote"],
+                  ["client", "Client"],
+                  ["status", "Status"],
+                  ["bidDate", "Bid Date"],
+                  ["updated", "Updated"],
+                ].map(([key, label]) => (
+                  <button key={key} onClick={() => updateQuoteSort(key)} style={{
+                    background: "transparent", border: 0, color: "#fff", padding: 0, textAlign: "left",
+                    font: "inherit", letterSpacing: "inherit", textTransform: "inherit", cursor: "pointer",
+                  }}>
+                    <span style={{ display: "inline-flex", alignItems: "center" }}>
+                      {label}{renderQuoteSortArrows(key)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {quotesLoading ? (
+                <div style={{ padding: 30, textAlign: "center", color: t.textMuted, fontSize: 14 }}>Loading quotes...</div>
+              ) : visibleQuotes.length === 0 ? (
+                <div style={{ padding: 30, textAlign: "center", color: t.textMuted, fontSize: 14 }}>
+                  {quoteSearch ? "No quotes match your search." : "No quotes found."}
+                </div>
+              ) : visibleQuotes.map((quote, idx) => {
+                const meta = getQuoteStatusMeta(quote)
+                const badgeStyle = meta.tone === "active"
+                  ? { bg: dark ? "#102540" : "#DBEAFE", color: dark ? "#7AB6FF" : "#1D4ED8" }
+                  : meta.tone === "ready"
+                    ? { bg: t.badgeApproved.bg, color: t.badgeApproved.color }
+                    : meta.tone === "muted"
+                      ? { bg: dark ? "#242424" : "#EFEFEF", color: t.textMid }
+                      : { bg: t.badgePending.bg, color: t.badgePending.color }
+                return (
+                  <div key={quote.project?.id || quote._rowId || idx} className="admin-quotes-row" style={{
+                    display: "grid", gridTemplateColumns: "120px minmax(180px, 1.3fr) minmax(160px, 1fr) minmax(180px, 1fr) 140px 140px",
+                    gap: 12, padding: "13px 16px", alignItems: "center", borderTop: `1px solid ${t.border}`,
+                    background: idx % 2 === 0 ? t.card : t.cardAlt, cursor: "pointer",
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  title="Open quote"
+                  onClick={() => onOpenQuote?.(quote.project?.id || quote._rowId)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" || e.key === " ") onOpenQuote?.(quote.project?.id || quote._rowId)
+                  }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: t.text, fontFamily: font }}>{fmtId(quote.project?.id || quote._rowId || "")}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: t.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{quote.project?.name || "Untitled Quote"}</div>
+                      <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{quote.project?.address || "No address"}</div>
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: t.textMid, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{quote.project?.contactName || "No client"}</div>
+                      <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{quote.project?.contactPhone || quote.project?.contactEmail || ""}</div>
+                    </div>
+                    <div>
+                      <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 9px", borderRadius: 999, background: badgeStyle.bg, color: badgeStyle.color, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        {meta.label}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, color: t.textMid }}>{fmtDate(quote.project?.bidDate || "") || "-"}</div>
+                    <div style={{ fontSize: 13, color: t.textMid }}>{quote._updatedAt ? new Date(quote._updatedAt).toLocaleDateString() : "-"}</div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

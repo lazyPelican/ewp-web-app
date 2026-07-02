@@ -131,12 +131,15 @@ const styles = `
   .topbar.topbar--hero.scrolled .topbar-sub { color: #6E7480; }
   .topbar.topbar--hero.scrolled .header-logo { filter: brightness(0.15); }
   .topbar.scrolled + .topbar-ribbon .topbar-btn {
-    background: rgba(45,48,56,0.08);
-    border-color: rgba(45,48,56,0.12);
-    color: #2D3038;
+    background: rgba(255,255,255,0.84);
+    border-color: rgba(31,36,46,0.26);
+    color: #15171C;
+    box-shadow: 0 2px 10px rgba(31,36,46,0.12);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
   .topbar.scrolled + .topbar-ribbon .topbar-btn:hover {
-    background: rgba(45,48,56,0.14);
+    background: rgba(255,255,255,0.95);
+    color: #15171C;
   }
   .topbar-logo {
     display: flex;
@@ -1674,7 +1677,7 @@ const styles = `
 
 
 // ── ROOT APP ───────────────────────────────────────────────────
-export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, onGuestExit }) {
+export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, onGuestExit, initialOpenQuoteId = null, onInitialQuoteOpened }) {
   const [displayName, setDisplayName] = useState(
     isGuest ? "Guest" : (session?.user?.user_metadata?.first_name || "")
   );
@@ -1944,6 +1947,13 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       setMaxStep(pValid && rComplete ? 4 : pValid ? 1 : 0);
     }
   };
+
+  useEffect(() => {
+    if (!initialOpenQuoteId || loading || projects.length === 0) return
+    const idx = projects.findIndex(p => p.project?.id === initialOpenQuoteId || p._rowId === initialOpenQuoteId)
+    if (idx >= 0) openProject(idx)
+    onInitialQuoteOpened?.()
+  }, [initialOpenQuoteId, loading, projects])
 
   const deleteProject = (i) => setDeletePendingIdx(i);
 

@@ -38,6 +38,7 @@ function Root() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [isGuest, setIsGuest] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem("ewp-theme") === "dark")
+  const [quoteToOpenId, setQuoteToOpenId] = useState(null)
 
   // Browser back closes admin panel
   useEffect(() => {
@@ -283,8 +284,23 @@ function Root() {
     content = (
       <Suspense fallback={suspenseFallback}>
         {showAdmin
-          ? <AdminPanel currentUser={session.user} session={session} isAdmin={isAdmin} onBack={() => setShowAdmin(false)} />
-          : <App session={session} isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />}
+          ? <AdminPanel
+              currentUser={session.user}
+              session={session}
+              isAdmin={isAdmin}
+              onBack={() => setShowAdmin(false)}
+              onOpenQuote={(quoteId) => {
+                setQuoteToOpenId(quoteId)
+                setShowAdmin(false)
+              }}
+            />
+          : <App
+              session={session}
+              isAdmin={isAdmin}
+              onOpenAdmin={() => setShowAdmin(true)}
+              initialOpenQuoteId={quoteToOpenId}
+              onInitialQuoteOpened={() => setQuoteToOpenId(null)}
+            />}
       </Suspense>
     )
   }
