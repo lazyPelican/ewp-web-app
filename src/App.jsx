@@ -1945,12 +1945,6 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       const isLocked = isClosedStatus(p._status);
       const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
       const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
-      if (!isLocked && rComplete) {
-        setReadOnly(true);
-        setSaved(true);
-        setView("project");
-        return;
-      }
       setReadOnly(isLocked);
       setSaved(true); setStep(0); setView("new");
       setMaxStep(pValid && rComplete ? 4 : pValid ? 1 : 0);
