@@ -29,6 +29,10 @@ const FONT_SANS_BD = 'Helvetica-Bold'
 const FONT_SERIF   = 'Times-Roman'
 const FONT_SERIF_BD= 'Times-Bold'
 
+// Avoid rare @react-pdf text-layout hangs on quote data with unusual words,
+// IDs, or punctuation-heavy labels.
+Font.registerHyphenationCallback(word => [word])
+
 // ── COLOUR PALETTE ─────────────────────────────────────────────────────────
 const C = {
   ivory:       '#FAF7F2',

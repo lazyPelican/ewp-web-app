@@ -239,6 +239,7 @@ const styles = `
   .main--dashboard { max-width: 100%; padding: 0 !important; }
   .main--readonly input, .main--readonly select, .main--readonly textarea { pointer-events: none; opacity: 0.7; }
   .main--readonly .btn:not([class*="pcard"]) { pointer-events: none; opacity: 0.5; }
+  .main--readonly .print-email-page .btn { pointer-events: auto; opacity: 1; }
   .main--readonly .field-row button, .main--readonly .add-row-btn { display: none; }
   .main--dashboard .dash-below-hero { max-width: 1200px; margin: 0 auto; padding: 12px 32px 40px; }
 
@@ -1645,7 +1646,7 @@ const styles = `
   .pv-pdf-viewer { background: var(--card-bg, #fff); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin-bottom: 20px; animation: fadeUp 0.3s ease both; }
   .pv-pdf-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--rule); background: var(--ivory2, #f5f5f0); }
   .pv-pdf-toolbar-label { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--char); }
-  .pv-pdf-frame { width: 100%; height: 75vh; border: none; display: block; }
+  .pv-pdf-frame { width: 100%; height: 75vh; border: none; display: block; background: #fff; }
 
   /* ── Dark mode overrides ── */
   .dark .pv-pdf-viewer { background: var(--surface); border-color: var(--ivory3); }
@@ -1942,10 +1943,16 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       setView("project");
     } else {
       const isLocked = isClosedStatus(p._status);
-      setReadOnly(isLocked);
-      setSaved(true); setStep(0); setView("new");
       const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
       const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
+      if (!isLocked && rComplete) {
+        setReadOnly(true);
+        setSaved(true);
+        setView("project");
+        return;
+      }
+      setReadOnly(isLocked);
+      setSaved(true); setStep(0); setView("new");
       setMaxStep(pValid && rComplete ? 4 : pValid ? 1 : 0);
     }
   };
@@ -2148,7 +2155,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     { label: "Room Estimates" },
     { label: "Final Details" },
     { label: "Summary" },
-    { label: "Save Quote" },
+    { label: "Save/Send/Print Quote" },
   ];
 
   if (loading) {
@@ -2363,11 +2370,13 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           <div className="stepper" style={{ justifyContent: "flex-start" }}>
             <button className="btn btn-ghost btn-sm"
               style={{ color:"var(--mid)", borderRight:"1px solid var(--ivory3)", borderRadius:0, padding:"16px 20px", marginRight:4, whiteSpace:"nowrap", flexShrink:0 }}
-              onClick={() => { setDashInitialView("active"); setView("dashboard"); setDashKey(k => k + 1); }}>
+              onClick={() => { setDashInitialView(isActiveStatus(projects[editIdx]?._status) ? "active" : "completed"); setView("dashboard"); setDashKey(k => k + 1); }}>
               ← Back
             </button>
             <div style={{ padding: "0 20px", display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", background: "rgba(212,175,55,0.12)", padding: "2px 10px", borderRadius: 12, letterSpacing: "0.06em", textTransform: "uppercase", border: "1px solid rgba(212,175,55,0.3)" }}>Under Contract</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", background: "rgba(212,175,55,0.12)", padding: "2px 10px", borderRadius: 12, letterSpacing: "0.06em", textTransform: "uppercase", border: "1px solid rgba(212,175,55,0.3)" }}>
+                {isActiveStatus(projects[editIdx]?._status) ? "Under Contract" : "Ready for Client"}
+              </span>
             </div>
           </div>
         )}
@@ -2461,21 +2470,26 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             actionBusy={actionBusy}
             onGenerateQuote={(i) => {
               const p = projects[i];
+              const locked = isActiveStatus(p._status) || isClosedStatus(p._status);
               setProject(p.project);
               setRooms(p.rooms);
               setEditIdx(i);
               setSaved(true);
-              setView("new");
-              setStep(3);
+              setReadOnly(locked);
+              setView("project");
               setMaxStep(4);
-              // slight delay so component mounts, then trigger export
-              setTimeout(() => {
-                exportPDFInternal(p.project, p.rooms, preparedBy, () => {});
-              }, 400);
             }}
             onGenerateQuoteCustomer={(i) => {
               const p = projects[i];
-              exportPDFCustomer(p.project, p.rooms, preparedBy, () => {});
+              const locked = isActiveStatus(p._status) || isClosedStatus(p._status);
+              setProject(p.project);
+              setRooms(p.rooms);
+              setEditIdx(i);
+              setSaved(true);
+              setReadOnly(locked);
+              setView("new");
+              setStep(4);
+              setMaxStep(4);
             }}
             onEmail={(i) => {
               const p = projects[i];
@@ -2537,8 +2551,9 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
               preparedBy={preparedBy}
               isGuest={isGuest}
               isAdmin={isAdmin}
+              quoteOnly={!isActiveStatus(projects[editIdx]?._status)}
               onStageChange={(stageKey) => updateProjectStage(editIdx, stageKey)}
-              onBack={() => { setDashInitialView("active"); setView("dashboard"); setDashKey(k => k + 1); }}
+              onBack={() => { setDashInitialView(isActiveStatus(projects[editIdx]?._status) ? "active" : "completed"); setView("dashboard"); setDashKey(k => k + 1); }}
               onShowToast={(msg) => setToast(msg)}
               onEmail={() => setEmailModal({ project, rooms })}
             />

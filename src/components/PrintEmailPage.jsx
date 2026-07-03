@@ -1,10 +1,22 @@
 import React, { useState, useRef, useEffect } from "react"
 import { fmtDate, fmtId } from "../appUtils.js"
-import { exportPDFInternal, exportPDFCustomer, exportPDFSummary } from "../pdfExport.js"
+import {
+  exportPDFInternal,
+  exportPDFCustomer,
+  exportPDFSummary,
+  buildInternalPDFBlob,
+  buildCustomerPDFBlob,
+  buildSummaryPDFBlob,
+} from "../pdfExport.js"
 import { isChunkLoadError, reloadForFreshAssets } from "../chunkRecovery.js"
 
-let _pdfMod = null;
-const getPDF = () => { if (!_pdfMod) _pdfMod = import("../PDFTemplates.jsx"); return _pdfMod; };
+const withPreviewTimeout = (promise, ms = 20000) => {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("PDF preview took too long. Please try Download PDF or retry Preview.")), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+};
 
 export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) {
   const [pdfStatus,  setPdfStatus]  = useState("idle");
@@ -60,21 +72,12 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
     setViewerBusy(type);
     setPreviewError(null);
     try {
-      const mod = await getPDF();
-      const utils = await import("../appUtils.js");
-      const withPricing = type === "internal";
-      const opts = {
-        calcCabinetry: utils.calcCabinetry,
-        calcUpgrades: utils.calcUpgrades,
-        calcCountertops: utils.calcCountertops,
-        calcFinishing: utils.calcFinishing,
-        calcInstall: utils.calcInstall,
-        preparedBy,
-        ...(withPricing ? { pricing: utils.PRICING } : {}),
-      };
-
-      const fnName = type === "internal" ? "buildInternalPDFBlob" : type === "customer" ? "buildCustomerPDFBlob" : "buildSummaryPDFBlob";
-      const blob = await mod[fnName](project, rooms, opts);
+      const buildBlob = type === "internal"
+        ? buildInternalPDFBlob
+        : type === "customer"
+          ? buildCustomerPDFBlob
+          : buildSummaryPDFBlob;
+      const blob = await withPreviewTimeout(buildBlob(project, rooms, preparedBy));
 
       if (!blob) throw new Error("PDF generation returned empty");
       if (viewerUrlRef.current) URL.revokeObjectURL(viewerUrlRef.current);
@@ -135,9 +138,9 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
   const viewerTitle = { internal: "Internal Quote", customer: "Customer Quote", summary: "Summary" }[viewer.label] || "";
 
   return (
-    <div>
+    <div className="print-email-page">
       <div className="page-header">
-        <div className="page-title">Save Quote</div>
+        <div className="page-title">Save/Send/Print Quote</div>
         <div className="gold-rule" />
         <div className="page-subtitle">{project.name} · {fmtDate(project.bidDate)} · {fmtId(project.id)}</div>
       </div>
@@ -196,11 +199,14 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
               >
                 {pdfTheme === "dark" ? "White PDF" : "Dark PDF"}
               </button>
+              <a href={viewer.url} target="_blank" rel="noreferrer" className="btn btn-sm">Open</a>
               <a href={viewer.url} download={`${project.name || "quote"}-${viewer.label}.pdf`} className="btn btn-sm">Download</a>
               <button className="btn btn-sm" onClick={() => { if (viewerUrlRef.current) { URL.revokeObjectURL(viewerUrlRef.current); viewerUrlRef.current = null; } setViewer({ open: false, url: null, label: "" }) }}>Close</button>
             </div>
           </div>
-          <div className={`pv-pdf-wrap pv-pdf-wrap--${pdfTheme}`}><iframe src={viewer.url} className="pv-pdf-frame" title="PDF Preview" /></div>
+          <div className={`pv-pdf-wrap pv-pdf-wrap--${pdfTheme}`}>
+            <embed key={viewer.url} src={viewer.url} type="application/pdf" className="pv-pdf-frame" />
+          </div>
         </div>
       )}
 

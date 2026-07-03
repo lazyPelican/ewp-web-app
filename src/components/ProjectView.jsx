@@ -5,9 +5,17 @@ import {
   calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall,
   SECTION_LABELS,
 } from "../appUtils.js"
-import { buildInternalPDFBlob } from "../pdfExport.js"
+import { buildInternalPDFBlob, buildCustomerPDFBlob } from "../pdfExport.js"
 
-export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGuest, isAdmin, onStageChange, onBack, onShowToast, onEmail }) {
+const withPDFTimeout = (promise, ms = 20000) => {
+  let timeoutId
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("PDF preview took too long")), ms)
+  })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId))
+}
+
+export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGuest, isAdmin, quoteOnly = false, onStageChange, onBack, onShowToast, onEmail }) {
   const projectId = project.id
   const currentStage = getActiveStage(status) || "drafting"
   const currentIdx = ACTIVE_STAGES.findIndex(s => s.key === currentStage)
@@ -29,7 +37,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
 
   // ── Load data on mount ──
   useEffect(() => {
-    if (isGuest) { setLoading(false); return }
+    if (isGuest || quoteOnly) { setLoading(false); return }
     const load = async () => {
       const [metaRes, timeRes, checkRes] = await Promise.all([
         supabase.from("project_stage_meta").select("*").eq("project_id", projectId),
@@ -52,10 +60,11 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
       if (mounted.current) setLoading(false)
     }
     load()
-  }, [projectId, isGuest, currentStage])
+  }, [projectId, isGuest, quoteOnly, currentStage])
 
   // ── Stage change handler ──
   const handleStageChange = async (newKey) => {
+    if (quoteOnly) return
     if (newKey === currentStage) { setViewingStage(newKey); return }
     const newIdx = ACTIVE_STAGES.findIndex(s => s.key === newKey)
     const newLabel = ACTIVE_STAGES.find(s => s.key === newKey)?.label || newKey
@@ -120,11 +129,11 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
 
   // ── Notes auto-save ──
   const saveNotes = useCallback(async (stageKey, text) => {
-    if (isGuest) return
+    if (isGuest || quoteOnly) return
     await supabase.from("project_stage_meta").upsert({
       project_id: projectId, stage_key: stageKey, notes: text
     }, { onConflict: "project_id,stage_key" })
-  }, [projectId, isGuest])
+  }, [projectId, isGuest, quoteOnly])
 
   const handleNotesChange = (stageKey, text) => {
     setStageMeta(prev => ({ ...prev, [stageKey]: { ...prev[stageKey], notes: text } }))
@@ -197,8 +206,8 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
     setPdfBusy(type)
     try {
       const blob = type === "internal"
-        ? await buildInternalPDFBlob(project, rooms, preparedBy)
-        : await buildCustomerPDFBlob(project, rooms, preparedBy)
+        ? await withPDFTimeout(buildInternalPDFBlob(project, rooms, preparedBy))
+        : await withPDFTimeout(buildCustomerPDFBlob(project, rooms, preparedBy))
       const url = URL.createObjectURL(blob);
       if (mounted.current) setPdfViewer({ open: true, url, label: type })
     } catch { onShowToast("PDF generation failed") }
@@ -298,6 +307,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
       )}
 
       {/* ── PROGRESS BAR ── */}
+      {!quoteOnly && (<>
       <div className="pv-progress">
         {ACTIVE_STAGES.map((s, i) => {
           const isCurrent = s.key === currentStage
@@ -429,6 +439,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
           </div>
         </div>
       </div>
+      </>)}
     </div>
   )
 }
