@@ -118,6 +118,45 @@ const s = StyleSheet.create({
     marginTop: 2,
     textAlign: 'right',
   },
+  continuationRibbon: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    border: `1 solid ${C.border}`,
+    borderLeft: `3 solid ${C.stone}`,
+    backgroundColor: C.ivory,
+    marginTop: -4,
+    marginBottom: 8,
+  },
+  continuationCell: {
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderRight: `1 solid ${C.border}`,
+  },
+  continuationCellWide: {
+    width: '36%',
+  },
+  continuationCellMid: {
+    width: '28%',
+  },
+  continuationCellLast: {
+    width: '36%',
+    borderRight: 'none',
+  },
+  continuationLabel: {
+    fontFamily: FONT_SANS_BD,
+    fontSize: 5.5,
+    color: C.stone,
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+    marginBottom: 1.5,
+  },
+  continuationValue: {
+    fontFamily: FONT_SANS,
+    fontSize: 8,
+    color: C.ink,
+  },
 
   // Info strip
   infoStrip: {
@@ -402,22 +441,52 @@ const trunc = (str, max = 40) => {
 
 // ── SHARED LAYOUT COMPONENTS ───────────────────────────────────────────────
 
-function PageHeader({ docType, docId, docDate }) {
+function ProjectRibbon({ project }) {
+  if (!project) return null
+
+  const contactBits = [
+    project.contactName,
+    project.contactPhone,
+    project.email,
+  ].filter(Boolean)
+
   return (
-    <View style={s.hdr} fixed>
-      <View style={s.coBrand}>
-        <Image style={s.coLogo} src={LOGO_SRC} />
-        <View>
-          <Text style={s.coName}>Engstrom Wood Products</Text>
-          <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
-        </View>
+    <View style={s.continuationRibbon} fixed>
+      <View style={[s.continuationCell, s.continuationCellWide]}>
+        <Text style={s.continuationLabel}>Project</Text>
+        <Text style={s.continuationValue}>{trunc(project.name, 46) || '-'}</Text>
       </View>
-      <View>
-        <Text style={s.docType}>{docType}</Text>
-        <Text style={s.docId}>{docId}</Text>
-        {docDate && <Text style={s.docDate}>{docDate}</Text>}
+      <View style={[s.continuationCell, s.continuationCellMid]}>
+        <Text style={s.continuationLabel}>Address</Text>
+        <Text style={s.continuationValue}>{trunc(project.address, 42) || '-'}</Text>
+      </View>
+      <View style={[s.continuationCell, s.continuationCellLast]}>
+        <Text style={s.continuationLabel}>Contact</Text>
+        <Text style={s.continuationValue}>{trunc(contactBits.join(' | '), 54) || '-'}</Text>
       </View>
     </View>
+  )
+}
+
+function PageHeader({ docType, docId, docDate, project, showProjectRibbon = false }) {
+  return (
+    <>
+      <View style={s.hdr} fixed>
+        <View style={s.coBrand}>
+          <Image style={s.coLogo} src={LOGO_SRC} />
+          <View>
+            <Text style={s.coName}>Engstrom Wood Products</Text>
+            <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
+          </View>
+        </View>
+        <View>
+          <Text style={s.docType}>{docType}</Text>
+          <Text style={s.docId}>{docId}</Text>
+          {docDate && <Text style={s.docDate}>{docDate}</Text>}
+        </View>
+      </View>
+      {showProjectRibbon && <ProjectRibbon project={project} />}
+    </>
   )
 }
 
@@ -619,20 +688,13 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
 function AcceptancePage({ project, preparedBy }) {
   return (
     <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
-      <View style={s.hdr} fixed>
-        <View style={s.coBrand}>
-          <Image style={s.coLogo} src={LOGO_SRC} />
-          <View>
-            <Text style={s.coName}>Engstrom Wood Products</Text>
-            <Text style={s.coTag}>Custom Cabinetry  ·  Fine Woodworking  ·  Precision Installation</Text>
-          </View>
-        </View>
-        <View>
-          <Text style={s.docType}>ACCEPTANCE</Text>
-          <Text style={s.docId}>{fmtId(project.id)}</Text>
-          <Text style={s.docDate}>{fmtD(project.bidDate)}</Text>
-        </View>
-      </View>
+      <PageHeader
+        docType="ACCEPTANCE"
+        docId={fmtId(project.id)}
+        docDate={fmtD(project.bidDate)}
+        project={project}
+        showProjectRibbon
+      />
 
       <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 15, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 10, textAlign: 'center' }}>
         Terms & Acceptance
@@ -762,6 +824,8 @@ function InternalSummaryPage({
         docType="INTERNAL — ROOM BREAKDOWN"
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
+        project={project}
+        showProjectRibbon
       />
 
       <SectionLabel label="Room Breakdown" />
@@ -943,6 +1007,8 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
         docType={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  ${roomIndex + 1} of ${totalRooms}`}
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
+        project={project}
+        showProjectRibbon
       />
 
       {/* Cabinetry */}
@@ -1151,6 +1217,8 @@ function CustomerSummaryPage({
         docType="QUOTE — ROOM SUMMARY"
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
+        project={project}
+        showProjectRibbon
       />
 
       <SectionLabel label="Room Summary" />
@@ -1276,6 +1344,8 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
         docType={`${trunc(room.name || `Room ${roomIndex + 1}`, 30)}  ·  ${roomIndex + 1} of ${totalRooms}`}
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
+        project={project}
+        showProjectRibbon
       />
 
       {/* 1. Cabinets / Casework */}
