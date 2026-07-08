@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react"
 import { fmt, fmtDate, fmtId, calcTotal, isRoomComplete, ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus } from "../appUtils.js"
 
-export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onUpdateStage, onCloseProject, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName, initialView }) {
+export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onUpdateStage, onCloseProject, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName, initialView }) {
   const [dashView, setDashView] = useState(initialView || "hub") // "hub" | "quotations" | "drafts" | "completed" | "active" | "closed"
   const [search, setSearch] = useState("")
   const [stageFilter, setStageFilter] = useState(null)
@@ -36,10 +36,10 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
   }, [projects]);
 
   const quotationTotal = useMemo(() =>
-    [...drafts, ...completed].reduce((s, p) => s + calcTotal(p), 0),
+    [...drafts, ...completed].reduce((s, p) => s + calcTotal(p, pricing), 0),
   [drafts, completed]);
   const activeTotal = useMemo(() =>
-    active.reduce((s, p) => s + calcTotal(p), 0),
+    active.reduce((s, p) => s + calcTotal(p, pricing), 0),
   [active]);
 
   const filterList = (list) => {
@@ -82,7 +82,7 @@ export function Dashboard({ projects, isAdmin, onNew, onOpen, onDelete, onDuplic
 
   // ── Card renderer ──
   const renderCard = (p, i, { section } = {}) => {
-    const gt = calcTotal(p);
+    const gt = calcTotal(p, pricing);
     const complete = allComplete(p);
     const realIdx = projects.indexOf(p);
     const isActive = isActiveStatus(p._status);

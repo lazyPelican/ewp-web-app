@@ -32,7 +32,7 @@ const suspenseFallback = (
       fontSize: 14,
     }}
   >
-    Loading…
+    Loading...
   </div>
 )
 
@@ -95,7 +95,7 @@ function Root() {
 
   const checkApproval = async (user) => {
     try {
-      // ── Admin check: DB is authoritative; env var is a fast first guess ──
+      // Admin check: DB is authoritative; env var is a fast first guess
       const clientSideAdmin = ADMIN_EMAILS.includes(user.email?.toLowerCase())
 
       // Try DB-backed admin verification (requires is_admin() RPC + admins table)
@@ -104,7 +104,7 @@ function Root() {
         const { data: adminResult } = await supabase.rpc("is_admin")
         dbAdmin = !!adminResult
       } catch {
-        // RLS SQL not yet applied — fall back to client-side check only
+        // RLS SQL not yet applied - fall back to client-side check only
         dbAdmin = clientSideAdmin
       }
 
@@ -124,7 +124,7 @@ function Root() {
         .single()
 
       if (error || !data) {
-        // First time sign-in — check if email is pre-approved
+        // First time sign-in - check if email is pre-approved
         const { data: preApproved } = await supabase
           .from("pre_approved_emails")
           .select("email")
@@ -207,7 +207,7 @@ function Root() {
             height={18}
             loading="lazy"
             decoding="async"
-            fetchPriority="low"
+            fetchpriority="low"
             style={{ display: "block" }}
           />
         </a>
@@ -224,7 +224,7 @@ function Root() {
         justifyContent: "center", background: "#FDFAF5",
         fontFamily: "var(--font-body)", color: "#9E9E9E", fontSize: 14,
       }}>
-        Loading…
+        Loading...
       </div>
     )
   } else if (isGuest) {
@@ -263,7 +263,7 @@ function Root() {
           padding: "48px 40px", width: 380,
           boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
         }}>
-          <div style={{ fontSize: 36, marginBottom: 16 }}>🚫</div>
+          <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>Access rejected</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#2D2D2D", marginBottom: 8 }}>
             Access Denied
           </div>
@@ -286,7 +286,7 @@ function Root() {
       </div>
     )
   } else {
-    // Approved — show the app (isAdmin is set by DB-backed check in checkApproval)
+    // Approved - show the app (isAdmin is set by DB-backed check in checkApproval)
     content = (
       <Suspense fallback={suspenseFallback}>
         {showAdmin
@@ -336,7 +336,11 @@ function Root() {
   )
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+const rootEl = document.getElementById("root")
+const root = window.__ewpRoot || ReactDOM.createRoot(rootEl)
+window.__ewpRoot = root
+
+root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <Root />

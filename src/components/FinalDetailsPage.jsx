@@ -2,13 +2,13 @@ import React, { useState } from "react"
 import { Field } from "./Field.jsx"
 import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, DEFAULT_QUOTE_SECTIONS } from "../appUtils.js"
 
-export function FinalDetailsPage({ project, rooms, onChange, onNext, onBack }) {
+export function FinalDetailsPage({ project, rooms, pricing, onChange, onNext, onBack }) {
   const roomTotals = rooms.map(r => {
-    const cab  = calcCabinetry(r.cabinetry);
-    const upg  = calcUpgrades(r.upgrades);
-    const ctp  = calcCountertops(r.countertops);
-    const fin  = calcFinishing(r.finishing);
-    const inst = calcInstall(r.install, cab);
+    const cab  = calcCabinetry(r.cabinetry, pricing);
+    const upg  = calcUpgrades(r.upgrades, pricing);
+    const ctp  = calcCountertops(r.countertops, pricing);
+    const fin  = calcFinishing(r.finishing, pricing);
+    const inst = calcInstall(r.install, cab, pricing);
     return cab + upg + ctp + fin + inst;
   });
   const roomsSubtotal = roomTotals.reduce((s, v) => s + v, 0);

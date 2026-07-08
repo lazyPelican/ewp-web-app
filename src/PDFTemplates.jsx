@@ -1571,11 +1571,11 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
   onStatus('generating')
   try {
     const roomTotals = rooms.map(r => {
-      const cab  = calcCabinetry(r.cabinetry)
-      const upg  = calcUpgrades(r.upgrades)
-      const ctp  = calcCountertops(r.countertops)
-      const fin  = calcFinishing(r.finishing)
-      const inst = calcInstall(r.install, cab)
+      const cab  = calcCabinetry(r.cabinetry, pricing)
+      const upg  = calcUpgrades(r.upgrades, pricing)
+      const ctp  = calcCountertops(r.countertops, pricing)
+      const fin  = calcFinishing(r.finishing, pricing)
+      const inst = calcInstall(r.install, cab, pricing)
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const grandCab  = roomTotals.reduce((s, r) => s + r.cab,  0)
@@ -1627,15 +1627,15 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
   }
 }
 
-export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }, onStatus) {
+export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
   onStatus('generating')
   try {
     const roomTotals = rooms.map(r => {
-      const cab  = calcCabinetry(r.cabinetry)
-      const upg  = calcUpgrades(r.upgrades)
-      const ctp  = calcCountertops(r.countertops)
-      const fin  = calcFinishing(r.finishing)
-      const inst = calcInstall(r.install, cab)
+      const cab  = calcCabinetry(r.cabinetry, pricing)
+      const upg  = calcUpgrades(r.upgrades, pricing)
+      const ctp  = calcCountertops(r.countertops, pricing)
+      const fin  = calcFinishing(r.finishing, pricing)
+      const inst = calcInstall(r.install, cab, pricing)
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
@@ -1679,11 +1679,11 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
 // Returns the internal PDF as a Blob (no download) — used for preview.
 export async function buildInternalPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }) {
   const roomTotals = rooms.map(r => {
-    const cab  = calcCabinetry(r.cabinetry)
-    const upg  = calcUpgrades(r.upgrades)
-    const ctp  = calcCountertops(r.countertops)
-    const fin  = calcFinishing(r.finishing)
-    const inst = calcInstall(r.install, cab)
+    const cab  = calcCabinetry(r.cabinetry, pricing)
+    const upg  = calcUpgrades(r.upgrades, pricing)
+    const ctp  = calcCountertops(r.countertops, pricing)
+    const fin  = calcFinishing(r.finishing, pricing)
+    const inst = calcInstall(r.install, cab, pricing)
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const grandCab  = roomTotals.reduce((s, r) => s + r.cab,  0)
@@ -1719,13 +1719,13 @@ export async function buildInternalPDFBlob(project, rooms, { calcCabinetry, calc
 }
 
 // Returns the customer PDF as a Blob (no download) — used for email attachment and preview.
-export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }) {
+export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }) {
   const roomTotals = rooms.map(r => {
-    const cab  = calcCabinetry(r.cabinetry)
-    const upg  = calcUpgrades(r.upgrades)
-    const ctp  = calcCountertops(r.countertops)
-    const fin  = calcFinishing(r.finishing)
-    const inst = calcInstall(r.install, cab)
+    const cab  = calcCabinetry(r.cabinetry, pricing)
+    const upg  = calcUpgrades(r.upgrades, pricing)
+    const ctp  = calcCountertops(r.countertops, pricing)
+    const fin  = calcFinishing(r.finishing, pricing)
+    const inst = calcInstall(r.install, cab, pricing)
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
@@ -1750,15 +1750,15 @@ export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calc
 }
 
 // Summary PDF — just the overview page, no per-room breakout
-export async function exportPDFSummary(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }, onStatus) {
+export async function exportPDFSummary(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
   onStatus('generating')
   try {
     const roomTotals = rooms.map(r => {
-      const cab  = calcCabinetry(r.cabinetry)
-      const upg  = calcUpgrades(r.upgrades)
-      const ctp  = calcCountertops(r.countertops)
-      const fin  = calcFinishing(r.finishing)
-      const inst = calcInstall(r.install, cab)
+      const cab  = calcCabinetry(r.cabinetry, pricing)
+      const upg  = calcUpgrades(r.upgrades, pricing)
+      const ctp  = calcCountertops(r.countertops, pricing)
+      const fin  = calcFinishing(r.finishing, pricing)
+      const inst = calcInstall(r.install, cab, pricing)
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
@@ -1799,13 +1799,13 @@ export async function exportPDFSummary(project, rooms, { calcCabinetry, calcUpgr
   }
 }
 
-export async function buildSummaryPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, preparedBy }) {
+export async function buildSummaryPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }) {
   const roomTotals = rooms.map(r => {
-    const cab  = calcCabinetry(r.cabinetry)
-    const upg  = calcUpgrades(r.upgrades)
-    const ctp  = calcCountertops(r.countertops)
-    const fin  = calcFinishing(r.finishing)
-    const inst = calcInstall(r.install, cab)
+    const cab  = calcCabinetry(r.cabinetry, pricing)
+    const upg  = calcUpgrades(r.upgrades, pricing)
+    const ctp  = calcCountertops(r.countertops, pricing)
+    const fin  = calcFinishing(r.finishing, pricing)
+    const inst = calcInstall(r.install, cab, pricing)
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)

@@ -1,15 +1,14 @@
-// ── Shared utilities and helpers used across App.jsx and extracted components ──
+// Shared utilities and helpers used across App.jsx and extracted components
 import { DEFAULT_PRICING } from "./pricing.js"
+import "./types.js"
 
-// Module-level pricing variable — replaced once loaded from Supabase; falls back to defaults.
-export let PRICING = DEFAULT_PRICING;
-export const setPRICING = (p) => { PRICING = p; };
-export const findByName = (arr, name) => arr.find(r => r.name === name) || arr.find(r => r.name.trim() === (name || "").trim());
+// Calculation helpers accept explicit pricing. DEFAULT_PRICING is only a legacy fallback.
+export const findByName = (arr = [], name) => arr.find(r => r.name === name) || arr.find(r => r.name.trim() === (name || "").trim());
 
-// Install type constant — avoids magic string scattered throughout
+// Install type constant - avoids magic string scattered throughout
 export const HOURLY_RATE = "Hourly Rate";
 
-// ── Format helpers ────────────────────────────────────────────────────────────
+// Format helpers
 export const fmt = (n) =>
   n == null
     ? "$0.00"
@@ -76,7 +75,7 @@ export const escHtml = (s) => String(s ?? "")
   .replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;");
 
-// ── Room completeness ─────────────────────────────────────────────────────────
+// Room completeness
 // Room is complete when it has a name AND at least one data entry in any section.
 // If cabinetry is present, install type must also be selected.
 export const ALL_SECTIONS = ["cabinetry", "upgrades", "countertops", "finishing", "install"];
@@ -101,13 +100,14 @@ export const isRoomComplete = (room) => {
   return true;
 };
 
-// ── Calculation helpers ───────────────────────────────────────────────────────
-export const calcCabinetry = (items) => {
+// Calculation helpers
+/** @param {Array<Object>} items @param {import("./types.js").PricingTables} pricing */
+export const calcCabinetry = (items, pricing = DEFAULT_PRICING) => {
   return items.reduce((sum, item) => {
     if (!item.product) return sum;
-    const prod = findByName(PRICING.woodwork, item.product);
-    const con  = findByName(PRICING.construction, item.construction);
-    const wood = findByName(PRICING.wood, item.wood);
+    const prod = findByName(pricing.woodwork, item.product);
+    const con  = findByName(pricing.construction, item.construction);
+    const wood = findByName(pricing.wood, item.wood);
     if (!prod) return sum;
     const basePrice = prod.price;
     const conPrem   = con  ? con.premium  : 0;
@@ -121,10 +121,10 @@ export const calcCabinetry = (items) => {
   }, 0);
 };
 
-export const calcUpgrades = (items) => {
+export const calcUpgrades = (items, pricing = DEFAULT_PRICING) => {
   return items.reduce((sum, item) => {
     if (!item.upgrade) return sum;
-    const upg = findByName(PRICING.upgrades, item.upgrade);
+    const upg = findByName(pricing.upgrades, item.upgrade);
     if (!upg) return sum;
     const qty    = parseFloat(item.qty)    || 0;
     const adjPct = parseFloat(item.adjPct) || 0;
@@ -133,11 +133,11 @@ export const calcUpgrades = (items) => {
   }, 0);
 };
 
-export const calcCountertops = (items) => {
+export const calcCountertops = (items, pricing = DEFAULT_PRICING) => {
   if (!items) return 0;
   return items.reduce((sum, item) => {
     if (!item.product) return sum;
-    const ctp = findByName(PRICING.countertops || [], item.product);
+    const ctp = findByName(pricing.countertops || [], item.product);
     if (!ctp) return sum;
     const qty    = parseFloat(item.qty)    || 0;
     const adjPct = parseFloat(item.adjPct) || 0;
@@ -145,10 +145,10 @@ export const calcCountertops = (items) => {
   }, 0);
 };
 
-export const calcFinishing = (items) => {
+export const calcFinishing = (items, pricing = DEFAULT_PRICING) => {
   return items.reduce((sum, item) => {
     if (!item.type) return sum;
-    const fin = findByName(PRICING.finishing, item.type);
+    const fin = findByName(pricing.finishing, item.type);
     if (!fin) return sum;
     const lf     = parseFloat(item.lf)     || 0;
     const adjPct = parseFloat(item.adjPct) || 0;
@@ -157,9 +157,9 @@ export const calcFinishing = (items) => {
   }, 0);
 };
 
-export const calcInstall = (installData, cabTotal) => {
+export const calcInstall = (installData, cabTotal, pricing = DEFAULT_PRICING) => {
   if (!installData.type || installData.type === "No Install") return 0;
-  const inst = findByName(PRICING.installType, installData.type);
+  const inst = findByName(pricing.installType, installData.type);
   if (!inst) return 0;
   const adjPct = parseFloat(installData.adjPct) || 0;
   let base;
@@ -172,17 +172,17 @@ export const calcInstall = (installData, cabTotal) => {
   return Math.ceil((base * (1 + adjPct / 100)) / 5) * 5;
 };
 
-export const calcEstimatedFinishingLF = (cabinetryItems) => {
+export const calcEstimatedFinishingLF = (cabinetryItems, pricing = DEFAULT_PRICING) => {
   return cabinetryItems.reduce((sum, item) => {
     if (!item.product) return sum;
-    const prod = findByName(PRICING.woodwork, item.product);
+    const prod = findByName(pricing.woodwork, item.product);
     if (!prod) return sum;
     const qty = parseFloat(item.qty) || 0;
     return sum + (prod.finLF * qty);
   }, 0);
 };
 
-// ── Default quote section settings ────────────────────────────────────────────
+// Default quote section settings
 export const DEFAULT_QUOTE_SECTIONS = {
   cabinetry:   { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" },
   upgrades:    { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "cabinetry" },
@@ -192,7 +192,7 @@ export const DEFAULT_QUOTE_SECTIONS = {
   delivery:    { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "install" },
 };
 
-// ── Blank row factories ───────────────────────────────────────────────────────
+// Blank row factories
 export const blankCabRow = () => ({
   product: "", construction: "Not Applicable", wood: "Not Applicable",
   qty: "", adjPct: "", notes: "",
@@ -201,11 +201,12 @@ export const blankUpgRow = () => ({ upgrade: "", qty: "", adjPct: "", notes: "" 
 export const blankCtpRow = () => ({ product: "", qty: "", adjPct: "", notes: "" });
 export const blankFinRow = () => ({ type: "", lf: "", adjPct: "", notes: "" });
 
-// ── Project total calculator ─────────────────────────────────────────────────
-export const calcTotal = (p) => {
+// Project total calculator
+/** @param {{ project: import("./types.js").QuoteProject, rooms: import("./types.js").QuoteRoom[] }} p @param {import("./types.js").PricingTables} pricing */
+export const calcTotal = (p, pricing = DEFAULT_PRICING) => {
   const roomsTotal = p.rooms.reduce((rs, r) => {
-    const cab = calcCabinetry(r.cabinetry);
-    return rs + cab + calcUpgrades(r.upgrades) + calcCountertops(r.countertops) + calcFinishing(r.finishing) + calcInstall(r.install, cab);
+    const cab = calcCabinetry(r.cabinetry, pricing);
+    return rs + cab + calcUpgrades(r.upgrades, pricing) + calcCountertops(r.countertops, pricing) + calcFinishing(r.finishing, pricing) + calcInstall(r.install, cab, pricing);
   }, 0);
   const delivery = p.project.noDelivery ? 0 : (parseFloat(p.project.deliveryAmount) || 0);
   const subtotal = roomsTotal + delivery;
@@ -215,7 +216,7 @@ export const calcTotal = (p) => {
   return subtotal + tax;
 };
 
-// ── Production lifecycle stages ──────────────────────────────────────────────
+// Production lifecycle stages
 export const ACTIVE_STAGES = [
   { key: "drafting",   label: "Drafting" },
   { key: "redlines",   label: "Redlines" },

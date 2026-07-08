@@ -10,3 +10,6 @@ todo.md
 recovery-codes.txt
 summary.md
 howToCommit.txt
+pdf-samples/
+public/sample*.pdf
+supabase/.temp/

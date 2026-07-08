@@ -18,7 +18,7 @@ const withPreviewTimeout = (promise, ms = 20000) => {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 };
 
-export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) {
+export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, onEmail }) {
   const [pdfStatus,  setPdfStatus]  = useState("idle");
   const [pdfError,   setPdfError]   = useState(null);
 
@@ -41,7 +41,7 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
 
   const handleInternal = () => {
     setPdfError(null);
-    exportPDFInternal(project, rooms, preparedBy, (status, errMsg) => {
+    exportPDFInternal(project, rooms, preparedBy, pricing, (status, errMsg) => {
       setPdfStatus(status);
       if (errMsg) setPdfError(errMsg);
     });
@@ -49,7 +49,7 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
 
   const handleCustomer = () => {
     setPdfError2(null);
-    exportPDFCustomer(project, rooms, preparedBy, (status, errMsg) => {
+    exportPDFCustomer(project, rooms, preparedBy, pricing, (status, errMsg) => {
       setPdfStatus2(status);
       if (errMsg) setPdfError2(errMsg);
     });
@@ -57,7 +57,7 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
 
   const handleSummary = () => {
     setPdfError3(null);
-    exportPDFSummary(project, rooms, preparedBy, (status, errMsg) => {
+    exportPDFSummary(project, rooms, preparedBy, pricing, (status, errMsg) => {
       setPdfStatus3(status);
       if (errMsg) setPdfError3(errMsg);
     });
@@ -77,7 +77,7 @@ export function PrintEmailPage({ project, rooms, preparedBy, onBack, onEmail }) 
         : type === "customer"
           ? buildCustomerPDFBlob
           : buildSummaryPDFBlob;
-      const blob = await withPreviewTimeout(buildBlob(project, rooms, preparedBy));
+      const blob = await withPreviewTimeout(buildBlob(project, rooms, preparedBy, pricing));
 
       if (!blob) throw new Error("PDF generation returned empty");
       if (viewerUrlRef.current) URL.revokeObjectURL(viewerUrlRef.current);

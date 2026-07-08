@@ -15,7 +15,7 @@ const withPDFTimeout = (promise, ms = 20000) => {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId))
 }
 
-export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGuest, isAdmin, quoteOnly = false, onStageChange, onBack, onShowToast, onEmail }) {
+export function ProjectView({ project, rooms, pricing, status, editIdx, preparedBy, isGuest, isAdmin, quoteOnly = false, onStageChange, onBack, onShowToast, onEmail }) {
   const projectId = project.id
   const currentStage = getActiveStage(status) || "drafting"
   const currentIdx = ACTIVE_STAGES.findIndex(s => s.key === currentStage)
@@ -206,8 +206,8 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
     setPdfBusy(type)
     try {
       const blob = type === "internal"
-        ? await withPDFTimeout(buildInternalPDFBlob(project, rooms, preparedBy))
-        : await withPDFTimeout(buildCustomerPDFBlob(project, rooms, preparedBy))
+        ? await withPDFTimeout(buildInternalPDFBlob(project, rooms, preparedBy, pricing))
+        : await withPDFTimeout(buildCustomerPDFBlob(project, rooms, preparedBy, pricing))
       const url = URL.createObjectURL(blob);
       if (mounted.current) setPdfViewer({ open: true, url, label: type })
     } catch { onShowToast("PDF generation failed") }
@@ -215,7 +215,7 @@ export function ProjectView({ project, rooms, status, editIdx, preparedBy, isGue
   }
 
   // ── Derived data ──
-  const total = calcTotal({ project, rooms })
+  const total = calcTotal({ project, rooms }, pricing)
   const stageChecks = checklists.filter(c => c.stage_key === viewingStage)
   const meta = stageMeta[viewingStage] || {}
   const fmtTs = (ts) => {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { Field } from "./Field.jsx"
 import {
-  PRICING,
   HOURLY_RATE,
   fmt,
   toTitleCase,
@@ -22,7 +21,7 @@ import {
 } from "../appUtils.js"
 
 // ── CabinetrySection ──────────────────────────────────────────────────────────
-function CabinetrySection({ items, masterAdj, onChange }) {
+function CabinetrySection({ items, masterAdj, onChange, pricing }) {
   const update = (i, field, val) => {
     const next = items.map((it, idx) => idx === i ? { ...it, [field]: val } : it);
     onChange(next);
@@ -44,7 +43,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
     }
   }, [items.length]);
 
-  const subTotal = calcCabinetry(items);
+  const subTotal = calcCabinetry(items, pricing);
 
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
@@ -74,9 +73,9 @@ function CabinetrySection({ items, masterAdj, onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const prod = findByName(PRICING.woodwork, item.product);
-              const con = findByName(PRICING.construction, item.construction);
-              const wood = findByName(PRICING.wood, item.wood);
+              const prod = findByName(pricing.woodwork, item.product);
+              const con = findByName(pricing.construction, item.construction);
+              const wood = findByName(pricing.wood, item.wood);
               const basePrice = prod ? prod.price : 0;
               const conPrem = con ? con.premium : 0;
               const woodPrem = wood ? wood.premium : 0;
@@ -94,7 +93,7 @@ function CabinetrySection({ items, masterAdj, onChange }) {
                       value={item.product}
                       onChange={e => update(i, "product", e.target.value)}>
                       <option value="">— Select —</option>
-                      {PRICING.woodwork.map(w => <option key={w.name}>{w.name}</option>)}
+                      {pricing.woodwork.map(w => <option key={w.name}>{w.name}</option>)}
                     </select>
                     {item.product && stdPrice > 0 && (
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>{fmt(stdPrice)}/unit</div>
@@ -102,12 +101,12 @@ function CabinetrySection({ items, masterAdj, onChange }) {
                   </td>
                   <td>
                     <select value={item.construction} onChange={e => update(i, "construction", e.target.value)}>
-                      {PRICING.construction.map(c => <option key={c.name}>{c.name}</option>)}
+                      {pricing.construction.map(c => <option key={c.name}>{c.name}</option>)}
                     </select>
                   </td>
                   <td>
                     <select value={item.wood} onChange={e => update(i, "wood", e.target.value)}>
-                      {PRICING.wood.map(w => <option key={w.name}>{w.name}</option>)}
+                      {pricing.wood.map(w => <option key={w.name}>{w.name}</option>)}
                     </select>
                   </td>
                   <td><input type="number" step="0.5" value={item.qty} onChange={e => update(i, "qty", e.target.value)} /></td>
@@ -140,11 +139,11 @@ function CabinetrySection({ items, masterAdj, onChange }) {
 }
 
 // ── UpgradesSection ───────────────────────────────────────────────────────────
-function UpgradesSection({ items, masterAdj, onChange }) {
+function UpgradesSection({ items, masterAdj, onChange, pricing }) {
   const update = (i, field, val) => onChange(items.map((it, idx) => idx === i ? { ...it, [field]: val } : it));
   const addRow = () => onChange([...items, { ...blankUpgRow(), adjPct: masterAdj != null ? String(masterAdj) : "" }]);
   const removeRow = (i) => { if (items.length === 1) return; onChange(items.filter((_, idx) => idx !== i)); };
-  const subTotal = calcUpgrades(items);
+  const subTotal = calcUpgrades(items, pricing);
 
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
@@ -170,7 +169,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const upg = findByName(PRICING.upgrades, item.upgrade);
+              const upg = findByName(pricing.upgrades, item.upgrade);
               const qty = parseFloat(item.qty) || 0;
               const adjPct = parseFloat(item.adjPct) || 0;
               const total = upg ? upg.price * qty * (1 + adjPct / 100) : 0;
@@ -179,7 +178,7 @@ function UpgradesSection({ items, masterAdj, onChange }) {
                   <td>
                     <select value={item.upgrade} onChange={e => update(i, "upgrade", e.target.value)}>
                       <option value="">— Select —</option>
-                      {PRICING.upgrades.map(u => <option key={u.name}>{u.name}</option>)}
+                      {pricing.upgrades.map(u => <option key={u.name}>{u.name}</option>)}
                     </select>
                     {upg && (
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>{fmt(upg.price)}/unit</div>
@@ -213,11 +212,11 @@ function UpgradesSection({ items, masterAdj, onChange }) {
 }
 
 // ── CountertopsSection ────────────────────────────────────────────────────────
-function CountertopsSection({ items, masterAdj, onChange }) {
+function CountertopsSection({ items, masterAdj, onChange, pricing }) {
   const update = (i, field, val) => onChange(items.map((it, idx) => idx === i ? { ...it, [field]: val } : it));
   const addRow = () => onChange([...items, { ...blankCtpRow(), adjPct: masterAdj != null ? String(masterAdj) : "" }]);
   const removeRow = (i) => { if (items.length === 1) return; onChange(items.filter((_, idx) => idx !== i)); };
-  const subTotal = calcCountertops(items);
+  const subTotal = calcCountertops(items, pricing);
 
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
@@ -243,7 +242,7 @@ function CountertopsSection({ items, masterAdj, onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const ctp = findByName(PRICING.countertops || [], item.product);
+              const ctp = findByName(pricing.countertops || [], item.product);
               const qty = parseFloat(item.qty) || 0;
               const adjPct = parseFloat(item.adjPct) || 0;
               const total = ctp ? ctp.price * qty * (1 + adjPct / 100) : 0;
@@ -252,7 +251,7 @@ function CountertopsSection({ items, masterAdj, onChange }) {
                   <td>
                     <select value={item.product} onChange={e => update(i, "product", e.target.value)}>
                       <option value="">— Select —</option>
-                      {(PRICING.countertops || []).map(c => <option key={c.name}>{c.name}</option>)}
+                      {(pricing.countertops || []).map(c => <option key={c.name}>{c.name}</option>)}
                     </select>
                     {ctp && (
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>{fmt(ctp.price)}/unit</div>
@@ -286,12 +285,12 @@ function CountertopsSection({ items, masterAdj, onChange }) {
 }
 
 // ── FinishingSection ──────────────────────────────────────────────────────────
-function FinishingSection({ items, cabinetry = [], onChange }) {
+function FinishingSection({ items, cabinetry = [], onChange, pricing }) {
   const update = (i, field, val) => onChange(items.map((it, idx) => idx === i ? { ...it, [field]: val } : it));
   const addRow    = () => onChange([...items, blankFinRow()]);
   const removeRow = (i) => { if (items.length === 1) return; onChange(items.filter((_, idx) => idx !== i)); };
-  const subTotal = calcFinishing(items);
-  const estimatedLF = calcEstimatedFinishingLF(cabinetry);
+  const subTotal = calcFinishing(items, pricing);
+  const estimatedLF = calcEstimatedFinishingLF(cabinetry, pricing);
   const enteredLF = items.reduce((s, it) => s + (parseFloat(it.lf) || 0), 0);
   const lfDiff = enteredLF - estimatedLF;
 
@@ -356,7 +355,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
           </thead>
           <tbody>
             {items.map((item, i) => {
-              const fin = findByName(PRICING.finishing, item.type);
+              const fin = findByName(pricing.finishing, item.type);
               const lf = parseFloat(item.lf) || 0;
               const adjPct = parseFloat(item.adjPct) || 0;
               const total = fin ? fin.pricePerLF * lf * (1 + adjPct / 100) : 0;
@@ -365,7 +364,7 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
                   <td>
                     <select value={item.type} onChange={e => update(i, "type", e.target.value)}>
                       <option value="">— Select —</option>
-                      {PRICING.finishing.map(f => <option key={f.name}>{f.name}</option>)}
+                      {pricing.finishing.map(f => <option key={f.name}>{f.name}</option>)}
                     </select>
                     {fin && (
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>{fmt(fin.pricePerLF)}/LF</div>
@@ -394,8 +393,8 @@ function FinishingSection({ items, cabinetry = [], onChange }) {
 }
 
 // ── InstallSection ────────────────────────────────────────────────────────────
-function InstallSection({ data, cabTotal, onChange }) {
-  const instTotal = calcInstall(data, cabTotal);
+function InstallSection({ data, cabTotal, onChange, pricing }) {
+  const instTotal = calcInstall(data, cabTotal, pricing);
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -408,10 +407,10 @@ function InstallSection({ data, cabTotal, onChange }) {
           <Field label="Install Type">
             <select value={data.type} onChange={e => onChange({ ...data, type: e.target.value })}>
               <option value="">— Select —</option>
-              {PRICING.installType.map(i => <option key={i.name}>{i.name}</option>)}
+              {pricing.installType.map(i => <option key={i.name}>{i.name}</option>)}
             </select>
             {data.type && data.type !== "No Install" && (() => {
-              const inst = findByName(PRICING.installType, data.type);
+              const inst = findByName(pricing.installType, data.type);
               return inst ? (
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>
                   {data.type === HOURLY_RATE ? `${fmt(inst.rate)}/hr` : `${(inst.rate * 100).toFixed(0)}% of cabinetry`}
@@ -440,7 +439,7 @@ function InstallSection({ data, cabTotal, onChange }) {
               Install Total: {fmt(instTotal)}
             </span>
             {data.type === "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>No installation included</div>}
-            {data.type !== HOURLY_RATE && data.type !== "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {findByName(PRICING.installType, data.type)?.rate * 100}% of cabinetry total</div>}
+            {data.type !== HOURLY_RATE && data.type !== "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {(findByName(pricing.installType, data.type)?.rate || 0) * 100}% of cabinetry total</div>}
           </div>
         )}
       </div>
@@ -449,7 +448,7 @@ function InstallSection({ data, cabTotal, onChange }) {
 }
 
 // ── RoomsPage ─────────────────────────────────────────────────────────────────
-export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRoom, onMoveRoom, onReplicateRoom, onDuplicateRoom, onProjectChange, onNext, onBack }) {
+export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, onRemoveRoom, onMoveRoom, onReplicateRoom, onDuplicateRoom, onProjectChange, onNext, onBack }) {
   const [activeRoom, setActiveRoom] = useState(0);
   const [dupeCount, setDupeCount] = useState(1);
   const [dragOver, setDragOver] = useState(null);
@@ -466,11 +465,11 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
   const sections = isLegacyRoom ? ALL_SECTIONS : room.sections;
   const hasSection = (s) => sections.includes(s);
 
-  const cabTotal = hasSection("cabinetry") ? calcCabinetry(room.cabinetry) : 0;
-  const upgTotal = hasSection("upgrades") ? calcUpgrades(room.upgrades) : 0;
-  const ctpTotal = hasSection("countertops") ? calcCountertops(room.countertops) : 0;
-  const finTotal = hasSection("finishing") ? calcFinishing(room.finishing) : 0;
-  const instTotal = hasSection("install") ? calcInstall(room.install, cabTotal) : 0;
+  const cabTotal = hasSection("cabinetry") ? calcCabinetry(room.cabinetry, pricing) : 0;
+  const upgTotal = hasSection("upgrades") ? calcUpgrades(room.upgrades, pricing) : 0;
+  const ctpTotal = hasSection("countertops") ? calcCountertops(room.countertops, pricing) : 0;
+  const finTotal = hasSection("finishing") ? calcFinishing(room.finishing, pricing) : 0;
+  const instTotal = hasSection("install") ? calcInstall(room.install, cabTotal, pricing) : 0;
   const roomTotal = cabTotal + upgTotal + ctpTotal + finTotal + instTotal;
 
   const toggleSection = (key) => {
@@ -718,11 +717,11 @@ export function RoomsPage({ project, rooms, onRoomsChange, onAddRoom, onRemoveRo
         </div>
       )}
 
-      {hasSection("cabinetry") && <CabinetrySection items={room.cabinetry} masterAdj={project.masterAdj} onChange={v => updateRoom("cabinetry", v)} />}
-      {hasSection("upgrades") && <UpgradesSection items={room.upgrades} masterAdj={project.masterAdj} onChange={v => updateRoom("upgrades", v)} />}
-      {hasSection("countertops") && <CountertopsSection items={room.countertops || []} masterAdj={project.masterAdj} onChange={v => updateRoom("countertops", v)} />}
-      {hasSection("finishing") && <FinishingSection items={room.finishing} cabinetry={room.cabinetry} onChange={v => updateRoom("finishing", v)} />}
-      {hasSection("install") && <InstallSection data={room.install} cabTotal={cabTotal} onChange={v => updateRoom("install", v)} />}
+        {hasSection("cabinetry") && <CabinetrySection items={room.cabinetry} masterAdj={project.masterAdj} pricing={pricing} onChange={v => updateRoom("cabinetry", v)} />}
+        {hasSection("upgrades") && <UpgradesSection items={room.upgrades} masterAdj={project.masterAdj} pricing={pricing} onChange={v => updateRoom("upgrades", v)} />}
+        {hasSection("countertops") && <CountertopsSection items={room.countertops || []} masterAdj={project.masterAdj} pricing={pricing} onChange={v => updateRoom("countertops", v)} />}
+        {hasSection("finishing") && <FinishingSection items={room.finishing} cabinetry={room.cabinetry} pricing={pricing} onChange={v => updateRoom("finishing", v)} />}
+        {hasSection("install") && <InstallSection data={room.install} cabTotal={cabTotal} pricing={pricing} onChange={v => updateRoom("install", v)} />}
 
       {(() => {
         const allComplete = rooms.every(isRoomComplete);

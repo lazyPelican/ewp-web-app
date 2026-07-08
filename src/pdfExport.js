@@ -2,12 +2,12 @@
 // These thin wrappers lazy-load PDFTemplates.jsx (and its heavy @react-pdf
 // dependency) only when the user actually generates a PDF.  This keeps the
 // initial bundle small and dramatically improves LCP / TBT.
-import { PRICING, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "./appUtils.js"
+import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from "./appUtils.js"
 
-const opts = (preparedBy, withPricing) => ({
+const opts = (preparedBy, pricing, withPricing) => ({
   calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall,
   preparedBy,
-  ...(withPricing ? { pricing: PRICING } : {}),
+  pricing,
 });
 
 let _pdfMod = null;
@@ -16,42 +16,42 @@ const getPDF = () => {
   return _pdfMod;
 };
 
-export async function exportPDFInternal(project, rooms, preparedBy, onStatus) {
+export async function exportPDFInternal(project, rooms, preparedBy, pricing, onStatus) {
   const mod = await getPDF();
-  mod.exportPDFInternal(project, rooms, opts(preparedBy, true), onStatus);
+  mod.exportPDFInternal(project, rooms, opts(preparedBy, pricing, true), onStatus);
 }
 
-export async function exportPDFCustomer(project, rooms, preparedBy, onStatus) {
+export async function exportPDFCustomer(project, rooms, preparedBy, pricing, onStatus) {
   const mod = await getPDF();
-  mod.exportPDFCustomer(project, rooms, opts(preparedBy, false), onStatus);
+  mod.exportPDFCustomer(project, rooms, opts(preparedBy, pricing, false), onStatus);
 }
 
-export async function buildCustomerPDFBlob(project, rooms, preparedBy) {
+export async function buildCustomerPDFBlob(project, rooms, preparedBy, pricing) {
   const mod = await getPDF();
-  return mod.buildCustomerPDFBlob(project, rooms, opts(preparedBy, false));
+  return mod.buildCustomerPDFBlob(project, rooms, opts(preparedBy, pricing, false));
 }
 
-export async function exportPDFSummary(project, rooms, preparedBy, onStatus) {
+export async function exportPDFSummary(project, rooms, preparedBy, pricing, onStatus) {
   const mod = await getPDF();
-  mod.exportPDFSummary(project, rooms, opts(preparedBy, false), onStatus);
+  mod.exportPDFSummary(project, rooms, opts(preparedBy, pricing, false), onStatus);
 }
 
-export async function buildSummaryPDFBlob(project, rooms, preparedBy) {
+export async function buildSummaryPDFBlob(project, rooms, preparedBy, pricing) {
   const mod = await getPDF();
-  return mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, false));
+  return mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, pricing, false));
 }
 
-export async function buildInternalPDFBlob(project, rooms, preparedBy) {
+export async function buildInternalPDFBlob(project, rooms, preparedBy, pricing) {
   const mod = await getPDF();
-  return mod.buildInternalPDFBlob(project, rooms, opts(preparedBy, true));
+  return mod.buildInternalPDFBlob(project, rooms, opts(preparedBy, pricing, true));
 }
 
 // Preview helpers — generate blob and open in new browser tab
-export async function previewPDFInternal(project, rooms, preparedBy, onStatus) {
+export async function previewPDFInternal(project, rooms, preparedBy, pricing, onStatus) {
   onStatus('generating');
   try {
     const mod = await getPDF();
-    const blob = await mod.buildInternalPDFBlob(project, rooms, opts(preparedBy, true));
+    const blob = await mod.buildInternalPDFBlob(project, rooms, opts(preparedBy, pricing, true));
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 120000);
@@ -62,11 +62,11 @@ export async function previewPDFInternal(project, rooms, preparedBy, onStatus) {
   }
 }
 
-export async function previewPDFCustomer(project, rooms, preparedBy, onStatus) {
+export async function previewPDFCustomer(project, rooms, preparedBy, pricing, onStatus) {
   onStatus('generating');
   try {
     const mod = await getPDF();
-    const blob = await mod.buildCustomerPDFBlob(project, rooms, opts(preparedBy, false));
+    const blob = await mod.buildCustomerPDFBlob(project, rooms, opts(preparedBy, pricing, false));
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 120000);
@@ -77,11 +77,11 @@ export async function previewPDFCustomer(project, rooms, preparedBy, onStatus) {
   }
 }
 
-export async function previewPDFSummary(project, rooms, preparedBy, onStatus) {
+export async function previewPDFSummary(project, rooms, preparedBy, pricing, onStatus) {
   onStatus('generating');
   try {
     const mod = await getPDF();
-    const blob = await mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, false));
+    const blob = await mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, pricing, false));
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 120000);

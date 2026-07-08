@@ -14,6 +14,10 @@ const buildDate = (() => {
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'node',
+    globals: true,
+  },
   define: {
     __BUILD_DATE__: JSON.stringify(buildDate),
   },

@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "precommit": "npm test -- --run && npm run build"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.3",
@@ -16,9 +19,14 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.2.0",
     "docx": "^9.7.1",
+    "jsdom": "^29.1.1",
     "pptxgenjs": "^4.0.1",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "vitest": "^4.1.10"
   }
 }

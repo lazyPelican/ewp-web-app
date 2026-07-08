@@ -28,6 +28,9 @@ jobs:
         run: npm audit --audit-level=high
         # Fails the build only on high/critical vulnerabilities
 
+      - name: Tests
+        run: npm test -- --run
+
       - name: Build
         run: npm run build
         env:
