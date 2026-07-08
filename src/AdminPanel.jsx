@@ -9,7 +9,7 @@ import { ACTIVE_STAGES, fmtDate, fmtId, getActiveStage, isActiveStatus, isClosed
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
 
-// â”€â”€ SheetJS loader (CDN, loaded once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SheetJS loader (CDN, loaded once)
 let _XLSX = null
 const loadXLSX = () => new Promise((resolve, reject) => {
   if (_XLSX) return resolve(_XLSX)
@@ -21,8 +21,8 @@ const loadXLSX = () => new Promise((resolve, reject) => {
   document.head.appendChild(s)
 })
 
-// â”€â”€ Download helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Convert a cell value for export â€” percent columns stored as decimals become display %
+// Download helpers
+// Convert a cell value for export; percent columns stored as decimals become display %
 const exportVal = (v, col) => {
   if (col.type === "percent" && v !== "" && v != null) return Math.round(v * 10000) / 100
   return v ?? ""
@@ -61,7 +61,7 @@ const downloadXLSX = async (rows, columns, filename) => {
   XLSX.writeFile(wb, filename + ".xlsx")
 }
 
-// â”€â”€ Upload / parse helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Upload / parse helpers
 const parseUploadedFile = async (file, expectedColumns) => {
   const XLSX = await loadXLSX()
   const buf = await file.arrayBuffer()
@@ -71,7 +71,7 @@ const parseUploadedFile = async (file, expectedColumns) => {
 
   if (rows.length === 0) throw new Error("File is empty or has no data rows.")
 
-  // Map header labels â†’ keys
+  // Map header labels to keys
   const labelToKey = {}
   expectedColumns.forEach(c => { labelToKey[c.label.toLowerCase()] = c })
 
@@ -99,7 +99,7 @@ const parseUploadedFile = async (file, expectedColumns) => {
   }).filter(row => row[expectedColumns[0].key] !== "" && row[expectedColumns[0].key] !== 0)
 }
 
-// â”€â”€ TABLE CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Table config
 const TABLE_CONFIG = [
   {
     key: "woodwork",
@@ -340,11 +340,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
         for (const col of tc.columns) {
           const val = rows[i][col.key]
           if (val === "" || val === null || val === undefined) {
-            showToast(`âš  "${tc.label}" row ${i + 1}: "${col.label}" cannot be blank`)
+            showToast(`Warning: "${tc.label}" row ${i + 1}: "${col.label}" cannot be blank`)
             return
           }
           if ((col.type === "number" || col.type === "percent") && (isNaN(Number(val)))) {
-            showToast(`âš  "${tc.label}" row ${i + 1}: "${col.label}" must be a number`)
+            showToast(`Warning: "${tc.label}" row ${i + 1}: "${col.label}" must be a number`)
             return
           }
         }
@@ -359,7 +359,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
       for (let i = 0; i < rows.length; i++) {
         const val = String(rows[i][firstCol] ?? "").toLowerCase().trim()
         if (seen.has(val)) {
-          showToast(`âš  "${tc.label}": duplicate entry "${rows[i][firstCol]}"`)
+          showToast(`Warning: "${tc.label}": duplicate entry "${rows[i][firstCol]}"`)
           return
         }
         seen.add(val)
@@ -484,7 +484,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
       const parsed = await parseUploadedFile(file, cfg.columns)
       setPricing(prev => ({ ...prev, [activeTable]: parsed }))
       setDirty(true)
-      showToast(`âœ“ Imported ${parsed.length} rows â€” click Save to apply`)
+      showToast(`Imported ${parsed.length} rows - click Save to apply`)
     } catch (err) {
       showToast("Upload error: " + err.message)
     }
@@ -514,8 +514,8 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
   }
 
   const sortArrow = (colKey) => {
-    if (sortTable !== activeTable || sortCol?.key !== colKey) return " â†•"
-    return sortCol.dir === "asc" ? " â†‘" : " â†“"
+    if (sortTable !== activeTable || sortCol?.key !== colKey) return " up/down"
+    return sortCol.dir === "asc" ? " up" : " down"
   }
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3500) }
@@ -535,9 +535,9 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
       const { error } = await supabase.from("user_approvals")
         .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
         .eq("user_id", userId)
-      if (error) { logError("approveUser", error); showToast("Error approving user â€” try again") }
-      else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "approved" } : u)); showToast(`âœ“ Approved ${email}`) }
-    } catch (err) { logError("approveUser", err); showToast("Unexpected error â€” check connection") }
+      if (error) { logError("approveUser", error); showToast("Error approving user - try again") }
+      else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "approved" } : u)); showToast(`Approved ${email}`) }
+    } catch (err) { logError("approveUser", err); showToast("Unexpected error - check connection") }
     setActionLoading(null)
   }
 
@@ -547,9 +547,9 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
       const { error } = await supabase.from("user_approvals")
         .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: currentUser.email })
         .eq("user_id", userId)
-      if (error) { logError("rejectUser", error); showToast("Error rejecting user â€” try again") }
+      if (error) { logError("rejectUser", error); showToast("Error rejecting user - try again") }
       else { setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: "rejected" } : u)); showToast(`Rejected ${email}`) }
-    } catch (err) { logError("rejectUser", err); showToast("Unexpected error â€” check connection") }
+    } catch (err) { logError("rejectUser", err); showToast("Unexpected error - check connection") }
     setActionLoading(null)
   }
 
@@ -559,9 +559,9 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
     setActionLoading(userId)
     try {
       const { error } = await supabase.from("user_approvals").delete().eq("user_id", userId)
-      if (error) { logError("deleteUser", error); showToast("Error removing user â€” try again") }
-      else { setUsers(prev => prev.filter(u => u.user_id !== userId)); showToast(`âœ“ ${email} removed`) }
-    } catch (err) { logError("deleteUser", err); showToast("Unexpected error â€” check connection") }
+      if (error) { logError("deleteUser", error); showToast("Error removing user - try again") }
+      else { setUsers(prev => prev.filter(u => u.user_id !== userId)); showToast(`${email} removed`) }
+    } catch (err) { logError("deleteUser", err); showToast("Unexpected error - check connection") }
     setActionLoading(null)
   }
 
@@ -571,9 +571,9 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin,
       })
-      if (error) { logError("passwordReset", error); showToast("Error sending reset email â€” try again") }
-      else { setResetSent(true); showToast(`âœ“ Password reset email sent to ${email}`) }
-    } catch (err) { logError("passwordReset", err); showToast("Unexpected error â€” check connection") }
+      if (error) { logError("passwordReset", error); showToast("Error sending reset email - try again") }
+      else { setResetSent(true); showToast(`Password reset email sent to ${email}`) }
+    } catch (err) { logError("passwordReset", err); showToast("Unexpected error - check connection") }
   }
 
   // Pre-approved emails
@@ -598,13 +598,13 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
         added_by: currentUser.email,
         added_at: new Date().toISOString(),
       })
-      if (error) { logError("addPreApproved", error); showToast("Error adding email â€” try again") }
+      if (error) { logError("addPreApproved", error); showToast("Error adding email - try again") }
       else {
         setPreApproved(prev => [{ email, added_by: currentUser.email, added_at: new Date().toISOString() }, ...prev])
         setNewPreEmail("")
-        showToast(`âœ“ ${email} pre-approved`)
+        showToast(`${email} pre-approved`)
       }
-    } catch (err) { logError("addPreApproved", err); showToast("Unexpected error â€” check connection") }
+    } catch (err) { logError("addPreApproved", err); showToast("Unexpected error - check connection") }
     setAddingPreEmail(false)
   }
 
@@ -612,12 +612,12 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
     if (!window.confirm(`Remove ${email} from pre-approved list?`)) return
     try {
       const { error } = await supabase.from("pre_approved_emails").delete().eq("email", email)
-      if (error) { logError("removePreApproved", error); showToast("Error removing email â€” try again") }
+      if (error) { logError("removePreApproved", error); showToast("Error removing email - try again") }
       else { setPreApproved(prev => prev.filter(p => p.email !== email)); showToast(`Removed ${email}`) }
-    } catch (err) { logError("removePreApproved", err); showToast("Unexpected error â€” check connection") }
+    } catch (err) { logError("removePreApproved", err); showToast("Unexpected error - check connection") }
   }
 
-  // â”€â”€ Theme tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Theme tokens
   const t = dark ? {
     bg: "#141414", card: "#1C1C1C", cardAlt: "#111111", border: "#2A2A2A",
     text: "#E8E2D9", textMid: "#9A9A9A", textMuted: "#666666",
@@ -671,18 +671,18 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
   }
   const renderQuoteSortArrows = (key) => (
     <span style={{ display: "inline-flex", flexDirection: "column", gap: 0, marginLeft: 5, fontSize: 8, lineHeight: 0.8, verticalAlign: "middle" }}>
-      <span style={{ opacity: quoteSort.key === key && quoteSort.dir === "asc" ? 1 : 0.42 }}>â–²</span>
-      <span style={{ opacity: quoteSort.key === key && quoteSort.dir === "desc" ? 1 : 0.42 }}>â–¼</span>
+      <span style={{ opacity: quoteSort.key === key && quoteSort.dir === "asc" ? 1 : 0.42 }}>^</span>
+      <span style={{ opacity: quoteSort.key === key && quoteSort.dir === "desc" ? 1 : 0.42 }}>v</span>
     </span>
   )
 
   if (!isAdmin) {
     return (
       <div style={{ padding: 40, textAlign: "center", background: t.bg, minHeight: "100vh", fontFamily: font }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>ðŸš«</div>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>Access blocked</div>
         <div style={{ fontSize: 16, fontWeight: 600, color: t.text, marginBottom: 8 }}>Access Denied</div>
         <div style={{ fontSize: 14, color: t.textMid }}>You don't have admin privileges.</div>
-        <button className="btn btn-outline" onClick={onBack} style={{ marginTop: 24 }}>â† Back</button>
+        <button className="btn btn-outline" onClick={onBack} style={{ marginTop: 24 }}>Back</button>
       </div>
     )
   }
@@ -696,7 +696,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
       <style>{`body { margin: 0; padding: 0; background: ${t.bg}; }`}</style>
 
       <style>{`
-        /* â”€â”€ CSS variables (duplicated from App â€” AdminPanel replaces App in the tree) â”€â”€ */
+        /* CSS variables duplicated from App; AdminPanel replaces App in the tree */
         :root {
           --font-body: 'Inter', sans-serif;
           --font-display: 'Inter', sans-serif;
@@ -710,7 +710,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           --muted: #6E7480;
         }
 
-        /* â”€â”€ Topbar (matches main App.jsx exactly) â”€â”€ */
+        /* Topbar matching main App.jsx */
         .topbar-sticky-wrap { background: #1F242E; position: sticky; top: 0; z-index: 100; transition: background 0.4s ease; }
         .topbar-sticky-wrap.dark { background: #12141A; }
         .topbar-sticky-wrap.scrolled { background: rgba(235,233,226,0.75) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
@@ -767,7 +767,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           margin: 0 10px; vertical-align: middle; opacity: 0.5;
         }
 
-        /* â”€â”€ Ribbon â”€â”€ */
+        /* Ribbon */
         .topbar-ribbon {
           background: transparent; padding: 0 56px;
         }
@@ -806,7 +806,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           background: rgba(216,212,201,0.08); border-color: rgba(216,212,201,0.12); color: #D8D4C9;
         }
 
-        /* â”€â”€ Shared button styles â”€â”€ */
+        /* Shared button styles */
         .btn {
           font-family: var(--font-body);
           font-size: 12px; font-weight: 700;
@@ -833,7 +833,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
         .dark .btn-outline { color: #F4F1EA; border-color: #5A6070; background: rgba(255,255,255,0.03); }
         .dark .btn-outline:hover { color: #FFFFFF; border-color: #D5D0C8; background: #262A33; }
 
-        /* â”€â”€ Header slide-down (matches main app) â”€â”€ */
+        /* Header slide-down matching main app */
         @keyframes headerSlideDown {
           from { opacity: 0; transform: translateY(-100%); }
           to   { opacity: 1; transform: translateY(0); }
@@ -842,7 +842,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           animation: headerSlideDown 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        /* â”€â”€ Admin animations â”€â”€ */
+        /* Admin animations */
         @keyframes adminFadeUp {
           from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -891,7 +891,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
         }
       `}</style>
 
-      {/* Topbar + Ribbon sticky wrapper â€” same structure as main page */}
+      {/* Topbar + Ribbon sticky wrapper; same structure as main page */}
       <div className={`topbar-sticky-wrap${scrolled ? " scrolled" : ""}${dark ? " dark" : ""}`}>
         <div className={`topbar${scrolled ? " scrolled" : ""}${dark ? " dark" : ""}`}>
           <div className="topbar-logo" style={{ cursor: "pointer" }} onClick={() => confirmIfDirty(onBack)}>
@@ -932,7 +932,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
 
       <div className="admin-main-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px" }}>
 
-        {/* â”€â”€ USERS TAB â”€â”€ */}
+        {/* Users tab */}
         {tab === "users" && (
           <div>
             <div style={{ marginBottom: 28 }}>
@@ -941,7 +941,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
               <div style={{ height: 2, background: t.gold, width: 48, marginTop: 12 }} />
             </div>
 
-            {/* â”€â”€ Pre-Approved Emails â”€â”€ */}
+            {/* Pre-approved emails */}
             <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 10, padding: "20px 24px", marginBottom: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.gold, marginBottom: 4 }}>
                 Pre-Approved Emails
@@ -964,11 +964,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                 />
                 <button className="btn btn-gold" onClick={addPreApproved} disabled={addingPreEmail || !newPreEmail.trim()}
                   style={{ opacity: addingPreEmail ? 0.6 : 1, whiteSpace: "nowrap" }}>
-                  {addingPreEmail ? "Addingâ€¦" : "+ Add Email"}
+                  {addingPreEmail ? "Adding..." : "+ Add Email"}
                 </button>
               </div>
               {preApprovedLoading ? (
-                <div style={{ fontSize: 13, color: t.textMuted }}>Loadingâ€¦</div>
+                <div style={{ fontSize: 13, color: t.textMuted }}>Loading...</div>
               ) : preApproved.length === 0 ? (
                 <div style={{ fontSize: 13, color: t.textMuted, fontStyle: "italic" }}>No pre-approved emails yet.</div>
               ) : (
@@ -978,7 +978,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                       <div>
                         <span style={{ fontSize: 13, fontWeight: 500, color: t.text }}>{p.email}</span>
                         <span style={{ fontSize: 11, color: t.textMuted, marginLeft: 10 }}>
-                          Added by {p.added_by} Â· {p.added_at ? new Date(p.added_at).toLocaleDateString() : ""}
+                          Added by {p.added_by} - {p.added_at ? new Date(p.added_at).toLocaleDateString() : ""}
                         </span>
                       </div>
                       <button onClick={() => removePreApproved(p.email)}
@@ -991,13 +991,13 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
               )}
             </div>
 
-            {/* â”€â”€ Pending Approvals â”€â”€ */}
+            {/* Pending approvals */}
             <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.gold, marginBottom: 12 }}>
                 Pending Approval ({pending.length})
               </div>
               {usersLoading ? (
-                <div style={{ color: t.textMuted, fontSize: 14 }}>Loadingâ€¦</div>
+                <div style={{ color: t.textMuted, fontSize: 14 }}>Loading...</div>
               ) : pending.length === 0 ? (
                 <div style={{ background: t.cardAlt, border: `1px solid ${t.border}`, borderRadius: 8, padding: 24, textAlign: "center", color: t.textMuted, fontSize: 14 }}>
                   No pending approvals
@@ -1026,14 +1026,14 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                     </button>
                     <button className="btn btn-ghost" onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
                       style={{ padding: "7px 12px", opacity: actionLoading === u.user_id ? 0.6 : 1 }} title="Delete user">
-                      ðŸ—‘
+                      Delete
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* â”€â”€ Reviewed Users â”€â”€ */}
+            {/* Reviewed users */}
             {reviewed.length > 0 && (
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: t.textMuted, marginBottom: 12 }}>
@@ -1051,7 +1051,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                         )}
                         <div style={{ fontWeight: 500, fontSize: 14, color: t.text }}>{u.email}</div>
                         <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
-                          Reviewed by {u.reviewed_by || "admin"} Â· {u.reviewed_at ? new Date(u.reviewed_at).toLocaleDateString() : "â€”"}
+                          Reviewed by {u.reviewed_by || "admin"} - {u.reviewed_at ? new Date(u.reviewed_at).toLocaleDateString() : "-"}
                         </div>
                       </div>
                       <div className="admin-user-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1064,11 +1064,11 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                         )}
                         <button className="btn btn-outline" onClick={() => { setResetModal({ email: u.email }); setResetSent(false) }}
                           style={{ padding: "5px 12px", fontSize: 11 }}>
-                          ðŸ”‘ Reset PW
+                          Reset PW
                         </button>
                         <button className="btn btn-outline" onClick={() => deleteUser(u.user_id, u.email)} disabled={actionLoading === u.user_id}
                           style={{ padding: "5px 10px", fontSize: 11, color: t.pendingRejectText, borderColor: t.pendingReject }}>
-                          ðŸ—‘ Delete
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -1079,12 +1079,12 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           </div>
         )}
 
-        {/* â”€â”€ ROOT ACCESS BLOCK MODAL â”€â”€ */}
+        {/* Root access block modal */}
         {rootBlockModal && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
             onClick={e => { if (e.target === e.currentTarget) setRootBlockModal(false) }}>
             <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 12, padding: 32, width: 420, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.35)", textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>ðŸ”’</div>
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Root admin protected</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: t.text, fontFamily: serif, marginBottom: 8 }}>Root Access Required</div>
               <div style={{ fontSize: 13, color: t.textMuted, lineHeight: 1.6, marginBottom: 24 }}>
                 This account has root-level privileges and cannot be deleted from the Admin Panel.<br /><br />
@@ -1097,7 +1097,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           </div>
         )}
 
-        {/* â”€â”€ RESET PASSWORD MODAL â”€â”€ */}
+        {/* Reset password modal */}
         {resetModal && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
             onClick={e => { if (e.target === e.currentTarget) setResetModal(null) }}>
@@ -1111,7 +1111,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
               </div>
               {resetSent && (
                 <div style={{ background: "#e8f5e9", border: "1px solid #a5d6a7", borderRadius: 6, padding: "10px 14px", fontSize: 13, color: "#2e7d32", marginBottom: 16, fontWeight: 500 }}>
-                  âœ… Reset email sent! They will receive a link to set a new password.
+                  Reset email sent. They will receive a link to set a new password.
                 </div>
               )}
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -1120,7 +1120,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                 </button>
                 <button className="btn btn-gold" onClick={() => sendPasswordReset(resetModal.email)} disabled={resetSent}
                   style={{ opacity: resetSent ? 0.8 : 1, cursor: resetSent ? "default" : "pointer" }}>
-                  {resetSent ? "âœ“ Sent" : "Send Reset Link"}
+                  {resetSent ? "Sent" : "Send Reset Link"}
                 </button>
               </div>
             </div>
@@ -1263,7 +1263,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           </div>
         )}
 
-        {/* â”€â”€ PRICING TAB â”€â”€ */}
+        {/* Pricing tab */}
         {tab === "pricing" && (
           <div className="admin-pricing-layout" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
 
@@ -1284,7 +1284,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                   }}>
                     {tc.label}
                     <span style={{ float: "right", fontSize: 11, color: t.textMuted, fontWeight: 400 }}>
-                      {pricing ? pricing[tc.key]?.length : "â€¦"}
+                      {pricing ? pricing[tc.key]?.length : "..."}
                     </span>
                   </button>
                 ))}
@@ -1296,14 +1296,14 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                 background: "transparent", color: dark ? "#E05C50" : "#991B1B",
                 fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font, marginTop: 8,
               }}>
-                â†º Reset All to Defaults
+                Reset All to Defaults
               </button>
             </div>
 
             {/* Table area */}
             <div style={{ flex: 1, minWidth: 0 }}>
               {pricing === null ? (
-                <div style={{ color: t.textMuted, fontSize: 14, padding: 20 }}>Loading pricesâ€¦</div>
+                <div style={{ color: t.textMuted, fontSize: 14, padding: 20 }}>Loading prices...</div>
               ) : (
                 <div key={activeTable} className="admin-pricing-table-shell">
                   <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -1321,7 +1321,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                           background: t.card, color: t.textMid, fontSize: 12, fontWeight: 600,
                           cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5,
                         }}>
-                        â†“ CSV
+                        CSV
                       </button>
                       {/* Download XLSX */}
                       <button
@@ -1332,7 +1332,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                           background: t.card, color: t.textMid, fontSize: 12, fontWeight: 600,
                           cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5,
                         }}>
-                        â†“ Excel
+                        Excel
                       </button>
                       {/* Upload */}
                       <input
@@ -1352,7 +1352,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                           fontFamily: font, display: "flex", alignItems: "center", gap: 5,
                           opacity: uploading ? 0.6 : 1,
                         }}>
-                        {uploading ? "Importingâ€¦" : "â†‘ Import"}
+                        {uploading ? "Importing..." : "Import"}
                       </button>
                     </div>
                   </div>
@@ -1422,7 +1422,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                               style={{ background: "none", border: "none", cursor: "pointer", color: dark ? "#5A2A28" : "#DDA8A4", fontSize: 16, lineHeight: 1, padding: "2px 4px", borderRadius: 4, transition: "color 0.15s" }}
                               onMouseEnter={e => e.currentTarget.style.color = dark ? "#E05C50" : "#C0392B"}
                               onMouseLeave={e => e.currentTarget.style.color = dark ? "#5A2A28" : "#DDA8A4"}>
-                              âœ•
+                              Delete
                             </button>
                           </div>
                         </div>
@@ -1438,7 +1438,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                       {dirty && (
                         <button className="btn btn-gold" onClick={savePricing} disabled={saving}
                           style={{ padding: "6px 18px", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
-                          {saving ? "Savingâ€¦" : "Save Changes"}
+                          {saving ? "Saving..." : "Save Changes"}
                         </button>
                       )}
                     </div>
@@ -1454,13 +1454,13 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           </div>
         )}
 
-        {/* â”€â”€ CONTRACTORS TAB â”€â”€ */}
+        {/* Contractors tab */}
         {tab === "contractors" && (
           <ContractorsTab />
         )}
 
 
-        {/* â”€â”€ TIME TRACKER TAB â”€â”€ */}
+        {/* Time tracker tab */}
         {tab === "timetracker" && (
           <TimeTrackerTab session={session} t={t} font={font} serif={serif} showToast={showToast} />
         )}
@@ -1481,7 +1481,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
   )
 }
 
-// â”€â”€ CONTRACTORS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Contractors tab
 function ContractorsTab() {
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1564,7 +1564,7 @@ function ContractorsTab() {
             style={inputStyle} />
           <button className="btn btn-gold" onClick={addContractor} disabled={!newRow.name.trim() || adding}
             style={{ whiteSpace: "nowrap" }}>
-            {adding ? "Addingâ€¦" : "+ Add"}
+            {adding ? "Adding..." : "+ Add"}
           </button>
         </div>
       </div>
@@ -1575,9 +1575,9 @@ function ContractorsTab() {
           <span>Name</span><span>Phone</span><span>Email</span><span></span>
         </div>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "30px", color: "var(--muted)", fontSize: 13 }}>Loadingâ€¦</div>
+          <div style={{ textAlign: "center", padding: "30px", color: "var(--muted)", fontSize: 13 }}>Loading...</div>
         ) : list.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "30px", color: "var(--muted)", fontSize: 13 }}>No contractors yet â€” add one above.</div>
+          <div style={{ textAlign: "center", padding: "30px", color: "var(--muted)", fontSize: 13 }}>No contractors yet - add one above.</div>
         ) : list.map(c => (
           <div key={c.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1.5fr auto", gap: 10, padding: "10px 16px", borderBottom: "1px solid var(--ivory3)", alignItems: "center" }}>
             <input defaultValue={c.name}
@@ -1591,7 +1591,7 @@ function ContractorsTab() {
               style={inputStyle} />
             <button onClick={() => removeContractor(c.id)} title="Delete"
               style={{ background: "transparent", border: "1px solid rgba(184,59,46,0.3)", color: "#B83B2E", padding: "5px 10px", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
-              {savingId === c.id ? "â€¦" : "ðŸ—‘"}
+              {savingId === c.id ? "..." : "Delete"}
             </button>
           </div>
         ))}
