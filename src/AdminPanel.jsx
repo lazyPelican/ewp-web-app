@@ -908,7 +908,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           <div className="topbar-ribbon-inner">
             <div className="topbar-ribbon-left">
               <button className="topbar-btn" onClick={() => confirmIfDirty(onBack)}>
-                â† Back
+                Back
               </button>
             </div>
             <div className="topbar-ribbon-right">
@@ -918,7 +918,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
                 </button>
               ))}
               <button className={`topbar-btn${tab === "timetracker" ? " topbar-btn--active" : ""}`} onClick={() => confirmIfDirty(() => setTab("timetracker"))}>
-                â± Time Tracker
+                Time Tracker
               </button>
             </div>
           </div>
