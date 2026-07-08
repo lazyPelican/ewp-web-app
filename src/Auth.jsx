@@ -114,7 +114,7 @@ export default function Auth({ onGuestLogin }) {
           transition: "all 0.15s",
         }}
       >
-        {dark ? "☀ Light" : "☾ Dark"}
+          {dark ? "Light" : "Dark"}
       </button>
 
       <div style={{
@@ -335,7 +335,7 @@ export default function Auth({ onGuestLogin }) {
             transition: "opacity 0.15s",
           }}
         >
-          {loading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+            {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
         </button>
 
         {/* Forgot password */}
@@ -348,7 +348,7 @@ export default function Auth({ onGuestLogin }) {
                 redirectTo: window.location.origin + "?reset=1",
               })
               if (error) setError(error.message)
-              else setSuccess("Password reset email sent — check your inbox.")
+                else setSuccess("Password reset email sent - check your inbox.")
               setLoading(false)
             }}
             style={{

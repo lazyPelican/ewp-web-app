@@ -266,8 +266,8 @@ export function FinalDetailsPage({ project, rooms, pricing, onChange, onNext, on
       </div>
 
       <div className="flex justify-between items-center mt-24">
-        <button className="btn btn-outline" onClick={onBack}>← Back to Rooms</button>
-        <button className="btn btn-gold btn-lg" onClick={onNext}>Review Summary →</button>
+        <button className="btn btn-outline" onClick={onBack}>Back to Rooms</button>
+        <button className="btn btn-gold btn-lg" onClick={onNext}>Review Summary</button>
       </div>
     </div>
   );

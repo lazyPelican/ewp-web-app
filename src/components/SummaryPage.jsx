@@ -269,9 +269,9 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, p
       )}
 
       <div className="flex justify-between items-center mt-24">
-        <button className="btn btn-outline" onClick={onBack}>← Back to Final Details</button>
+        <button className="btn btn-outline" onClick={onBack}>Back to Final Details</button>
         <button className="btn btn-gold btn-lg" onClick={handleSaveAndNext} disabled={saving}>
-          {saving ? "⳿ Saving…" : "Save & Continue →"}
+          {saving ? "Saving..." : "Save and Continue"}
         </button>
       </div>
     </div>

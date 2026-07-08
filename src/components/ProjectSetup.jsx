@@ -149,7 +149,7 @@ export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
 
       <div className="flex justify-between items-center mt-24">
         <button className="btn btn-gold btn-lg" onClick={handleNext}>
-          Continue to Rooms →
+          Continue to Rooms
         </button>
       </div>
     </div>

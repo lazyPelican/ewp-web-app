@@ -120,7 +120,7 @@ function CabinetrySection({ items, masterAdj, onChange, pricing }) {
                     {item.product && qty !== 0 ? fmt(lineTotal) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
-                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)} title="Remove row">✕</button></td>
+                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)} title="Remove row">Remove</button></td>
                 </tr>
               );
             })}
@@ -195,7 +195,7 @@ function UpgradesSection({ items, masterAdj, onChange, pricing }) {
                     {item.upgrade && qty !== 0 ? fmt(total) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
-                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)}>✕</button></td>
+                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)}>Remove</button></td>
                 </tr>
               );
             })}
@@ -268,7 +268,7 @@ function CountertopsSection({ items, masterAdj, onChange, pricing }) {
                     {item.product && qty !== 0 ? fmt(total) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
-                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)}>✕</button></td>
+                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)}>Remove</button></td>
                 </tr>
               );
             })}
@@ -376,7 +376,7 @@ function FinishingSection({ items, cabinetry = [], onChange, pricing }) {
                     {item.type && lf !== 0 ? fmt(total) : "–"}
                   </td>
                   <td><input value={item.notes} onChange={e => update(i, "notes", e.target.value)} placeholder="Notes…" /></td>
-                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)}>✕</button></td>
+                  <td><button className="btn btn-ghost btn-sm" style={{ color: items.length > 1 ? "var(--red)" : "var(--rule)", cursor: items.length > 1 ? "pointer" : "default" }} onClick={() => removeRow(i)}>Remove</button></td>
                 </tr>
               );
             })}
@@ -573,7 +573,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
                     fontSize: 13, lineHeight: 1, padding: "0 2px", marginLeft: 2,
                     display: "flex", alignItems: "center",
                   }}>
-                  ✕
+                  Remove
                 </button>
               )}
             </div>
@@ -616,7 +616,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
                   }
                 }}
                 title={dupeCount > 1 ? `Create ${dupeCount} copies of this room` : "Duplicate this room"}>
-                ⧉ {dupeCount > 1 ? `Duplicate ×${dupeCount}` : "Duplicate Room"}
+                {dupeCount > 1 ? `Duplicate x${dupeCount}` : "Duplicate Room"}
               </button>
             </div>
           )}
@@ -728,7 +728,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
         const incomplete = rooms.filter(r => !isRoomComplete(r));
         return (
           <div className="flex justify-between items-center mt-24">
-            <button className="btn btn-outline" onClick={onBack}>← Back</button>
+            <button className="btn btn-outline" onClick={onBack}>Back</button>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
               {!allComplete && (
                 <span style={{ fontSize: 11, color: "var(--muted)" }}>
@@ -739,7 +739,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
                 className={`btn btn-lg ${allComplete ? "btn-gold" : "btn-outline"}`}
                 style={!allComplete ? { opacity: 0.45, cursor: "not-allowed", pointerEvents: "none" } : {}}
                 onClick={allComplete ? onNext : undefined}>
-                Review &amp; Summary →
+                Review &amp; Summary
               </button>
             </div>
           </div>

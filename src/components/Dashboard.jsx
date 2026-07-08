@@ -120,7 +120,7 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
             if (window.confirm("Marking this quote as Under Contract will finalize it.\n\nUnder Contract quotes become read-only (view & print only).\n\nProceed?")) {
               onConfirm(realIdx);
             }
-          }}>✓ Mark as Under Contract</button>
+          }}>Mark as Under Contract</button>
         )}
 
         {/* Close button for active jobs */}
@@ -133,10 +133,10 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
         )}
 
         <div className="pcard-meta">
-          {p.project.contactName && <span className="pcard-pill">👤 {p.project.contactName}</span>}
-          <span className="pcard-pill">🏠 {p.rooms.length} {p.rooms.length === 1 ? "room" : "rooms"}</span>
-          <span className="pcard-pill">📅 {fmtDate(p.project.bidDate)}</span>
-          {p._updatedAt && <span className="pcard-pill">✏️ {fmtDate(p._updatedAt.slice(0, 10))}</span>}
+          {p.project.contactName && <span className="pcard-pill">{p.project.contactName}</span>}
+          <span className="pcard-pill">{p.rooms.length} {p.rooms.length === 1 ? "room" : "rooms"}</span>
+          <span className="pcard-pill">{fmtDate(p.project.bidDate)}</span>
+          {p._updatedAt && <span className="pcard-pill">Updated {fmtDate(p._updatedAt.slice(0, 10))}</span>}
         </div>
 
         <div className="pcard-actions" onClick={e => e.stopPropagation()}>
@@ -146,7 +146,7 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
             aria-disabled={!complete && !isActive && !isClosed}
             title={complete || isActive || isClosed ? "Internal PDF" : "Complete all rooms first"}
             onClick={() => (complete || isActive || isClosed) && onGenerateQuote(realIdx)}>
-            📄 Internal
+            Internal
           </button>
           <button
             className={`pcard-act-btn ${complete || isActive || isClosed ? "pcard-act--gold" : ""}`}
@@ -154,20 +154,20 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
             aria-disabled={!complete && !isActive && !isClosed}
             title={complete || isActive || isClosed ? "Client PDF" : "Complete all rooms first"}
             onClick={() => (complete || isActive || isClosed) && onGenerateQuoteCustomer(realIdx)}>
-            📋 Client
+            Client
           </button>
           {section !== "active" && section !== "closed" && (
             <button className="pcard-act-btn" disabled={actionBusy}
               aria-disabled={actionBusy}
               onClick={() => !actionBusy && onDuplicate(realIdx)} title="Duplicate">
-              ⧉ Copy
+              Copy
             </button>
           )}
           {(section !== "active" && section !== "closed") || isAdmin ? (
             <button className="pcard-act-btn pcard-act--danger" disabled={actionBusy}
               aria-disabled={actionBusy}
               onClick={() => !actionBusy && onDelete(realIdx)} title="Delete">
-              🗑
+              Delete
             </button>
           ) : null}
         </div>
@@ -175,10 +175,10 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
     );
   };
 
-  // ── Section header with back button ──
+  // Section header with back button
   const renderSectionHeader = (title, subtitle, backTo) => (
     <div style={{ marginBottom: 20 }}>
-      <button className="dash-back-btn" onClick={() => goSection(backTo || "hub")}>← Back</button>
+      <button className="dash-back-btn" onClick={() => goSection(backTo || "hub")}>Back</button>
       <div className="dash-section-title" style={{ marginBottom: 4 }}>{title}</div>
       {subtitle && <div className="dash-section-sub">{subtitle}</div>}
     </div>
@@ -187,8 +187,8 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
   const renderSearch = (count, label) => (
     <div className="dash-search-row">
       <div className="dash-search-wrap">
-        <span className="dash-search-icon">🔍</span>
-        <input className="dash-search-input" placeholder={`Search ${label}…`} value={search} onChange={e => setSearch(e.target.value)} aria-label={`Search ${label}`} />
+        <span className="dash-search-icon">Search</span>
+        <input className="dash-search-input" placeholder={`Search ${label}...`} value={search} onChange={e => setSearch(e.target.value)} aria-label={`Search ${label}`} />
       </div>
       <div className="dash-result-count">{count} {count === 1 ? "project" : "projects"}</div>
     </div>
@@ -509,3 +509,4 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
     </div>
   );
 }
+

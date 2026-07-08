@@ -2756,7 +2756,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                 letterSpacing: "0.04em", whiteSpace: "nowrap",
               }}
             >
-              Sign in to save ?
+              Sign in to save
             </button>
           </div>
         )}
@@ -2767,7 +2767,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             <button className="btn btn-ghost btn-sm"
               style={{ color:"var(--mid)", borderRight:"1px solid var(--ivory3)", borderRadius:0, padding:"16px 20px", marginRight:4, whiteSpace:"nowrap", flexShrink:0 }}
               onClick={() => { resetToLatestPricing(); setDashInitialView(isActiveStatus(projects[editIdx]?._status) ? "active" : "completed"); setView("dashboard"); setDashKey(k => k + 1); }}>
-              ? Back
+              Back
             </button>
             <div style={{ padding: "0 20px", display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", background: "rgba(212,175,55,0.12)", padding: "2px 10px", borderRadius: 12, letterSpacing: "0.06em", textTransform: "uppercase", border: "1px solid rgba(212,175,55,0.3)" }}>
@@ -2794,7 +2794,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
               <button className="btn btn-ghost btn-sm"
                 style={{ color:"var(--mid)", borderRight:"1px solid var(--ivory3)", borderRadius:0, padding:"16px 20px", marginRight:4, whiteSpace:"nowrap", flexShrink:0 }}
                 onClick={() => { resetToLatestPricing(); setDashInitialView(null); setView("dashboard"); setReadOnly(false); setDashKey(k => k + 1); }}>
-                ? All Projects
+                All Projects
               </button>
               {stepConfig.map((s, i) => {
                 const canClick = reachable[i] && i !== step;
@@ -2804,7 +2804,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
                     className={`step ${step === i ? "active" : ""} ${isDone ? "done" : ""}`}
                     style={{ cursor: canClick ? "pointer" : "default", opacity: reachable[i] ? 1 : 0.45 }}
                     onClick={() => canClick && setStep(i)}>
-                    <div className="step-num">{isDone ? "?" : i + 1}</div>
+                    <div className="step-num">{isDone ? "Done" : i + 1}</div>
                     <div className="step-label">{s.label}</div>
                   </div>
                 );
@@ -2988,7 +2988,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             <div className="modal" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
                 <span className="modal-title">Delete Estimate</span>
-                <button className="btn btn-ghost" style={{ color:"var(--muted)" }} onClick={() => setDeletePendingIdx(null)}>?</button>
+                <button className="btn btn-ghost" style={{ color:"var(--muted)" }} onClick={() => setDeletePendingIdx(null)}>Close</button>
               </div>
               <div className="modal-body">
                 <p style={{ fontSize:14, color:"var(--char)", lineHeight:1.6 }}>

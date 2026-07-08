@@ -105,7 +105,7 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
       title: "Internal Quote",
       key: "internal",
       desc: "Full breakdown with costs, labour, and pricing details for internal use.",
-      btnLabel: { idle: "Download PDF", generating: "⳿ Preparing…", done: "Download Again", error: "⚠ Try Again" }[pdfStatus] || "Download PDF",
+      btnLabel: { idle: "Download PDF", generating: "Preparing...", done: "Download Again", error: "Try Again" }[pdfStatus] || "Download PDF",
       busy: pdfStatus === "generating",
       err: pdfError,
       onClick: handleInternal,
@@ -116,7 +116,7 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
       title: "Customer Quote",
       key: "customer",
       desc: "Client-facing quote with totals and project details — ready to share.",
-      btnLabel: { idle: "Download PDF", generating: "⳿ Preparing…", done: "Download Again", error: "⚠ Try Again" }[pdfStatus2] || "Download PDF",
+      btnLabel: { idle: "Download PDF", generating: "Preparing...", done: "Download Again", error: "Try Again" }[pdfStatus2] || "Download PDF",
       busy: pdfStatus2 === "generating",
       err: pdfError2,
       onClick: handleCustomer,
@@ -127,7 +127,7 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
       title: "Summary Download",
       key: "summary",
       desc: "One-page overview with room totals, delivery, tax, and grand total — no per-room breakout.",
-      btnLabel: { idle: "Download PDF", generating: "⳿ Preparing…", done: "Download Again", error: "⚠ Try Again" }[pdfStatus3] || "Download PDF",
+      btnLabel: { idle: "Download PDF", generating: "Preparing...", done: "Download Again", error: "Try Again" }[pdfStatus3] || "Download PDF",
       busy: pdfStatus3 === "generating",
       err: pdfError3,
       onClick: handleSummary,
@@ -163,7 +163,7 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
                   disabled={prevBusy}
                   style={{ opacity: prevBusy ? 0.6 : 1, width: "100%" }}
                 >
-                  {prevBusy ? "⳿ Loading…" : isViewing ? "Hide Preview" : "Preview"}
+                  {prevBusy ? "Loading..." : isViewing ? "Hide Preview" : "Preview"}
                 </button>
                 <button
                   className={`btn ${btnClass}`}
@@ -211,7 +211,7 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
       )}
 
       <div className="flex justify-between items-center mt-24">
-        <button className="btn btn-outline" onClick={onBack}>← Back to Summary</button>
+        <button className="btn btn-outline" onClick={onBack}>Back to Summary</button>
       </div>
     </div>
   );

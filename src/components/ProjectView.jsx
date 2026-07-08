@@ -324,7 +324,7 @@ export function ProjectView({ project, rooms, pricing, status, editIdx, prepared
                 title={canClick ? `Move to ${s.label}` : i < currentIdx ? "Admin only" : "Complete previous stages first"}
                 style={{ opacity: canClick ? 1 : 0.45, cursor: canClick ? "pointer" : "not-allowed" }}
               >
-                {isCompleted ? "✓" : i + 1}
+                {isCompleted ? "Done" : i + 1}
               </button>
               <button className="pv-progress-label" onClick={() => setViewingStage(s.key)} title={`View ${s.label} details`}>
                 {s.label}
@@ -367,7 +367,7 @@ export function ProjectView({ project, rooms, pricing, status, editIdx, prepared
                     <input type="checkbox" checked={item.checked} onChange={() => toggleChecklistItem(item)} />
                     <span className={item.checked ? "pv-check-done" : ""}>{item.label}</span>
                   </label>
-                  <button className="pv-check-delete" onClick={() => deleteChecklistItem(item)} title="Remove">×</button>
+                  <button className="pv-check-delete" onClick={() => deleteChecklistItem(item)} title="Remove">Remove</button>
                 </div>
               ))}
               <div className="pv-checklist-add">
@@ -420,12 +420,12 @@ export function ProjectView({ project, rooms, pricing, status, editIdx, prepared
                 <div className="pv-timeline-dot" />
                 <div className="pv-timeline-content">
                   <div className="pv-timeline-title">
-                    {evt.event_type === "stage_change" && <span className="pv-timeline-icon">→</span>}
+                    {evt.event_type === "stage_change" && <span className="pv-timeline-icon">Stage</span>}
                     {evt.event_type === "milestone" && <span className="pv-timeline-icon">⚑</span>}
                     {evt.event_type === "note" && <span className="pv-timeline-icon">✎</span>}
                     {evt.title}
                     {isAdmin && (
-                      <button className="pv-timeline-delete" onClick={() => deleteTimelineEntry(evt)} title="Delete entry">×</button>
+                      <button className="pv-timeline-delete" onClick={() => deleteTimelineEntry(evt)} title="Delete entry">Delete</button>
                     )}
                   </div>
                   {evt.body && <div className="pv-timeline-body">{evt.body}</div>}
