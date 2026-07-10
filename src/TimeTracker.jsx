@@ -28,6 +28,15 @@ const fmtDuration = (sec) => {
 
 const fmtHours = (sec) => (sec / 3600).toFixed(2)
 
+const getEntryDurationSeconds = (entry) => {
+  const saved = Number(entry?.duration_seconds || 0)
+  if (saved > 0) return saved
+  if (entry?.started_at && entry?.stopped_at) {
+    return computeDurationSeconds(entry.started_at, new Date(entry.stopped_at).getTime())
+  }
+  return 0
+}
+
 const fmtTime = (iso) => {
   if (!iso) return "-"
   const d = new Date(iso)
@@ -146,7 +155,7 @@ function groupEntriesByDate(entries) {
   entries.forEach(e => {
     const dateKey = new Date(e.started_at).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
     if (!map[dateKey]) map[dateKey] = { date: dateKey, totalSeconds: 0 }
-    map[dateKey].totalSeconds += e.duration_seconds || 0
+    map[dateKey].totalSeconds += getEntryDurationSeconds(e)
   })
   return Object.values(map).sort((a, b) => new Date(a.date) - new Date(b.date))
 }
@@ -429,7 +438,7 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
       if (field === "description") {
         updates.description = editVal.trim() || null
       } else if (field === "started_at" || field === "stopped_at") {
-        const dateStr = new Date(entry[field]).toISOString().slice(0, 10)
+        const dateStr = toDateStr(new Date(entry[field]))
         const timeParts = editVal.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i)
         if (!timeParts) { showToast("Invalid time format"); cancelEdit(); return }
         let hours = parseInt(timeParts[1], 10)
@@ -676,12 +685,28 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
       const key = toDateStr(mon)
       if (!map[key]) map[key] = { start: mon, end: getSunday(mon), entries: [], totalSeconds: 0 }
       map[key].entries.push(e)
-      map[key].totalSeconds += e.duration_seconds || 0
+      map[key].totalSeconds += getEntryDurationSeconds(e)
     })
     return Object.entries(map)
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([key, val]) => ({ key, ...val }))
   }, [entries])
+
+  const groupWeekEntriesByDay = (weekEntries) => {
+    const sorted = [...weekEntries].sort((a, b) => new Date(a.started_at) - new Date(b.started_at))
+    const groups = []
+    sorted.forEach(entry => {
+      const key = toDateStr(new Date(entry.started_at))
+      let group = groups[groups.length - 1]
+      if (!group || group.key !== key) {
+        group = { key, label: fmtDateShort(entry.started_at), entries: [], totalSeconds: 0 }
+        groups.push(group)
+      }
+      group.entries.push(entry)
+      group.totalSeconds += getEntryDurationSeconds(entry)
+    })
+    return groups
+  }
 
   // Generate invoice
   const handleGenerateInvoice = async (week) => {
@@ -936,7 +961,7 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
                   <span>{fmtDateShort(e.started_at)}</span>
                   <span>{renderEditableCell(e, "started_at", fmtTime(e.started_at))}</span>
                   <span>{e.stopped_at ? renderEditableCell(e, "stopped_at", fmtTime(e.stopped_at)) : "running"}</span>
-                  <span style={{ fontWeight: 600 }}>{e.stopped_at ? fmtDuration(e.duration_seconds || 0) : fmtDuration(elapsed)}</span>
+                  <span style={{ fontWeight: 600 }}>{e.stopped_at ? fmtDuration(getEntryDurationSeconds(e)) : fmtDuration(elapsed)}</span>
                   <span style={{ color: t.textMid, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{renderEditableCell(e, "description", e.description || "-")}</span>
                   <span>
                     {e.stopped_at && (
@@ -963,6 +988,7 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
             const totalHrs = parseFloat(fmtHours(week.totalSeconds))
             const totalAmt = totalHrs * HOURLY_RATE
             const isCurrentWeek = week.key === currentWeekKey
+            const dayGroups = groupWeekEntriesByDay(week.entries)
 
             return (
               <div key={week.key} style={{ border: `1px solid ${isCurrentWeek ? "#5B8C5A" : t.border}`, borderRadius: 8, marginBottom: 10, overflow: "hidden", background: isCurrentWeek ? "rgba(91,140,90,0.07)" : "transparent" }}>
@@ -1014,16 +1040,31 @@ export function TimeTrackerTab({ session, t, font, serif, showToast }) {
                       <div style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr 40px", padding: "8px 12px", background: t.cardAlt, fontSize: 10, fontWeight: 700, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                         <span>Date</span><span>Start</span><span>Stop</span><span>Duration</span><span>Description</span><span></span>
                       </div>
-                      {[...week.entries].sort((a, b) => new Date(a.started_at) - new Date(b.started_at)).map(e => (
-                        <div key={e.id} style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr 40px", padding: "8px 12px", borderTop: `1px solid ${t.border}`, fontSize: 12, color: t.text, alignItems: "center" }}>
-                          <span>{fmtDateShort(e.started_at)}</span>
-                          <span>{renderEditableCell(e, "started_at", fmtTime(e.started_at))}</span>
-                          <span>{renderEditableCell(e, "stopped_at", fmtTime(e.stopped_at))}</span>
-                          <span style={{ fontWeight: 600 }}>{fmtDuration(e.duration_seconds || 0)}</span>
-                          <span style={{ color: t.textMid }}>{renderEditableCell(e, "description", e.description || "-")}</span>
-                          <span>
-                            <button onClick={() => handleDeleteEntry(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: t.textMuted, padding: 2 }} title="Delete">Delete</button>
-                          </span>
+                      {dayGroups.map(group => (
+                        <div key={group.key}>
+                          <div style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr 40px", padding: "7px 12px", borderTop: `1px solid ${t.border}`, background: t.cardAlt, fontSize: 10, fontWeight: 700, color: t.textMid, textTransform: "uppercase", letterSpacing: "0.05em", alignItems: "center" }}>
+                            <span>{group.label}</span><span></span><span></span><span></span><span>{group.entries.length} entr{group.entries.length === 1 ? "y" : "ies"}</span><span></span>
+                          </div>
+                          {group.entries.map(e => (
+                            <div key={e.id} style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr 40px", padding: "8px 12px", borderTop: `1px solid ${t.border}`, fontSize: 12, color: t.text, alignItems: "center" }}>
+                              <span>{fmtDateShort(e.started_at)}</span>
+                              <span>{renderEditableCell(e, "started_at", fmtTime(e.started_at))}</span>
+                              <span>{renderEditableCell(e, "stopped_at", fmtTime(e.stopped_at))}</span>
+                              <span style={{ fontWeight: 600 }}>{fmtDuration(getEntryDurationSeconds(e))}</span>
+                              <span style={{ color: t.textMid }}>{renderEditableCell(e, "description", e.description || "-")}</span>
+                              <span>
+                                <button onClick={() => handleDeleteEntry(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: t.textMuted, padding: 2 }} title="Delete">Delete</button>
+                              </span>
+                            </div>
+                          ))}
+                          <div style={{ display: "grid", gridTemplateColumns: "90px 80px 80px 80px 1fr 40px", padding: "8px 12px", borderTop: `1px solid ${t.border}`, background: isCurrentWeek ? "rgba(91,140,90,0.10)" : t.cardAlt, fontSize: 12, color: t.text, alignItems: "center" }}>
+                            <span style={{ fontWeight: 700 }}>Day Total</span>
+                            <span></span>
+                            <span></span>
+                            <span style={{ fontWeight: 800 }}>{fmtDuration(group.totalSeconds)}</span>
+                            <span style={{ color: t.textMid }}>{fmtHours(group.totalSeconds)} hrs</span>
+                            <span></span>
+                          </div>
                         </div>
                       ))}
                     </div>
