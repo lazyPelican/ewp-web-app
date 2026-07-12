@@ -9,6 +9,25 @@ import ErrorBoundary from "./ErrorBoundary.jsx"
 import { logError } from "./logger.js"
 import { reloadForFreshAssets } from "./chunkRecovery.js"
 
+window.__ewpLastHiddenAt = document.visibilityState === "hidden" ? Date.now() : 0
+window.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    window.__ewpLastHiddenAt = Date.now()
+  }
+})
+
+window.addEventListener("error", (event) => {
+  logError("window.error", event.error || event.message || "Unknown window error", {
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+  })
+})
+
+window.addEventListener("unhandledrejection", (event) => {
+  logError("window.unhandledrejection", event.reason || "Unhandled promise rejection")
+})
+
 window.addEventListener("vite:preloadError", (event) => {
   event.preventDefault()
   reloadForFreshAssets()

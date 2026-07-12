@@ -5,9 +5,30 @@
 
 const isDev  = import.meta.env.DEV
 const isProd = import.meta.env.PROD
+const ERROR_LOG_KEY = "ewp-client-error-log"
+
+export function saveClientError(context, error, extra = {}) {
+  if (typeof window === "undefined") return
+  try {
+    const item = {
+      at: new Date().toISOString(),
+      context,
+      message: error?.message || String(error),
+      stack: error?.stack || null,
+      extra,
+      url: window.location.href,
+      userAgent: window.navigator?.userAgent || null,
+    }
+    const previous = JSON.parse(window.localStorage.getItem(ERROR_LOG_KEY) || "[]")
+    window.localStorage.setItem(ERROR_LOG_KEY, JSON.stringify([item, ...previous].slice(0, 10)))
+  } catch {
+    // Logging must never break the app.
+  }
+}
 
 export function logError(context, error, extra = {}) {
   // Future: Sentry.captureException(error, { extra: { context, ...extra } })
+  saveClientError(context, error, extra)
   if (isDev) {
     console.error(`[EWP:${context}]`, error?.message || String(error), extra)
   }

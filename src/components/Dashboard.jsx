@@ -187,7 +187,6 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
   const renderSearch = (count, label) => (
     <div className="dash-search-row">
       <div className="dash-search-wrap">
-        <span className="dash-search-icon">Search</span>
         <input className="dash-search-input" placeholder={`Search ${label}...`} value={search} onChange={e => setSearch(e.target.value)} aria-label={`Search ${label}`} />
       </div>
       <div className="dash-result-count">{count} {count === 1 ? "project" : "projects"}</div>
@@ -509,4 +508,3 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
     </div>
   );
 }
-
