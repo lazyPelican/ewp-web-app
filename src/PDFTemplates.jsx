@@ -951,6 +951,8 @@ function InternalSummaryPage({
   )
 }
 
+const HOURLY_RATE = 'Hourly Rate'
+
 function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, preparedBy, delivery }) {
   const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) !== 0)
   const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) !== 0)
