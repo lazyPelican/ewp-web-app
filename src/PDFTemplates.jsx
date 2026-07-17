@@ -540,6 +540,63 @@ function GrandBar({ label, sub, value, standalone = false, small = false }) {
   )
 }
 
+const SUMMARY_FIRST_PAGE_ROWS = 9
+const SUMMARY_CONTINUATION_ROWS = 9
+const SUMMARY_MIN_FINAL_ROWS = 3
+
+function splitSummaryRows(rows, firstLimit = SUMMARY_FIRST_PAGE_ROWS, continuationLimit = SUMMARY_CONTINUATION_ROWS, minFinalRows = SUMMARY_MIN_FINAL_ROWS) {
+  if (rows.length <= firstLimit) return [rows]
+
+  const chunks = []
+  let index = 0
+  let limit = firstLimit
+
+  while (rows.length - index > limit) {
+    const remainingAfterChunk = rows.length - index - limit
+    if (remainingAfterChunk > 0 && remainingAfterChunk < minFinalRows) {
+      limit = Math.max(minFinalRows, limit - (minFinalRows - remainingAfterChunk))
+    }
+    chunks.push(rows.slice(index, index + limit))
+    index += limit
+    limit = continuationLimit
+  }
+
+  chunks.push(rows.slice(index))
+  return chunks
+}
+
+function SummaryTotalsBlock({ project, roomCount, roomSubtotal, delivery, pdfTaxRate, pdfTaxAmt, grandTotal }) {
+  const hasTax = project.installationType ? project.installationType === "contractor" : project.taxEnabled
+
+  return (
+    <View wrap={false}>
+      <SubBar
+        label={`Rooms Total - ${roomCount} room${roomCount !== 1 ? 's' : ''}`}
+        value={roomSubtotal}
+      />
+      {delivery > 0 && (
+        <SubBar
+          label={project.deliveryNotes ? `Delivery - ${trunc(project.deliveryNotes, 80)}` : 'Delivery'}
+          value={delivery}
+        />
+      )}
+      {hasTax && (
+        <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
+      )}
+      <GrandBar
+        label="Grand Total"
+        sub={[
+          `rooms ${fmtN(roomSubtotal)}`,
+          delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
+          hasTax ? `incl. ${pdfTaxRate}% tax` : '',
+        ].filter(Boolean).join('  Â·  ')}
+        value={grandTotal}
+        standalone
+      />
+    </View>
+  )
+}
+
 function TotalsStrip({ items }) {
   return (
     <View style={s.totalsStrip}>
@@ -594,9 +651,18 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
   const grandCtp = roomTotals.reduce((s, r) => s + r.ctp, 0)
   const grandFin = roomTotals.reduce((s, r) => s + r.fin, 0)
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
+  const summaryChunks = splitSummaryRows(roomTotals)
+  const summaryRowStyle = summaryChunks.length > 1 ? { minHeight: 28 } : {}
 
   return (
-    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingTop: 24, paddingBottom: 38 }]}>
+    <>
+    {summaryChunks.map((chunk, chunkIndex) => {
+      const isFirstSummaryPage = chunkIndex === 0
+      const isLastSummaryPage = chunkIndex === summaryChunks.length - 1
+      const rowOffset = summaryChunks.slice(0, chunkIndex).reduce((sum, rows) => sum + rows.length, 0)
+
+      return (
+    <Page key={chunkIndex} size="LETTER" orientation="landscape" style={[s.page, { paddingTop: 24, paddingBottom: 38 }]}>
       <View style={[s.hdr, { paddingTop: 8, paddingBottom: 8, marginBottom: 14 }]} fixed>
         <View style={s.coBrand}>
           <Image style={{ width: 38, height: 38 }} src={LOGO_SRC} />
@@ -612,11 +678,13 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
         </View>
       </View>
 
-      <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 16, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 12, textAlign: 'center' }}>
-        Executive Summary
-      </Text>
+      {isFirstSummaryPage && (
+        <>
+        <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 16, color: '#1A1A1A', letterSpacing: 0.5, marginBottom: 12, textAlign: 'center' }}>
+          Executive Summary
+        </Text>
 
-      <View style={[s.infoStrip, { marginBottom: 14 }]}>
+        <View style={[s.infoStrip, { marginBottom: 14 }]}>
         {[
           { label: 'Project Name', value: project.name },
           { label: 'Address', value: project.address },
@@ -630,15 +698,18 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
             <Text style={[s.icVal, { fontSize: 9.5 }]}>{trunc(cell.value, 48) || '—'}</Text>
           </View>
         ))}
-      </View>
+        </View>
+        </>
+      )}
 
       <View style={{ marginBottom: 14 }}>
-        <SectionLabel label="Room Summary" />
+        <SectionLabel label={isFirstSummaryPage ? 'Room Summary' : 'Room Summary (continued)'} />
       </View>
       <View style={[s.tblWrap, { marginBottom: 16 }]}>
         <TableHeader colDefs={roomTableCols} />
-        {roomTotals.map((r, i) => {
-          const cells = [{ val: trunc(r.name || `Room ${i + 1}`, 50) }]
+        {chunk.map((r, i) => {
+          const absoluteIndex = rowOffset + i
+          const cells = [{ val: trunc(r.name || `Room ${absoluteIndex + 1}`, 50) }]
           if (hasCab) cells.push({ val: fmtN(r.cab + r.upg), right: true })
           if (hasCtp) cells.push({ val: fmtN(r.ctp), right: true })
           if (hasFin) cells.push({ val: fmtN(r.fin), right: true })
@@ -646,14 +717,15 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
           cells.push({ val: fmtN(r.total), amt: true })
           return (
             <TableRow
-              key={i}
+              key={absoluteIndex}
               colDefs={roomTableCols}
-              isEven={i % 2 === 1}
+              isEven={absoluteIndex % 2 === 1}
               cells={cells}
+              rowStyle={summaryRowStyle}
             />
           )
         })}
-        {(() => {
+        {isLastSummaryPage && (() => {
           const cells = [{ val: 'TOTALS', bold: true }]
           if (hasCab) cells.push({ val: fmtN(grandCab), right: true, bold: true })
           if (hasCtp) cells.push({ val: fmtN(grandCtp), right: true, bold: true })
@@ -664,34 +736,22 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
         })()}
       </View>
 
-      <View wrap={false} style={{ marginTop: 'auto' }}>
-        <SubBar
-          label={`Rooms Total - ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
-          value={roomSubtotal}
+      {isLastSummaryPage && (
+        <SummaryTotalsBlock
+          project={project}
+          roomCount={roomTotals.length}
+          roomSubtotal={roomSubtotal}
+          delivery={delivery}
+          pdfTaxRate={pdfTaxRate}
+          pdfTaxAmt={pdfTaxAmt}
+          grandTotal={grandTotal}
         />
-        {delivery > 0 && (
-          <SubBar
-            label={project.deliveryNotes ? `Delivery - ${trunc(project.deliveryNotes, 80)}` : 'Delivery'}
-            value={delivery}
-          />
-        )}
-        {hasTax && (
-          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
-        )}
-        <GrandBar
-          label="Grand Total"
-          sub={[
-            `rooms ${fmtN(roomSubtotal)}`,
-            delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
-            hasTax ? `incl. ${pdfTaxRate}% tax` : '',
-          ].filter(Boolean).join('  ·  ')}
-          value={grandTotal}
-          standalone
-        />
-      </View>
-
+      )}
       <PageFooter project={project} preparedBy={preparedBy} />
     </Page>
+      )
+    })}
+    </>
   )
 }
 
@@ -776,10 +836,10 @@ function TableHeader({ colDefs }) {
   )
 }
 
-function TableRow({ colDefs, cells, isEven }) {
+function TableRow({ colDefs, cells, isEven, rowStyle }) {
   // cells: [{ val, right, amt, muted, bold }]
   return (
-    <View style={[s.tRow, isEven ? s.tRowAlt : {}]}>
+    <View style={[s.tRow, isEven ? s.tRowAlt : {}, rowStyle || {}]}>
       {colDefs.map((col, i) => {
         const cell = cells[i] || {}
         return (
@@ -827,74 +887,69 @@ function InternalSummaryPage({
     { w: '14%', label: 'Installation', right: true },
     { w: '15%', label: 'Room Total', right: true },
   ]
+  const summaryChunks = splitSummaryRows(roomTotals)
+  const summaryRowStyle = summaryChunks.length > 1 ? { minHeight: 28 } : {}
 
   return (
-    <Page size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
+    <>
+    {summaryChunks.map((chunk, chunkIndex) => {
+      const isLastSummaryPage = chunkIndex === summaryChunks.length - 1
+      const rowOffset = summaryChunks.slice(0, chunkIndex).reduce((sum, rows) => sum + rows.length, 0)
+
+      return (
+    <Page key={chunkIndex} size="LETTER" orientation="landscape" style={[s.page, { paddingBottom: 40 }]}>
       <PageHeader
-        docType="INTERNAL — ROOM BREAKDOWN"
+        docType={chunkIndex === 0 ? "INTERNAL - ROOM BREAKDOWN" : "INTERNAL - ROOM BREAKDOWN CONT."}
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
         project={project}
         showProjectRibbon
       />
 
-      <SectionLabel label="Room Breakdown" />
+      <SectionLabel label={chunkIndex === 0 ? 'Room Breakdown' : 'Room Breakdown (continued)'} />
       <View style={s.tblWrap}>
         <TableHeader colDefs={roomTableCols} />
-        {roomTotals.map((r, i) => (
-          <TableRow
-            key={i}
-            colDefs={roomTableCols}
-            isEven={i % 2 === 1}
-            cells={[
-              { val: trunc(r.name || `Room ${i + 1}`, 36) },
-              { val: fmtN(r.cab), right: true },
-              { val: fmtN(r.upg), right: true },
-              { val: fmtN(r.ctp), right: true },
-              { val: fmtN(r.fin), right: true },
-              { val: fmtN(r.inst), right: true },
-              { val: fmtN(r.total), amt: true },
-            ]}
-          />
-        ))}
+        {chunk.map((r, i) => {
+          const absoluteIndex = rowOffset + i
+          return (
+            <TableRow
+              key={absoluteIndex}
+              colDefs={roomTableCols}
+              isEven={absoluteIndex % 2 === 1}
+              rowStyle={summaryRowStyle}
+              cells={[
+                { val: trunc(r.name || `Room ${absoluteIndex + 1}`, 36) },
+                { val: fmtN(r.cab), right: true },
+                { val: fmtN(r.upg), right: true },
+                { val: fmtN(r.ctp), right: true },
+                { val: fmtN(r.fin), right: true },
+                { val: fmtN(r.inst), right: true },
+                { val: fmtN(r.total), amt: true },
+              ]}
+            />
+          )
+        })}
       </View>
 
-      <View wrap={false}>
-        <SubBar
-          label={`Rooms Total - ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
-          value={roomSubtotal}
+      {isLastSummaryPage && (
+        <SummaryTotalsBlock
+          project={project}
+          roomCount={roomTotals.length}
+          roomSubtotal={roomSubtotal}
+          delivery={delivery}
+          pdfTaxRate={pdfTaxRate}
+          pdfTaxAmt={pdfTaxAmt}
+          grandTotal={grandTotal}
         />
-        {delivery > 0 && (
-          <SubBar
-            label={project.deliveryNotes ? `Delivery - ${trunc(project.deliveryNotes, 80)}` : 'Delivery'}
-            value={delivery}
-          />
-        )}
-
-        {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
-          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
-        )}
-
-        <GrandBar
-          label="Grand Total"
-          sub={[
-            `rooms ${fmtN(roomSubtotal)}`,
-            delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
-            (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
-          ].filter(Boolean).join('  ·  ')}
-          value={grandTotal}
-          standalone
-        />
-      </View>
+      )}
 
       <PageFooter project={project} preparedBy={preparedBy} />
     </Page>
+      )
+    })}
+    </>
   )
 }
-
-// ── INTERNAL ROOM PAGE ─────────────────────────────────────────────────────
-
-const HOURLY_RATE = 'Hourly Rate'
 
 function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, preparedBy, delivery }) {
   const cabItems = room.cabinetry.filter(i => i.product && parseFloat(i.qty) !== 0)
@@ -1215,33 +1270,42 @@ function CustomerSummaryPage({
 
   const dataCols = cols.length
   const nameW = dataCols <= 4 ? '40%' : '28%'
-  const numW = `${Math.floor((100 - parseInt(nameW)) / (dataCols - 1))}%`
+  const numW = Math.floor((100 - parseInt(nameW)) / (dataCols - 1)) + '%'
   const roomTableCols = cols.map((c, i) => ({ ...c, w: i === 0 ? nameW : numW }))
 
   const grandCab = roomTotals.reduce((s, r) => s + r.cab + r.upg, 0)
   const grandCtp = roomTotals.reduce((s, r) => s + r.ctp, 0)
   const grandFin = roomTotals.reduce((s, r) => s + r.fin, 0)
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
+  const summaryChunks = splitSummaryRows(roomTotals)
+  const summaryRowStyle = summaryChunks.length > 1 ? { minHeight: 28 } : {}
 
   const pgStyle = compact
     ? [s.page, { paddingTop: 18, paddingBottom: 30, paddingLeft: 28, paddingRight: 28 }]
     : [s.page, { paddingBottom: 40 }]
 
   return (
-    <Page size="LETTER" orientation="landscape" style={pgStyle}>
+    <>
+    {summaryChunks.map((chunk, chunkIndex) => {
+      const isLastSummaryPage = chunkIndex === summaryChunks.length - 1
+      const rowOffset = summaryChunks.slice(0, chunkIndex).reduce((sum, rows) => sum + rows.length, 0)
+
+      return (
+    <Page key={chunkIndex} size="LETTER" orientation="landscape" style={pgStyle}>
       <PageHeader
-        docType="QUOTE — ROOM SUMMARY"
+        docType={chunkIndex === 0 ? "QUOTE - ROOM SUMMARY" : "QUOTE - ROOM SUMMARY CONT."}
         docId={fmtId(project.id)}
         docDate={fmtD(project.bidDate)}
         project={project}
         showProjectRibbon
       />
 
-      <SectionLabel label="Room Summary" />
+      <SectionLabel label={chunkIndex === 0 ? 'Room Summary' : 'Room Summary (continued)'} />
       <View style={s.tblWrap}>
         <TableHeader colDefs={roomTableCols} />
-        {roomTotals.map((r, i) => {
-          const cells = [{ val: trunc(r.name || `Room ${i + 1}`, 50) }]
+        {chunk.map((r, i) => {
+          const absoluteIndex = rowOffset + i
+          const cells = [{ val: trunc(r.name || `Room ${absoluteIndex + 1}`, 50) }]
           if (hasCab) cells.push({ val: fmtN(r.cab + r.upg), right: true })
           if (hasCtp) cells.push({ val: fmtN(r.ctp), right: true })
           if (hasFin) cells.push({ val: fmtN(r.fin), right: true })
@@ -1249,15 +1313,15 @@ function CustomerSummaryPage({
           cells.push({ val: fmtN(r.total), amt: true })
           return (
             <TableRow
-              key={i}
+              key={absoluteIndex}
               colDefs={roomTableCols}
-              isEven={i % 2 === 1}
+              isEven={absoluteIndex % 2 === 1}
               cells={cells}
+              rowStyle={summaryRowStyle}
             />
           )
         })}
-        {/* Totals row */}
-        {(() => {
+        {isLastSummaryPage && (() => {
           const cells = [{ val: 'TOTALS', bold: true }]
           if (hasCab) cells.push({ val: fmtN(grandCab), right: true, bold: true })
           if (hasCtp) cells.push({ val: fmtN(grandCtp), right: true, bold: true })
@@ -1268,39 +1332,25 @@ function CustomerSummaryPage({
         })()}
       </View>
 
-      <View wrap={false}>
-        <SubBar
-          label={`Rooms Total - ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
-          value={roomSubtotal}
+      {isLastSummaryPage && (
+        <SummaryTotalsBlock
+          project={project}
+          roomCount={roomTotals.length}
+          roomSubtotal={roomSubtotal}
+          delivery={delivery}
+          pdfTaxRate={pdfTaxRate}
+          pdfTaxAmt={pdfTaxAmt}
+          grandTotal={grandTotal}
         />
-        {delivery > 0 && (
-          <SubBar
-            label={project.deliveryNotes ? `Delivery - ${trunc(project.deliveryNotes, 80)}` : 'Delivery'}
-            value={delivery}
-          />
-        )}
-        {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
-          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
-        )}
-
-        <GrandBar
-          label="Grand Total"
-          sub={[
-            `rooms ${fmtN(roomSubtotal)}`,
-            delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
-            (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
-          ].filter(Boolean).join('  ·  ')}
-          value={grandTotal}
-          standalone
-        />
-      </View>
+      )}
 
       <PageFooter project={project} preparedBy={preparedBy} />
     </Page>
+      )
+    })}
+    </>
   )
 }
-
-// ── CUSTOMER ROOM PAGE ─────────────────────────────────────────────────────
 
 function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, preparedBy }) {
   const qs = project.quoteSections || {}
