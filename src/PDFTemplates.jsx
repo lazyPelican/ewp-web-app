@@ -569,8 +569,8 @@ function PageFooter({ project, preparedBy }) {
 }
 
 function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy, docType }) {
-  const perRoomDelivery = delivery > 0 && roomTotals.length > 0 ? delivery / roomTotals.length : 0
-  const projectSubtotal = roomTotals.reduce((sum, r) => sum + r.total, 0) + delivery
+  const roomSubtotal = roomTotals.reduce((sum, r) => sum + r.total, 0)
+  const projectSubtotal = roomSubtotal + delivery
   const hasTax = project.installationType ? project.installationType === "contractor" : project.taxEnabled
 
   const hasCab = roomTotals.some(r => r.cab + r.upg > 0)
@@ -643,7 +643,7 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
           if (hasCtp) cells.push({ val: fmtN(r.ctp), right: true })
           if (hasFin) cells.push({ val: fmtN(r.fin), right: true })
           if (hasInst) cells.push({ val: fmtN(r.inst), right: true })
-          cells.push({ val: fmtN(r.total + perRoomDelivery), amt: true })
+          cells.push({ val: fmtN(r.total), amt: true })
           return (
             <TableRow
               key={i}
@@ -659,20 +659,30 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
           if (hasCtp) cells.push({ val: fmtN(grandCtp), right: true, bold: true })
           if (hasFin) cells.push({ val: fmtN(grandFin), right: true, bold: true })
           if (hasInst) cells.push({ val: fmtN(grandInst), right: true, bold: true })
-          cells.push({ val: fmtN(roomTotals.reduce((s, r) => s + r.total, 0) + delivery), amt: true, bold: true })
+          cells.push({ val: fmtN(roomSubtotal), amt: true, bold: true })
           return <TableRow colDefs={roomTableCols} cells={cells} />
         })()}
       </View>
 
       <View wrap={false} style={{ marginTop: 'auto' }}>
+        <SubBar
+          label={`Rooms Total - ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
+          value={roomSubtotal}
+        />
+        {delivery > 0 && (
+          <SubBar
+            label={project.deliveryNotes ? `Delivery - ${trunc(project.deliveryNotes, 80)}` : 'Delivery'}
+            value={delivery}
+          />
+        )}
         {hasTax && (
-          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
+          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
         )}
         <GrandBar
           label="Grand Total"
           sub={[
-            `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            delivery > 0 ? 'delivery included in room totals' : '',
+            `rooms ${fmtN(roomSubtotal)}`,
+            delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
             hasTax ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
@@ -807,7 +817,7 @@ function InternalSummaryPage({
   grandCab, grandUpg, grandCtp, grandFin, grandInst,
   delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
 }) {
-  const perRoomDelivery = delivery > 0 && roomTotals.length > 0 ? delivery / roomTotals.length : 0
+  const roomSubtotal = roomTotals.reduce((sum, r) => sum + r.total, 0)
   const roomTableCols = [
     { w: '22%', label: 'Room' },
     { w: '13%', label: 'Cabinetry', right: true },
@@ -843,7 +853,7 @@ function InternalSummaryPage({
               { val: fmtN(r.ctp), right: true },
               { val: fmtN(r.fin), right: true },
               { val: fmtN(r.inst), right: true },
-              { val: fmtN(r.total + perRoomDelivery), amt: true },
+              { val: fmtN(r.total), amt: true },
             ]}
           />
         ))}
@@ -851,19 +861,25 @@ function InternalSummaryPage({
 
       <View wrap={false}>
         <SubBar
-          label={`Project Totals — all ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''} combined${delivery > 0 ? ' (incl. delivery)' : ''}`}
-          value={grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery}
+          label={`Rooms Total - ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
+          value={roomSubtotal}
         />
+        {delivery > 0 && (
+          <SubBar
+            label={project.deliveryNotes ? `Delivery - ${trunc(project.deliveryNotes, 80)}` : 'Delivery'}
+            value={delivery}
+          />
+        )}
 
         {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
-          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
+          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
         )}
 
         <GrandBar
           label="Grand Total"
           sub={[
-            `All rooms · ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            delivery > 0 ? 'delivery included in room totals' : '',
+            `rooms ${fmtN(roomSubtotal)}`,
+            delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
             (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
@@ -1184,7 +1200,7 @@ function CustomerSummaryPage({
   delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy,
   compact = false,
 }) {
-  const perRoomDelivery = delivery > 0 && roomTotals.length > 0 ? delivery / roomTotals.length : 0
+  const roomSubtotal = roomTotals.reduce((sum, r) => sum + r.total, 0)
   const hasCab = roomTotals.some(r => r.cab + r.upg > 0)
   const hasCtp = roomTotals.some(r => r.ctp > 0)
   const hasFin = roomTotals.some(r => r.fin > 0)
@@ -1230,7 +1246,7 @@ function CustomerSummaryPage({
           if (hasCtp) cells.push({ val: fmtN(r.ctp), right: true })
           if (hasFin) cells.push({ val: fmtN(r.fin), right: true })
           if (hasInst) cells.push({ val: fmtN(r.inst), right: true })
-          cells.push({ val: fmtN(r.total + perRoomDelivery), amt: true })
+          cells.push({ val: fmtN(r.total), amt: true })
           return (
             <TableRow
               key={i}
@@ -1247,21 +1263,31 @@ function CustomerSummaryPage({
           if (hasCtp) cells.push({ val: fmtN(grandCtp), right: true, bold: true })
           if (hasFin) cells.push({ val: fmtN(grandFin), right: true, bold: true })
           if (hasInst) cells.push({ val: fmtN(grandInst), right: true, bold: true })
-          cells.push({ val: fmtN(roomTotals.reduce((s, r) => s + r.total, 0) + delivery), amt: true, bold: true })
+          cells.push({ val: fmtN(roomSubtotal), amt: true, bold: true })
           return <TableRow colDefs={roomTableCols} cells={cells} />
         })()}
       </View>
 
       <View wrap={false}>
+        <SubBar
+          label={`Rooms Total - ${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`}
+          value={roomSubtotal}
+        />
+        {delivery > 0 && (
+          <SubBar
+            label={project.deliveryNotes ? `Delivery - ${trunc(project.deliveryNotes, 80)}` : 'Delivery'}
+            value={delivery}
+          />
+        )}
         {(project.installationType ? project.installationType === "contractor" : project.taxEnabled) && (
-          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub={`Applied to project subtotal${delivery > 0 ? ' including delivery' : ''}`} value={pdfTaxAmt} standalone small />
+          <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
         )}
 
         <GrandBar
           label="Grand Total"
           sub={[
-            `${roomTotals.length} room${roomTotals.length !== 1 ? 's' : ''}`,
-            delivery > 0 ? 'delivery included in room totals' : '',
+            `rooms ${fmtN(roomSubtotal)}`,
+            delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
             (project.installationType ? project.installationType === "contractor" : project.taxEnabled) ? `incl. ${pdfTaxRate}% tax` : '',
           ].filter(Boolean).join('  ·  ')}
           value={grandTotal}
