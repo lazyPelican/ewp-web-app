@@ -1,5 +1,7 @@
 // Shared utilities and helpers used across App.jsx and extracted components
 import { DEFAULT_PRICING } from "./pricing.js"
+import { installationDetails, installationIssue } from "../supabase/functions/_shared/installation.js"
+export { installationDetails, installationFootage, installationIssue } from "../supabase/functions/_shared/installation.js"
 import "./types.js"
 
 // Calculation helpers accept explicit pricing. DEFAULT_PRICING is only a legacy fallback.
@@ -87,7 +89,7 @@ export const SECTION_LABELS = {
   install: "Installation",
 };
 
-export const isRoomComplete = (room) => {
+export const isRoomComplete = (room, pricing = DEFAULT_PRICING) => {
   if (room.name.trim() === "") return false;
   const sections = (room.sections === undefined || room.sections === null) ? ALL_SECTIONS : room.sections;
   if (sections.length === 0) return false;
@@ -97,6 +99,7 @@ export const isRoomComplete = (room) => {
   const hasFinishing   = sections.includes("finishing") && (room.finishing || []).some(f => f.type && parseFloat(f.lf) !== 0);
   if (!hasCabinetry && !hasCountertops && !hasUpgrades && !hasFinishing) return false;
   if (hasCabinetry && sections.includes("install") && room.install.type === "") return false;
+  if (installationIssue(room, pricing)) return false;
   return true;
 };
 
@@ -157,20 +160,8 @@ export const calcFinishing = (items, pricing = DEFAULT_PRICING) => {
   }, 0);
 };
 
-export const calcInstall = (installData, cabTotal, pricing = DEFAULT_PRICING) => {
-  if (!installData.type || installData.type === "No Install") return 0;
-  const inst = findByName(pricing.installType, installData.type);
-  if (!inst) return 0;
-  const adjPct = parseFloat(installData.adjPct) || 0;
-  let base;
-  if (installData.type === HOURLY_RATE) {
-    const hours = parseFloat(installData.metric) || 0;
-    base = inst.rate * hours;
-  } else {
-    base = cabTotal * inst.rate;
-  }
-  return Math.ceil((base * (1 + adjPct / 100)) / 5) * 5;
-};
+export const calcInstall = (installData, cabTotal, pricing = DEFAULT_PRICING, room = {}) =>
+  installationDetails(installData, cabTotal, pricing, room).total;
 
 export const calcEstimatedFinishingLF = (cabinetryItems, pricing = DEFAULT_PRICING) => {
   return cabinetryItems.reduce((sum, item) => {
@@ -206,7 +197,7 @@ export const blankFinRow = () => ({ type: "", lf: "", adjPct: "", notes: "" });
 export const calcTotal = (p, pricing = DEFAULT_PRICING) => {
   const roomsTotal = p.rooms.reduce((rs, r) => {
     const cab = calcCabinetry(r.cabinetry, pricing);
-    return rs + cab + calcUpgrades(r.upgrades, pricing) + calcCountertops(r.countertops, pricing) + calcFinishing(r.finishing, pricing) + calcInstall(r.install, cab, pricing);
+    return rs + cab + calcUpgrades(r.upgrades, pricing) + calcCountertops(r.countertops, pricing) + calcFinishing(r.finishing, pricing) + calcInstall(r.install, cab, pricing, r);
   }, 0);
   const delivery = p.project.noDelivery ? 0 : (parseFloat(p.project.deliveryAmount) || 0);
   const subtotal = roomsTotal + delivery;
@@ -228,7 +219,7 @@ export const isActiveStatus = (s) => s && s.startsWith("active:")
 export const getActiveStage = (s) => s ? s.replace("active:", "") : null
 export const isClosedStatus = (s) => s === "closed"
 
-export const blankRoom = (n, masterAdj) => ({
+export const blankRoom = (n, masterAdj, installationMethod = 'per_lf') => ({
   id: Date.now() + n,
   name: "",
   sections: [],
@@ -236,5 +227,5 @@ export const blankRoom = (n, masterAdj) => ({
   upgrades:  [{ ...blankUpgRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
   countertops: [{ ...blankCtpRow(), adjPct: masterAdj != null ? String(masterAdj) : '' }],
   finishing: [blankFinRow()],
-  install: { type: "", metric: "", adjPct: "", notes: "" },
+  install: { ...(installationMethod === 'per_lf' ? { method: 'per_lf' } : {}), type: "", metric: "", adjPct: "", notes: "" },
 });

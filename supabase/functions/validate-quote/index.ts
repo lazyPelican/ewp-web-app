@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { installationDetails } from '../_shared/installation.js'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -51,17 +52,6 @@ const calcFinishing = (items: any[] = [], pricing: any) =>
     return sum + Number(fin.pricePerLF || 0) * lf * (1 + adjPct / 100)
   }, 0)
 
-const calcInstall = (installData: any = {}, cabTotal: number, pricing: any) => {
-  if (!installData.type || installData.type === 'No Install') return 0
-  const inst = findByName(pricing.installType, installData.type)
-  if (!inst) return 0
-  const adjPct = parseFloat(installData.adjPct) || 0
-  const base = installData.type === 'Hourly Rate'
-    ? Number(inst.rate || 0) * (parseFloat(installData.metric) || 0)
-    : cabTotal * Number(inst.rate || 0)
-  return Math.ceil((base * (1 + adjPct / 100)) / 5) * 5
-}
-
 const calcTotal = (project: any, rooms: any[] = [], pricing: any) => {
   const roomsTotal = rooms.reduce((sum, room) => {
     const cab = calcCabinetry(room.cabinetry || [], pricing)
@@ -70,7 +60,7 @@ const calcTotal = (project: any, rooms: any[] = [], pricing: any) => {
       + calcUpgrades(room.upgrades || [], pricing)
       + calcCountertops(room.countertops || [], pricing)
       + calcFinishing(room.finishing || [], pricing)
-      + calcInstall(room.install || {}, cab, pricing)
+      + installationDetails(room.install || {}, cab, pricing, room).total
   }, 0)
   const delivery = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
   const subtotal = roomsTotal + delivery

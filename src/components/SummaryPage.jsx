@@ -1,16 +1,30 @@
 import React, { useState, useRef, useEffect } from "react"
+import { installationDetails } from "../appUtils.js"
 import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, findByName } from "../appUtils.js"
 
-export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, preparedBy }) {
+export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, onEditProject, preparedBy }) {
   const [saving, setSaving]           = useState(false);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const handleSave = async () => {
     setSaving(true);
     setSaveConfirmed(false);
-    await onSave();
-    setSaving(false);
-    setSaveConfirmed(true);
+    setSaveError(null);
+    try {
+      const result = await onSave();
+      if (result?.ok !== true) {
+        setSaveError(result?.error || 'The estimate was not saved. Please retry.');
+        return false;
+      }
+      setSaveConfirmed(true);
+      return true;
+    } catch {
+      setSaveError('The estimate could not be saved. Please check your connection and retry.');
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Reset saved confirmation when user edits project or rooms after saving
@@ -18,18 +32,18 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, p
   useEffect(() => {
     if (_initialSaveRef.current) { _initialSaveRef.current = false; return; }
     setSaveConfirmed(false);
+    setSaveError(null);
   }, [project, rooms]);
 
   const handleSaveAndNext = async () => {
-    await handleSave();
-    onNext();
+    if (await handleSave()) onNext();
   };
   const roomTotals = rooms.map(r => {
     const cab = calcCabinetry(r.cabinetry, pricing);
     const upg = calcUpgrades(r.upgrades, pricing);
     const ctp = calcCountertops(r.countertops, pricing);
     const fin = calcFinishing(r.finishing, pricing);
-    const inst = calcInstall(r.install, cab, pricing);
+    const inst = calcInstall(r.install, cab, pricing, r);
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst };
   });
 
@@ -222,7 +236,7 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, p
                   <div className="report-section">
                     <div className="report-section-title">Installation</div>
                     <div className="report-line">
-                      <span>{room.install.type}{room.install.metric ? ` × ${room.install.metric} hrs` : ""}</span>
+                      <span>{room.install.type}{room.install.method === 'per_lf' ? ` - ${installationDetails(room.install, rt.cab, pricing, room).lf} LF x ${fmt(installationDetails(room.install, rt.cab, pricing, room).rate)}/LF` : room.install.metric ? ` × ${room.install.metric} hrs` : ""}</span>
                       <span>{fmt(rt.inst)}</span>
                     </div>
                     <div className="report-line report-line-total"><span>Install Total</span><span>{fmt(rt.inst)}</span></div>
@@ -249,6 +263,14 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, p
         This estimate is valid for 30 days from the bid date. All prices subject to final measurement verification.
       </div>
 
+      {saveError && (
+        <div role="alert" style={{ padding: '14px 20px', marginTop: 16, color: 'var(--red, #C0392B)', border: '1px solid currentColor', borderRadius: 6 }}>
+          <div>{saveError}</div>
+          {/email/i.test(saveError) && <div style={{ marginTop: 8 }}>Enter a valid email address in Project Details, or leave it blank.
+            {onEditProject && <button className="btn btn-outline btn-sm" style={{ marginLeft: 12 }} onClick={onEditProject}>Edit Project Details</button>}
+          </div>}
+        </div>
+      )}
       {saveConfirmed && (
         <div style={{
           display: "flex", alignItems: "center", gap: 12,

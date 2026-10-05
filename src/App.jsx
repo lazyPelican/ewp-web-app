@@ -15,7 +15,7 @@ import {
   displayPriceValue,
 } from "./pricingSnapshots.js"
 import {
-  genId, makeCopyName, fmtId, blankRoom, isRoomComplete,
+  genId, makeCopyName, fmtId, blankRoom, isRoomComplete, installationIssue,
   calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, calcTotal,
   DEFAULT_QUOTE_SECTIONS,
   ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus,
@@ -1967,6 +1967,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     rooms: 1, masterAdj: 0,
     deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false,
     taxEnabled: false, taxRate: 8.53,
+    installationPricingVersion: 2,
     quoteSections: { ...DEFAULT_QUOTE_SECTIONS },
   });
   const [rooms, setRooms] = useState([blankRoom(0)]);
@@ -1980,6 +1981,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         const merged = { ...DEFAULT_PRICING }
         for (const key of Object.keys(DEFAULT_PRICING)) {
           if (dbData[key]) merged[key] = dbData[key]
+          if (key === 'installPerLF' && merged[key].length === 0) merged[key] = DEFAULT_PRICING[key].map(row => ({ ...row }))
         }
         for (const key of Object.keys(merged)) {
           if (Array.isArray(merged[key])) {
@@ -2059,7 +2061,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
 
 
   const addRoom = () => {
-    setRooms(prev => [...prev, blankRoom(prev.length, project.masterAdj)]);
+    setRooms(prev => [...prev, blankRoom(prev.length, project.masterAdj, project.installationPricingVersion === 2 ? 'per_lf' : 'legacy')]);
   };
 
   const removeRoom = (i) => {
@@ -2107,7 +2109,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       billingName: "", billingEmail: "",
       rooms: 1, masterAdj: 0,
       deliveryAmount: "", deliveryNotes: "", noDelivery: false, showDeliveryOnPdf: false, taxEnabled: false, taxRate: 8.53, installationType: "ewp",
-      quoteSections: { ...DEFAULT_QUOTE_SECTIONS } });
+      installationPricingVersion: 2, quoteSections: { ...DEFAULT_QUOTE_SECTIONS } });
     setRooms([blankRoom(0)]);
     _serverUpdatedAt.current = null;
     setReadOnly(false);
@@ -2147,7 +2149,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     } else {
       const isLocked = isClosedStatus(p._status);
       const pValid = !!(p.project.name && p.project.address && p.project.bidDate);
-      const rComplete = p.rooms.length > 0 && p.rooms.every(isRoomComplete);
+      const rComplete = p.rooms.length > 0 && p.rooms.every(r => isRoomComplete(r, pricingSnapshotToTables(p.pricingSnapshot, latestPricing)));
       setReadOnly(isLocked);
       setSaved(true); setStep(0); setView("new");
       setMaxStep(pValid && rComplete ? 4 : pValid ? 1 : 0);
@@ -2206,6 +2208,8 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   const confirmProject = async (i) => {
     if (actionBusy) return;
     const p = projects[i];
+    const installError = p.rooms.map(room => installationIssue(room, pricingSnapshotToTables(p.pricingSnapshot, latestPricing))).find(Boolean);
+    if (installError) { showToast(installError); return; }
     if (isGuest) {
       setProjects(prev => prev.map((pr, idx) => idx === i ? { ...pr, _status: "active:drafting" } : pr));
       showToast("Quote marked as Under Contract");
@@ -2271,6 +2275,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   };
 
   const saveProject = async () => {
+    setSaved(false);
     const cleanProject = sanitizeProject(project);
     const cleanRooms   = sanitizeRooms(rooms);
     const pricingSource = activePricingSnapshot
@@ -2279,8 +2284,9 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     const pricingSnapshot = buildPricingSnapshotForRooms(cleanRooms, pricingSource);
     const localValidation = validateQuotePayload(cleanProject, cleanRooms);
     if (!localValidation.ok) {
-      showToast(localValidation.errors[0] || "Please fix quote validation errors before saving");
-      return;
+      const error = localValidation.errors[0] || "Please fix quote validation errors before saving";
+      showToast(error);
+      return { ok: false, error };
     }
     const integrityPayload = buildQuoteIntegrityPayload({ project: cleanProject, rooms: cleanRooms, pricing: pricingSource });
     try {
@@ -2292,7 +2298,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     } catch (err) {
       logError("saveProject.validateQuote", err);
       showToast("Quote validation failed - save blocked");
-      return;
+      return { ok: false, error: 'Quote validation failed. Please retry before continuing.' };
     }
     const entry = { project: cleanProject, rooms: cleanRooms, pricingSnapshot };
     setActivePricingSnapshot(pricingSnapshot);
@@ -2306,7 +2312,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       }
       setSaved(true);
       showToast("Saved for this session - sign in to keep estimates permanently");
-      return;
+      return { ok: true };
     }
     // Conflict detection: check if someone else saved since we loaded
     if (_serverUpdatedAt.current && editIdx !== null) {
@@ -2318,7 +2324,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
           "Click OK to save your version (overwrites their changes).\n" +
           "Click Cancel to go back and reload the latest version."
         );
-        if (!overwrite) return;
+        if (!overwrite) return { ok: false, error: 'Save cancelled. Your changes have not been saved.' };
       }
     }
 
@@ -2333,7 +2339,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       contractor_name: cleanProject.contractorName || null,
     };
     const { data: savedRow, error } = await supabase.from("projects").upsert(payload, { onConflict: "id" }).select("updated_at").single();
-    if (error) { logError("saveProject", error); showToast("Error saving - check connection"); return; }
+    if (error) { logError("saveProject", error); showToast("Error saving - check connection"); return { ok: false, error: 'Error saving. Check your connection and retry.' }; }
     if (savedRow) _serverUpdatedAt.current = savedRow.updated_at;
     recordAuditEvent(supabase, {
       session,
@@ -2365,13 +2371,21 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     }
     setSaved(true);
     showToast("Estimate saved successfully");
+    return { ok: true };
   };
 
   const handleQuickSave = async () => {
     setQuickSaving(true);
-    await saveProject();
-    setQuickSaving(false);
-    setQuickSaved(true);
+    setQuickSaved(false);
+    try {
+      const result = await saveProject();
+      setQuickSaved(result?.ok === true);
+    } catch (error) {
+      logError('quickSave', error);
+      showToast('Error saving. Please retry.');
+    } finally {
+      setQuickSaving(false);
+    }
   };
 
   const keepSavedPricing = () => {
@@ -2381,6 +2395,10 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
 
   const updateQuotePricing = async () => {
     if (!priceUpdatePrompt) return;
+    if (priceUpdatePrompt.changes.some(change => change.removed)) {
+      showToast('Keep saved pricing, then select a replacement installation category before updating prices.');
+      return;
+    }
     const nextSnapshot = priceUpdatePrompt.currentSnapshot;
     const cleanProject = sanitizeProject(project);
     const cleanRooms = sanitizeRooms(rooms);
@@ -2780,7 +2798,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
         {/* STEPPER */}
         {view === "new" && (() => {
           const projectValid = !!(project.name && project.address && project.bidDate);
-          const allRoomsComplete = rooms.every(isRoomComplete);
+          const allRoomsComplete = rooms.every(r => isRoomComplete(r, activePricing));
           const done = [
             maxStep >= 1,
             maxStep >= 2,
@@ -2854,7 +2872,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             key={dashKey}
             userName={preparedBy}
             projects={projects}
-            pricing={activePricing}
+            pricing={latestPricing}
             isAdmin={isAdmin}
             initialView={dashInitialView}
             onNew={startNew}
@@ -2935,7 +2953,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             <FinalDetailsPage project={project} rooms={rooms} pricing={activePricing} onChange={d => setProject(p => ({ ...p, ...d }))} onNext={() => { setStep(3); setMaxStep(p => Math.max(p, 3)); }} onBack={() => setStep(1)} />
           )}
           {view === "new" && step === 3 && (
-            <SummaryPage project={project} rooms={rooms} pricing={activePricing} onBack={() => setStep(2)} onSave={saveProject} onNext={() => { setStep(4); setMaxStep(p => Math.max(p, 4)); }} preparedBy={preparedBy} />
+            <SummaryPage project={project} rooms={rooms} pricing={activePricing} onBack={() => setStep(2)} onSave={saveProject} onEditProject={() => setStep(0)} onNext={() => { setStep(4); setMaxStep(p => Math.max(p, 4)); }} preparedBy={preparedBy} />
           )}
           {view === "new" && step === 4 && (
             <PrintEmailPage

@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { Field } from "./Field.jsx"
+import { isValidEmail, sanitizeEmail } from '../sanitize.js'
 
 export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
   const [errors, setErrors] = useState({});
@@ -9,6 +10,8 @@ export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
     if (!project.name) e.name = "Required";
     if (!project.address) e.address = "Required";
     if (!project.bidDate) e.bidDate = "Required";
+    if (sanitizeEmail(project.email) && !isValidEmail(project.email)) e.email = 'Enter a valid email address or leave blank.';
+    if (sanitizeEmail(project.billingEmail) && !isValidEmail(project.billingEmail)) e.billingEmail = 'Enter a valid email address or leave blank.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -55,7 +58,7 @@ export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
                 }}
               />
             </Field>
-            <Field label="Email Address">
+            <Field label="Email Address" error={errors.email}>
               <input aria-label="Email address" type="email" value={project.email} placeholder="client@email.com"
                 onChange={e => onChange({ email: e.target.value })} />
             </Field>
@@ -79,7 +82,7 @@ export function ProjectSetup({ project, onChange, onNext, contractors = [] }) {
               <input value={project.billingName || ""} placeholder="Same as contact if left blank"
                 onChange={e => onChange({ billingName: e.target.value })} />
             </Field>
-            <Field label="Billing Email">
+            <Field label="Billing Email" error={errors.billingEmail}>
               <input type="email" value={project.billingEmail || ""} placeholder="billing@email.com"
                 onChange={e => onChange({ billingEmail: e.target.value })} />
             </Field>

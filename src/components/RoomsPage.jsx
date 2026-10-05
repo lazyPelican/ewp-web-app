@@ -10,6 +10,8 @@ import {
   calcCountertops,
   calcFinishing,
   calcInstall,
+  installationDetails,
+  installationIssue,
   calcEstimatedFinishingLF,
   findByName,
   blankCabRow,
@@ -393,8 +395,13 @@ function FinishingSection({ items, cabinetry = [], onChange, pricing }) {
 }
 
 // ── InstallSection ────────────────────────────────────────────────────────────
-function InstallSection({ data, cabTotal, onChange, pricing }) {
-  const instTotal = calcInstall(data, cabTotal, pricing);
+export function InstallSection({ data, room, cabTotal, onChange, pricing }) {
+  const details = installationDetails(data, cabTotal, pricing, room);
+  const instTotal = details.total;
+  const modern = !!data.method;
+  const perLF = data.method === 'per_lf';
+  const rates = pricing.installPerLF || [];
+  const issue = installationIssue(room, pricing);
   return (
     <div className="card form-section-anim" style={{ marginBottom: 16 }}>
       <div className="section-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -404,20 +411,38 @@ function InstallSection({ data, cabTotal, onChange, pricing }) {
       </div>
       <div className="card-body">
         <div className="form-grid form-grid-4">
-          <Field label="Install Type">
-            <select value={data.type} onChange={e => onChange({ ...data, type: e.target.value })}>
+          {modern && (
+            <Field label="Installation Method">
+              <select value={data.method} onChange={e => onChange({ ...data, method: e.target.value, type: e.target.value === 'hourly' ? HOURLY_RATE : e.target.value === 'none' ? 'No Install' : '' })}>
+                <option value="per_lf">Per Linear Foot</option>
+                <option value="hourly">Hourly Rate</option>
+                <option value="none">No Install</option>
+              </select>
+            </Field>
+          )}
+          {(!modern || perLF) && (
+          <Field label={perLF ? 'Installation Category' : 'Install Type'}>
+            <select id={perLF ? 'f-installation-category' : 'f-install-type'} value={data.type} onChange={e => onChange({ ...data, type: e.target.value })}>
               <option value="">— Select —</option>
-              {pricing.installType.map(i => <option key={i.name}>{i.name}</option>)}
+              {(perLF ? rates : pricing.installType).map(i => <option key={i.name}>{i.name}</option>)}
             </select>
             {data.type && data.type !== "No Install" && (() => {
-              const inst = findByName(pricing.installType, data.type);
+              const inst = findByName(perLF ? rates : pricing.installType, data.type);
               return inst ? (
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>
-                  {data.type === HOURLY_RATE ? `${fmt(inst.rate)}/hr` : `${(inst.rate * 100).toFixed(0)}% of cabinetry`}
+                  {perLF ? `${fmt(inst.rate)}/LF` : data.type === HOURLY_RATE ? `${fmt(inst.rate)}/hr` : `${(inst.rate * 100).toFixed(0)}% of cabinetry`}
                 </div>
               ) : null;
             })()}
           </Field>
+          )}
+          {perLF && (
+            <Field label="Installation Linear Feet">
+              <input id="f-installation-linear-feet" value={details.lf} readOnly aria-label="Installation Linear Feet" />
+              <div className="text-muted" style={{ marginTop: 4 }}>{details.source}</div>
+            </Field>
+          )}
+          {modern && data.method === 'hourly' && <Field label="Hourly Rate"><div>{fmt(details.rate)}/hr</div></Field>}
           {data.type === HOURLY_RATE && (
             <Field label="Total Hours">
               <input type="number" min="0" step="0.5" value={data.metric} placeholder="0"
@@ -433,13 +458,14 @@ function InstallSection({ data, cabTotal, onChange, pricing }) {
               onChange={e => onChange({ ...data, notes: e.target.value })} />
           </Field>
         </div>
+        {perLF && issue && <div role="status" style={{ color: 'var(--red, #C0392B)', marginTop: 12 }}>{!rates.some(row => Number(row.rate) > 0) ? 'Installation rates have not been configured. An admin must add rates before this quote is ready for client.' : issue}</div>}
         {data.type && (
           <div className="mt-16" style={{ textAlign: "right" }}>
             <span className="serif-value-lg" style={{ fontSize: 22, color: "var(--char)" }}>
               Install Total: {fmt(instTotal)}
             </span>
             {data.type === "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>No installation included</div>}
-            {data.type !== HOURLY_RATE && data.type !== "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {(findByName(pricing.installType, data.type)?.rate || 0) * 100}% of cabinetry total</div>}
+            {perLF ? <div className="text-muted" style={{ marginTop: 4 }}>{details.lf} LF x {fmt(details.rate)}/LF{Number(data.adjPct) ? ` (${data.adjPct}% adjustment)` : ''} - rounded up to $5</div> : data.type !== HOURLY_RATE && data.type !== "No Install" && <div className="text-muted" style={{ marginTop: 4 }}>Based on {(findByName(pricing.installType, data.type)?.rate || 0) * 100}% of cabinetry total</div>}
           </div>
         )}
       </div>
@@ -469,7 +495,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
   const upgTotal = hasSection("upgrades") ? calcUpgrades(room.upgrades, pricing) : 0;
   const ctpTotal = hasSection("countertops") ? calcCountertops(room.countertops, pricing) : 0;
   const finTotal = hasSection("finishing") ? calcFinishing(room.finishing, pricing) : 0;
-  const instTotal = hasSection("install") ? calcInstall(room.install, cabTotal, pricing) : 0;
+  const instTotal = hasSection("install") ? calcInstall(room.install, cabTotal, pricing, room) : 0;
   const roomTotal = cabTotal + upgTotal + ctpTotal + finTotal + instTotal;
 
   const toggleSection = (key) => {
@@ -516,7 +542,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
       {/* Room Tabs — drag to reorder */}
       <div className="room-tabs" style={{ flexWrap: "wrap", gap: 6 }}>
         {rooms.map((r, i) => {
-          const done = isRoomComplete(r);
+          const done = isRoomComplete(r, pricing);
           const isActive = i === safeActiveRoom;
           return (
             <div key={r.id}
@@ -591,7 +617,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
       <div className="card">
         <div className="card-header">
           <span className="card-title">ROOM INFORMATION</span>
-          {isRoomComplete(room) && (
+          {isRoomComplete(room, pricing) && (
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <input
                 type="number" min="1" max="500" step="1"
@@ -691,7 +717,7 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
               Enter a room name to get started.
             </div>
           )}
-          {room.name.trim() && sections.length > 0 && !isRoomComplete(room) && (
+          {room.name.trim() && sections.length > 0 && !isRoomComplete(room, pricing) && (
             <div style={{ fontSize: 13, color: "var(--mid)", marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>
               For large projects with repeating rooms — complete the data entry for this room and a duplication option will appear, allowing you to copy it multiple times.
             </div>
@@ -721,11 +747,11 @@ export function RoomsPage({ project, rooms, pricing, onRoomsChange, onAddRoom, o
         {hasSection("upgrades") && <UpgradesSection items={room.upgrades} masterAdj={project.masterAdj} pricing={pricing} onChange={v => updateRoom("upgrades", v)} />}
         {hasSection("countertops") && <CountertopsSection items={room.countertops || []} masterAdj={project.masterAdj} pricing={pricing} onChange={v => updateRoom("countertops", v)} />}
         {hasSection("finishing") && <FinishingSection items={room.finishing} cabinetry={room.cabinetry} pricing={pricing} onChange={v => updateRoom("finishing", v)} />}
-        {hasSection("install") && <InstallSection data={room.install} cabTotal={cabTotal} pricing={pricing} onChange={v => updateRoom("install", v)} />}
+        {hasSection("install") && <InstallSection data={room.install} room={room} cabTotal={cabTotal} pricing={pricing} onChange={v => updateRoom("install", v)} />}
 
       {(() => {
-        const allComplete = rooms.every(isRoomComplete);
-        const incomplete = rooms.filter(r => !isRoomComplete(r));
+        const allComplete = rooms.every(r => isRoomComplete(r, pricing));
+        const incomplete = rooms.filter(r => !isRoomComplete(r, pricing));
         return (
           <div className="flex justify-between items-center mt-24">
             <button className="btn btn-outline" onClick={onBack}>Back</button>

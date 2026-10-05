@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react"
 import { supabase } from "./supabase.js"
 import { DEFAULT_PRICING } from "./pricing.js"
+import { pricingSnapshotToTables } from "./pricingSnapshots.js"
 import { sanitizeName, sanitizeText, sanitizeNumeric, sanitizeEmail, isValidEmail } from "./sanitize.js"
 import { logError } from "./logger.js"
 import { recordAuditEvent } from "./auditLog.js"
@@ -149,11 +150,20 @@ const TABLE_CONFIG = [
   },
   {
     key: "installType",
-    label: "Installation Types",
-    description: "Rate as decimal of cabinetry total (or $/hr for Hourly Rate)",
+    label: "Legacy Installation / Hourly",
+    description: "Existing quote percentages and hourly installation rates",
     columns: [
       { key: "name", label: "Install Type", type: "text",   width: "60%" },
       { key: "rate", label: "Rate",         type: "number", width: "30%" },
+    ],
+  },
+  {
+    key: "installPerLF",
+    label: "Installation Rates per LF",
+    description: "Installation difficulty / style rates in dollars per linear foot",
+    columns: [
+      { key: "name", label: "Category", type: "text", width: "60%" },
+      { key: "rate", label: "$/LF", type: "number", width: "30%" },
     ],
   },
   {
@@ -167,7 +177,7 @@ const TABLE_CONFIG = [
   },
 ]
 
-const allRoomsComplete = (quote) => Array.isArray(quote.rooms) && quote.rooms.length > 0 && quote.rooms.every(isRoomComplete)
+const allRoomsComplete = (quote) => Array.isArray(quote.rooms) && quote.rooms.length > 0 && quote.rooms.every(room => isRoomComplete(room, pricingSnapshotToTables(quote.pricingSnapshot, quote._pricing || DEFAULT_PRICING)))
 
 const getQuoteStatusMeta = (quote) => {
   const status = quote._status
@@ -293,6 +303,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
         const merged = {}
         for (const key of Object.keys(DEFAULT_PRICING)) {
           merged[key] = data.data[key] ?? DEFAULT_PRICING[key]
+          if (key === 'installPerLF' && merged[key].length === 0) merged[key] = DEFAULT_PRICING[key].map(row => ({ ...row }))
         }
         setPricing(merged)
         pricingStampRef.current = data.updated_at || null
@@ -314,6 +325,7 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
       } else {
         setQuotes((data || []).map(row => ({
           ...(row.data || {}),
+          _pricing: pricing,
           _rowId: row.id,
           _updatedAt: row.updated_at,
           _createdAt: row.created_at,
@@ -345,6 +357,10 @@ export default function AdminPanel({ currentUser, isAdmin, onBack, session, onOp
           }
           if ((col.type === "number" || col.type === "percent") && (isNaN(Number(val)))) {
             showToast(`Warning: "${tc.label}" row ${i + 1}: "${col.label}" must be a number`)
+            return
+          }
+          if (tc.key === 'installPerLF' && col.key === 'rate' && (!Number.isFinite(Number(val)) || Number(val) <= 0)) {
+            showToast('Installation rates per LF must be greater than zero.')
             return
           }
         }

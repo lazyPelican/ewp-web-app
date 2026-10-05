@@ -41,6 +41,20 @@ export async function buildSummaryPDFBlob(project, rooms, preparedBy, pricing) {
   return mod.buildSummaryPDFBlob(project, rooms, opts(preparedBy, pricing, false));
 }
 
+export async function buildQuickBooksPDFBlob(project, rooms, preparedBy, pricing) {
+  const mod = await getPDF();
+  return mod.buildQuickBooksPDFBlob(project, rooms, opts(preparedBy, pricing, false));
+}
+
+export async function exportPDFQuickBooks(project, rooms, preparedBy, pricing, onStatus) {
+  try {
+    const mod = await getPDF();
+    return mod.exportPDFQuickBooks(project, rooms, opts(preparedBy, pricing, false), onStatus);
+  } catch (error) {
+    onStatus('error', error?.message || 'QuickBooks summary generation failed.');
+  }
+}
+
 export async function buildInternalPDFBlob(project, rooms, preparedBy, pricing) {
   const mod = await getPDF();
   return mod.buildInternalPDFBlob(project, rooms, opts(preparedBy, pricing, true));

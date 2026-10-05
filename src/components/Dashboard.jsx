@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react"
+import { pricingSnapshotToTables } from "../pricingSnapshots.js"
 import { fmt, fmtDate, fmtId, calcTotal, isRoomComplete, ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus } from "../appUtils.js"
 
 export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete, onDuplicate, onConfirm, onUpdateStage, onCloseProject, onGenerateQuote, onGenerateQuoteCustomer, onEmail, actionBusy, userName, initialView }) {
@@ -14,7 +15,8 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
     return "Welcome back";
   })();
 
-  const allComplete = (p) => p.rooms.length > 0 && p.rooms.every(isRoomComplete);
+  const quotePricing = (p) => pricingSnapshotToTables(p.pricingSnapshot, pricing);
+  const allComplete = (p) => p.rooms.length > 0 && p.rooms.every(room => isRoomComplete(room, quotePricing(p)));
 
   const { drafts, completed, active, closed } = useMemo(() => {
     const d = [], c = [], a = [], cl = [];
@@ -33,14 +35,14 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
       return getIdTime(b.project.id || '').localeCompare(getIdTime(a.project.id || ''))
     });
     return { drafts: sortByIdDesc(d), completed: sortByIdDesc(c), active: sortByIdDesc(a), closed: sortByIdDesc(cl) };
-  }, [projects]);
+  }, [projects, pricing]);
 
   const quotationTotal = useMemo(() =>
-    [...drafts, ...completed].reduce((s, p) => s + calcTotal(p, pricing), 0),
-  [drafts, completed]);
+    [...drafts, ...completed].reduce((s, p) => s + calcTotal(p, quotePricing(p)), 0),
+  [drafts, completed, pricing]);
   const activeTotal = useMemo(() =>
-    active.reduce((s, p) => s + calcTotal(p, pricing), 0),
-  [active]);
+    active.reduce((s, p) => s + calcTotal(p, quotePricing(p)), 0),
+  [active, pricing]);
 
   const filterList = (list) => {
     if (!search.trim()) return list;
@@ -82,7 +84,7 @@ export function Dashboard({ projects, pricing, isAdmin, onNew, onOpen, onDelete,
 
   // ── Card renderer ──
   const renderCard = (p, i, { section } = {}) => {
-    const gt = calcTotal(p, pricing);
+    const gt = calcTotal(p, quotePricing(p));
     const complete = allComplete(p);
     const realIdx = projects.indexOf(p);
     const isActive = isActiveStatus(p._status);

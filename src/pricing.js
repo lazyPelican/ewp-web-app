@@ -64,6 +64,10 @@ export const DEFAULT_PRICING = {
     { name: "Mantels", pricePerLF: 100 },
     { name: "Kitchen Hood", pricePerLF: null },
   ],
+  installPerLF: [
+    { name: "Euro Style", rate: "" },
+    { name: "Paint Grade", rate: "" },
+  ],
   installType: [
     { name: "No Install", rate: 0 },
     { name: "Standard or Full Overlay - Unfinished", rate: 0.18 },

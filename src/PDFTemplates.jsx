@@ -2,6 +2,15 @@
 // Generates true vector PDFs (selectable text, no rasterisation)
 
 import React from 'react'
+import { quickBooksSummary } from './quickBooksSummary.js'
+import { installationDetails, installationIssue } from '../supabase/functions/_shared/installation.js'
+
+const assertInstallationReady = (rooms, pricing) => {
+  for (const room of rooms) {
+    const issue = installationIssue(room, pricing)
+    if (issue) throw new Error(`${room.name || 'Room'}: ${issue}`)
+  }
+}
 import {
   Document, Page, View, Text, Image, StyleSheet, Font, pdf
 } from '@react-pdf/renderer'
@@ -997,12 +1006,13 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
   ]
 
   // Compute install display values
-  const instMetric = room.install.type === HOURLY_RATE
-    ? `${room.install.metric || '0'} hrs × $135.00/hr`
+  const installation = installationDetails(room.install, rt.cab, pricing, room)
+  const instMetric = room.install.method === 'per_lf'
+    ? `${installation.lf} LF x ${fmtN(installation.rate)}/LF`
+    : room.install.type === HOURLY_RATE
+    ? `${room.install.metric || '0'} hrs x ${fmtN(installation.rate)}/hr`
     : instDef ? `${(instDef.rate * 100).toFixed(0)}% of cabinetry` : '—'
-  const instPrice = room.install.type === HOURLY_RATE
-    ? fmtN((parseFloat(room.install.metric) || 0) * 135)
-    : fmtN(instDef ? rt.cab * instDef.rate : 0)
+  const instPrice = fmtN(installation.base)
   const instAdj = room.install.adjPct ? `${room.install.adjPct}%` : '0%'
 
   // Build cabinetry row cells
@@ -1174,7 +1184,7 @@ function InternalRoomPage({ project, room, roomIndex, totalRooms, rt, pricing, p
       </>)}
 
       {/* Installation */}
-      {cfgI('install').showInternal && (<>
+      {cfgI('install').showInternal && (!room.install.method || !Array.isArray(room.sections) || room.sections.includes('install')) && (<>
       <SectionLabel label="Installation" />
       <View style={s.tblWrap}>
         <TableHeader colDefs={instInfoCols} />
@@ -1354,7 +1364,8 @@ function CustomerSummaryPage({
   )
 }
 
-function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, preparedBy }) {
+function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, preparedBy, pricing }) {
+  const installation = installationDetails(room.install, rt.cab, pricing, room)
   const qs = project.quoteSections || {}
   const qd = { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" }
   const cfg = (k) => ({ ...qd, ...(qs[k] || {}) })
@@ -1363,7 +1374,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
   const upgItems = room.upgrades.filter(i => i.upgrade && parseFloat(i.qty) !== 0)
   const ctpItems = (room.countertops || []).filter(i => i.product && parseFloat(i.qty) !== 0)
   const finItems = room.finishing.filter(i => i.type && parseFloat(i.lf) !== 0)
-  const hasInstall = room.install.type && room.install.type !== 'No Install'
+  const hasInstall = room.install.type && room.install.type !== 'No Install' && (!room.install.method || !Array.isArray(room.sections) || room.sections.includes('install'))
 
   const descCols = [
     { w: '60%', label: 'Description' },
@@ -1531,7 +1542,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
             <View style={s.tblWrap}>
               <View style={s.tRow}>
                 <View style={{ width: '100%' }}>
-                  <Text style={s.tCell}>Professional installation — {room.install.type}</Text>
+                  <Text style={s.tCell}>Professional installation — {room.install.type}{room.install.method === 'per_lf' ? ` · ${installation.lf} LF x ${fmtN(installation.rate)}/LF${Number(room.install.adjPct) ? ` · ${room.install.adjPct}% adjustment` : ''} · ${fmtN(rt.inst)} (rounded up to $5)` : ''}</Text>
                 </View>
               </View>
             </View>
@@ -1592,7 +1603,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
 
 // ── CUSTOMER DOCUMENT ──────────────────────────────────────────────────────
 
-function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy }) {
+function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTaxAmt, grandTotal, preparedBy, pricing }) {
   return (
     <Document title={`${project.name || 'Quote'} — Quote`} author="Engstrom Wood Products">
       <ExecutiveSummaryPage
@@ -1608,6 +1619,7 @@ function CustomerPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfT
       {rooms.map((room, i) => (
         <CustomerRoomPage
           key={i}
+          pricing={pricing}
           project={project}
           room={room}
           roomIndex={i}
@@ -1643,17 +1655,87 @@ function SummaryPDFDoc({ project, rooms, roomTotals, delivery, pdfTaxRate, pdfTa
 }
 
 // ── EXPORT FUNCTIONS ───────────────────────────────────────────────────────
+export async function buildQuickBooksPDFBlob(project, rooms, { pricing, preparedBy }) {
+  assertInstallationReady(rooms, pricing)
+  const totals = quickBooksSummary(project, rooms, pricing)
+  return pdf(
+    <Document title={`${project.name || 'Quote'} - QuickBooks Summary`} author="Engstrom Wood Products">
+      <Page size="LETTER" style={[s.page, { paddingTop: 36, paddingBottom: 48, paddingLeft: 42, paddingRight: 42 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18, marginBottom: 24, borderBottomWidth: 2, borderBottomColor: '#237A3B' }}>
+          <Image src={LOGO_SRC} style={{ width: 42, height: 42, objectFit: 'contain', marginRight: 14 }} />
+          <View>
+            <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 23 }}>Engstrom Wood Products</Text>
+            <Text style={{ fontSize: 9, color: '#606860', marginTop: 5 }}>CUSTOM CABINETRY  /  FINE WOODWORKING</Text>
+          </View>
+        </View>
+        <Text style={{ fontFamily: FONT_SERIF_BD, fontSize: 28, marginBottom: 8 }}>QuickBooks Summary</Text>
+        <Text style={{ fontSize: 10, color: '#606860', marginBottom: 22 }}>Quote {fmtId(project.id)}  |  {fmtD(project.bidDate)}</Text>
+        <ProjectRibbon project={project} />
+        <View style={{ marginTop: 24 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 9, borderBottomWidth: 1.5, borderBottomColor: '#202820' }}>
+            <Text style={{ fontSize: 10, fontFamily: FONT_SANS_BD }}>ITEM / DESCRIPTION</Text>
+            <Text style={{ fontSize: 10, fontFamily: FONT_SANS_BD }}>AMOUNT</Text>
+          </View>
+          {totals.lines.map((line, index) => (
+            <View key={line.name} wrap={false} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 10, backgroundColor: index % 2 === 1 ? '#F4F6F3' : '#FFFFFF', borderBottomWidth: 0.5, borderBottomColor: '#D9DFD7' }}>
+              <View style={{ width: '66%' }}>
+                <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 13 }}>{line.name}</Text>
+                <Text style={{ fontSize: 10, color: '#606860', marginTop: 4 }}>{line.description}</Text>
+              </View>
+              <Text style={{ width: '34%', textAlign: 'right', fontFamily: FONT_SANS_BD, fontSize: 15 }}>{fmtN(line.amount)}</Text>
+            </View>
+          ))}
+        </View>
+        <View wrap={false} style={{ width: '64%', alignSelf: 'flex-end', marginTop: 18 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 }}>
+            <Text style={{ fontSize: 11, color: '#606860' }}>Subtotal</Text>
+            <Text style={{ fontSize: 12 }}>{fmtN(totals.subtotal)}</Text>
+          </View>
+          {totals.hasTax && <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#606860' }}>Estimated Tax</Text>
+            <Text style={{ fontSize: 12 }}>{fmtN(totals.tax)}</Text>
+          </View>}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderTopWidth: 2, borderTopColor: '#237A3B' }}>
+            <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 13 }}>Grand Total</Text>
+            <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 20, color: '#1D6030' }}>{fmtN(totals.grandTotal)}</Text>
+          </View>
+        </View>
+        <PageFooter project={project} preparedBy={preparedBy} />
+      </Page>
+    </Document>
+  ).toBlob()
+}
+
+export async function exportPDFQuickBooks(project, rooms, options, onStatus) {
+  onStatus('generating')
+  try {
+    const blob = await buildQuickBooksPDFBlob(project, rooms, options)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${(project.name || 'Quote').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Quote'} - QuickBooks Summary.pdf`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 120000)
+    onStatus('done')
+  } catch (error) {
+    onStatus('error', error?.message || 'QuickBooks summary generation failed.')
+  }
+}
+
 // Called from App.jsx; calc functions + PRICING are passed in.
 
 export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
   onStatus('generating')
   try {
+    assertInstallationReady(rooms, pricing)
     const roomTotals = rooms.map(r => {
       const cab  = calcCabinetry(r.cabinetry, pricing)
       const upg  = calcUpgrades(r.upgrades, pricing)
       const ctp  = calcCountertops(r.countertops, pricing)
       const fin  = calcFinishing(r.finishing, pricing)
-      const inst = calcInstall(r.install, cab, pricing)
+      const inst = calcInstall(r.install, cab, pricing, r)
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const grandCab  = roomTotals.reduce((s, r) => s + r.cab,  0)
@@ -1708,12 +1790,13 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
 export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
   onStatus('generating')
   try {
+    assertInstallationReady(rooms, pricing)
     const roomTotals = rooms.map(r => {
       const cab  = calcCabinetry(r.cabinetry, pricing)
       const upg  = calcUpgrades(r.upgrades, pricing)
       const ctp  = calcCountertops(r.countertops, pricing)
       const fin  = calcFinishing(r.finishing, pricing)
-      const inst = calcInstall(r.install, cab, pricing)
+      const inst = calcInstall(r.install, cab, pricing, r)
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
@@ -1725,6 +1808,7 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
 
     const blob = await pdf(
       <CustomerPDFDoc
+        pricing={pricing}
         project={project}
         rooms={rooms}
         roomTotals={roomTotals}
@@ -1756,12 +1840,13 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
 
 // Returns the internal PDF as a Blob (no download) — used for preview.
 export async function buildInternalPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }) {
+  assertInstallationReady(rooms, pricing)
   const roomTotals = rooms.map(r => {
     const cab  = calcCabinetry(r.cabinetry, pricing)
     const upg  = calcUpgrades(r.upgrades, pricing)
     const ctp  = calcCountertops(r.countertops, pricing)
     const fin  = calcFinishing(r.finishing, pricing)
-    const inst = calcInstall(r.install, cab, pricing)
+      const inst = calcInstall(r.install, cab, pricing, r)
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const grandCab  = roomTotals.reduce((s, r) => s + r.cab,  0)
@@ -1798,12 +1883,13 @@ export async function buildInternalPDFBlob(project, rooms, { calcCabinetry, calc
 
 // Returns the customer PDF as a Blob (no download) — used for email attachment and preview.
 export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }) {
+  assertInstallationReady(rooms, pricing)
   const roomTotals = rooms.map(r => {
     const cab  = calcCabinetry(r.cabinetry, pricing)
     const upg  = calcUpgrades(r.upgrades, pricing)
     const ctp  = calcCountertops(r.countertops, pricing)
     const fin  = calcFinishing(r.finishing, pricing)
-    const inst = calcInstall(r.install, cab, pricing)
+    const inst = calcInstall(r.install, cab, pricing, r)
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
@@ -1815,6 +1901,7 @@ export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calc
 
   return pdf(
     <CustomerPDFDoc
+      pricing={pricing}
       project={project}
       rooms={rooms}
       roomTotals={roomTotals}
@@ -1831,12 +1918,13 @@ export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calc
 export async function exportPDFSummary(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }, onStatus) {
   onStatus('generating')
   try {
+    assertInstallationReady(rooms, pricing)
     const roomTotals = rooms.map(r => {
       const cab  = calcCabinetry(r.cabinetry, pricing)
       const upg  = calcUpgrades(r.upgrades, pricing)
       const ctp  = calcCountertops(r.countertops, pricing)
       const fin  = calcFinishing(r.finishing, pricing)
-      const inst = calcInstall(r.install, cab, pricing)
+    const inst = calcInstall(r.install, cab, pricing, r)
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
@@ -1878,12 +1966,13 @@ export async function exportPDFSummary(project, rooms, { calcCabinetry, calcUpgr
 }
 
 export async function buildSummaryPDFBlob(project, rooms, { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, pricing, preparedBy }) {
+  assertInstallationReady(rooms, pricing)
   const roomTotals = rooms.map(r => {
     const cab  = calcCabinetry(r.cabinetry, pricing)
     const upg  = calcUpgrades(r.upgrades, pricing)
     const ctp  = calcCountertops(r.countertops, pricing)
     const fin  = calcFinishing(r.finishing, pricing)
-    const inst = calcInstall(r.install, cab, pricing)
+    const inst = calcInstall(r.install, cab, pricing, r)
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)

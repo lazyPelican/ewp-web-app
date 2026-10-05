@@ -7,6 +7,8 @@ import {
   buildInternalPDFBlob,
   buildCustomerPDFBlob,
   buildSummaryPDFBlob,
+  buildQuickBooksPDFBlob,
+  exportPDFQuickBooks,
 } from "../pdfExport.js"
 import { isChunkLoadError, reloadForFreshAssets } from "../chunkRecovery.js"
 
@@ -27,6 +29,8 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
 
   const [pdfStatus3, setPdfStatus3] = useState("idle");
   const [pdfError3,  setPdfError3]  = useState(null);
+  const [quickBooksStatus, setQuickBooksStatus] = useState('idle');
+  const [quickBooksError, setQuickBooksError] = useState(null);
 
   const [viewer, setViewer] = useState({ open: false, url: null, label: "" });
   const [viewerBusy, setViewerBusy] = useState(null);
@@ -72,7 +76,7 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
     setViewerBusy(type);
     setPreviewError(null);
     try {
-      const buildBlob = type === "internal"
+      const buildBlob = type === 'quickbooks' ? buildQuickBooksPDFBlob : type === "internal"
         ? buildInternalPDFBlob
         : type === "customer"
           ? buildCustomerPDFBlob
@@ -97,6 +101,14 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
     } finally {
       if (mounted.current) setViewerBusy(null);
     }
+  };
+
+  const handleQuickBooks = () => {
+    setQuickBooksError(null);
+    exportPDFQuickBooks(project, rooms, preparedBy, pricing, (status, error) => {
+      setQuickBooksStatus(status);
+      if (error) setQuickBooksError(error);
+    });
   };
 
   const actions = [
@@ -135,7 +147,19 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
     },
   ];
 
-  const viewerTitle = { internal: "Internal Quote", customer: "Customer Quote", summary: "Summary" }[viewer.label] || "";
+  actions.push({
+    icon: 'QB',
+    title: 'Summary for QuickBooks',
+    key: 'quickbooks',
+    desc: 'Wood Products, Finishing, Installation, and Delivery.',
+    btnLabel: { idle: 'Download PDF', generating: 'Preparing...', done: 'Download Again', error: 'Try Again' }[quickBooksStatus],
+    busy: quickBooksStatus === 'generating',
+    err: quickBooksError,
+    onClick: handleQuickBooks,
+    btnClass: 'btn-gold',
+  });
+
+  const viewerTitle = { internal: "Internal Quote", customer: "Customer Quote", summary: "Summary", quickbooks: 'Summary for QuickBooks' }[viewer.label] || "";
 
   return (
     <div className="print-email-page">
@@ -151,7 +175,9 @@ export function PrintEmailPage({ project, rooms, pricing, preparedBy, onBack, on
           const prevBusy = viewerBusy === key;
           return (
             <div key={title} className="card" style={{ display: "flex", flexDirection: "column", gap: 12, padding: "24px 20px" }}>
-              <div style={{ fontSize: 32 }}>{icon}</div>
+              {key === 'quickbooks' ? (
+                <div role="img" aria-label="QuickBooks" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#237A3B', color: '#fff', fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-body)', flexShrink: 0 }}>QB</div>
+              ) : <div style={{ fontSize: 32 }}>{icon}</div>}
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--char)", marginBottom: 4 }}>{title}</div>
                 <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>{desc}</div>

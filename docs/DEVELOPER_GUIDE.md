@@ -40,6 +40,20 @@ Apply `supabase/hardening.sql` in Supabase SQL Editor whenever it changes.
 
 ## Architecture Notes
 
+### Installation Pricing
+
+Fresh quotes carry `project.installationPricingVersion: 2`. New rooms use `install.method: "per_lf"`, with a category name in `install.type`. The admin-managed `pricing.installPerLF` table contains `{ name, rate }` rows in dollars per LF. An unconfigured table starts with Euro Style and Paint Grade categories, with blank rates for an admin to enter. Existing configured tables retain their categories. New quotes also allow `hourly` and `none`. Missing method/version fields retain legacy percentage/hourly behavior, including rooms added to existing quotes and duplicates.
+
+Installation uses the sum of entered finishing LF when finishing is enabled, otherwise the cabinetry-derived finishing estimate. Apply the installation percentage adjustment and round up to $5. Browser and Edge Function use `supabase/functions/_shared/installation.js` for the same formula. Rate/category/footage requirements block quote completion and PDF issuance, but incomplete drafts can be saved.
+
+Snapshots include `installPerLF` rates and `woodworkFinLF` factors for new per-LF rooms. Saved installation categories are reconstructed even if deleted from the current table. Deleted categories require keeping saved pricing or choosing a replacement before updating. No existing quotes are migrated.
+
+Deploy `validate-quote` before releasing the frontend. The shared function directory also triggers the Edge Function deployment workflow. An admin must configure the new LF table before issuing per-LF quotes.
+
+### QuickBooks Summary PDF
+
+The Save/Send/Print Quote page includes a separate Summary for QuickBooks preview/download. It aggregates all rooms into Wood Products (cabinetry, upgrades and countertops), Finishing, Installation and Delivery. It shows subtotal, applicable tax and grand total, using the active saved pricing and the same installation/delivery/tax rules as the quote. This is a standalone PDF for manual entry, not a QuickBooks API integration or import file.
+
 The app still stores deep quote details in `projects.data` JSON. Frequently queried fields such as total amount, bid date, contact name, and contractor name are also written to dedicated columns for reporting. Future normalization should be incremental: keep the JSON payload until equivalent relational tables are fully populated and tested.
 
 The app is JavaScript-first. Use JSDoc or TypeScript for new complex utility modules where possible, but do not rename large React files to TypeScript without a planned migration and regression coverage.

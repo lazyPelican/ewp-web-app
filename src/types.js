@@ -17,6 +17,7 @@
  * @property {PricingRow[]} countertops
  * @property {PricingRow[]} finishing
  * @property {PricingRow[]} installType
+ * @property {PricingRow[]=} installPerLF
  */
 
 /**

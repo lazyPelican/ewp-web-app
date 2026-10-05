@@ -6,7 +6,8 @@ export const priceValueFor = (row, key) => {
   if (!row) return null
   if (key === "finishing") return Number(row.pricePerLF || 0)
   if (key === "construction" || key === "wood") return Number(row.premium || 0)
-  if (key === "installType") return Number(row.rate || 0)
+  if (key === "installType" || key === "installPerLF") return Number(row.rate || 0)
+  if (key === "woodworkFinLF") return Number(row.finLF || 0)
   return Number(row.price || 0)
 }
 
@@ -18,6 +19,8 @@ export const pricingLabelFor = (key) => ({
   construction: "Construction premium",
   wood: "Wood premium",
   installType: "Installation",
+  installPerLF: "Installation per LF",
+  woodworkFinLF: "Cabinetry finishing LF factor",
 }[key] || key)
 
 export const buildPricingSnapshotForRooms = (roomsList, pricing = DEFAULT_PRICING) => {
@@ -40,14 +43,19 @@ export const buildPricingSnapshotForRooms = (roomsList, pricing = DEFAULT_PRICIN
     ;(room.upgrades || []).forEach(item => item.upgrade && names.upgrades.add(item.upgrade))
     ;(room.countertops || []).forEach(item => item.product && names.countertops.add(item.product))
     ;(room.finishing || []).forEach(item => item.type && names.finishing.add(item.type))
-    if (room.install?.type) names.installType.add(room.install.type)
+    if (room.install?.method === 'per_lf') {
+      names.installPerLF ||= new Set()
+      names.woodworkFinLF ||= new Set()
+      if (room.install.type) names.installPerLF.add(room.install.type)
+      ;(room.cabinetry || []).forEach(item => item.product && names.woodworkFinLF.add(item.product))
+    } else if (room.install?.type) names.installType.add(room.install.type)
   })
 
   const snapshot = {}
   Object.entries(names).forEach(([key, usedNames]) => {
     snapshot[key] = {}
     usedNames.forEach(name => {
-      const row = (pricing[key] || []).find(r => r.name === name || r.name?.trim() === name?.trim())
+      const row = (pricing[key === 'woodworkFinLF' ? 'woodwork' : key] || []).find(r => r.name === name || r.name?.trim() === name?.trim())
       if (row) snapshot[key][name] = priceValueFor(row, key)
     })
   })
@@ -58,11 +66,20 @@ export const pricingSnapshotToTables = (snapshot, basePricing = DEFAULT_PRICING)
   if (!snapshot) return clonePricing(basePricing)
   const pricing = clonePricing(basePricing)
   Object.entries(snapshot).forEach(([key, rows]) => {
-    pricing[key] = (pricing[key] || []).map(row => {
+    const tableKey = key === 'woodworkFinLF' ? 'woodwork' : key
+    if (key === 'installPerLF') {
+      Object.entries(rows).forEach(([name, rate]) => {
+        if (!(pricing[tableKey] || []).some(row => row.name === name)) {
+          pricing[tableKey] = [...(pricing[tableKey] || []), { name, rate }]
+        }
+      })
+    }
+    pricing[tableKey] = (pricing[tableKey] || []).map(row => {
       if (!row?.name || rows[row.name] == null) return row
       if (key === "finishing") return { ...row, pricePerLF: rows[row.name] }
       if (key === "construction" || key === "wood") return { ...row, premium: rows[row.name] }
-      if (key === "installType") return { ...row, rate: rows[row.name] }
+      if (key === "installType" || key === "installPerLF") return { ...row, rate: rows[row.name] }
+      if (key === "woodworkFinLF") return { ...row, finLF: rows[row.name] }
       return { ...row, price: rows[row.name] }
     })
   })
@@ -75,7 +92,10 @@ export const detectPricingChanges = (savedSnapshot, currentSnapshot) => {
   Object.entries(savedSnapshot).forEach(([key, rows]) => {
     Object.entries(rows || {}).forEach(([name, oldValue]) => {
       const newValue = currentSnapshot[key]?.[name]
-      if (newValue == null) return
+      if (newValue == null) {
+        if (key === 'installPerLF') changes.push({ key, label: pricingLabelFor(key), name, oldValue: Number(oldValue), newValue: null, removed: true })
+        return
+      }
       if (Math.abs(Number(oldValue) - Number(newValue)) > 0.0001) {
         changes.push({ key, label: pricingLabelFor(key), name, oldValue: Number(oldValue), newValue: Number(newValue) })
       }
@@ -86,6 +106,9 @@ export const detectPricingChanges = (savedSnapshot, currentSnapshot) => {
 
 export const displayPriceValue = (change) => {
   const money = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
+  if (change.removed) return `${money(change.oldValue)}/LF -> Removed from current pricing`
+  if (change.key === 'installPerLF') return `${money(change.oldValue)}/LF -> ${money(change.newValue)}/LF`
+  if (change.key === 'woodworkFinLF') return `${change.oldValue} LF -> ${change.newValue} LF`
   if (change.key === "installType" && change.name === "Hourly Rate") {
     return `${money(change.oldValue)}/hr -> ${money(change.newValue)}/hr`
   }

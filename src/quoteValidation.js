@@ -38,6 +38,7 @@ export function validateQuotePayload(project, rooms) {
     })
     if (!isFiniteNumberString(room?.install?.metric, { min: 0 })) errors.push(`${prefix} install metric is invalid.`)
     if (!isFiniteNumberString(room?.install?.adjPct, { min: -100, max: 1000 })) errors.push(`${prefix} install adjustment is invalid.`)
+    if (room?.install?.method && !['per_lf', 'hourly', 'none'].includes(room.install.method)) errors.push(`${prefix} installation method is invalid.`)
   })
 
   return {

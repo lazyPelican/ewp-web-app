@@ -8,7 +8,7 @@ export function FinalDetailsPage({ project, rooms, pricing, onChange, onNext, on
     const upg  = calcUpgrades(r.upgrades, pricing);
     const ctp  = calcCountertops(r.countertops, pricing);
     const fin  = calcFinishing(r.finishing, pricing);
-    const inst = calcInstall(r.install, cab, pricing);
+    const inst = calcInstall(r.install, cab, pricing, r);
     return cab + upg + ctp + fin + inst;
   });
   const roomsSubtotal = roomTotals.reduce((s, v) => s + v, 0);
