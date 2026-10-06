@@ -1365,7 +1365,6 @@ function CustomerSummaryPage({
 }
 
 function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, preparedBy, pricing }) {
-  const installation = installationDetails(room.install, rt.cab, pricing, room)
   const qs = project.quoteSections || {}
   const qd = { showInternal: true, showExternal: true, showDetailExt: true, showPricingExt: false, rollInto: "" }
   const cfg = (k) => ({ ...qd, ...(qs[k] || {}) })
@@ -1542,7 +1541,7 @@ function CustomerRoomPage({ project, room, roomIndex, totalRooms, rt, delivery, 
             <View style={s.tblWrap}>
               <View style={s.tRow}>
                 <View style={{ width: '100%' }}>
-                  <Text style={s.tCell}>Professional installation — {room.install.type}{room.install.method === 'per_lf' ? ` · ${installation.lf} LF x ${fmtN(installation.rate)}/LF${Number(room.install.adjPct) ? ` · ${room.install.adjPct}% adjustment` : ''} · ${fmtN(rt.inst)} (rounded up to $5)` : ''}</Text>
+                  <Text style={s.tCell}>Professional installation</Text>
                 </View>
               </View>
             </View>

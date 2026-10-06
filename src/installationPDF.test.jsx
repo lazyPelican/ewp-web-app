@@ -3,8 +3,20 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { DEFAULT_PRICING } from './pricing.js'
 import { blankRoom, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from './appUtils.js'
 
-// Keep the real PDF renderer; remove remote logo fetching from this runtime test.
-vi.mock('@react-pdf/renderer', async importOriginal => ({ ...await importOriginal(), Image: () => null }))
+const renderedText = vi.hoisted(() => [])
+// Keep the real renderer and capture text without remote logo fetching.
+vi.mock('@react-pdf/renderer', async importOriginal => {
+  const original = await importOriginal()
+  const { createElement } = await import('react')
+  return {
+    ...original,
+    Image: () => null,
+    Text: props => {
+      renderedText.push(props.children)
+      return createElement(original.Text, props)
+    },
+  }
+})
 import { buildCustomerPDFBlob, buildInternalPDFBlob, buildSummaryPDFBlob, buildQuickBooksPDFBlob } from './PDFTemplates.jsx'
 
 const pricing = { ...DEFAULT_PRICING, installPerLF: [{ name: 'Euro', rate: 100 }] }
@@ -30,6 +42,22 @@ it('blocks issuing a per-LF PDF with no configured rate', async () => {
     await expect(build(project, [room], { ...options, pricing: { ...pricing, installPerLF: [] } })).rejects.toThrow(/valid rate/)
   }
 })
+
+it('hides installation pricing methods in customer PDFs but preserves internal details', async () => {
+  const pricedProject = { ...project, quoteSections: { install: { showExternal: true, showDetailExt: true, showPricingExt: true } } }
+  const adjustedRoom = { ...room, install: { ...room.install, adjPct: '10' } }
+  for (const build of [buildCustomerPDFBlob, buildSummaryPDFBlob, buildQuickBooksPDFBlob]) {
+    renderedText.length = 0
+    await build(pricedProject, [adjustedRoom], options)
+    const text = renderedText.flat(Infinity).filter(value => typeof value === 'string').join(' ')
+    expect(text).not.toMatch(/\/LF|\b100 LF\b|10% adjustment|rounded up to \$5/)
+    expect(text).toContain('$11,000')
+    if (build === buildCustomerPDFBlob) expect(text).toContain('Professional installation')
+  }
+  renderedText.length = 0
+  await buildInternalPDFBlob(pricedProject, [adjustedRoom], options)
+  expect(renderedText.flat(Infinity).join(' ')).toContain('/LF')
+}, 60000)
 
 it('still renders an existing percentage-based quote', async () => {
   const legacyRoom = { ...room, install: { type: 'Euro - Finished', adjPct: '', notes: '' } }
