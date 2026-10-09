@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { Field } from "./Field.jsx"
+import { quoteTotals } from '../../supabase/functions/_shared/quoteTotals.js'
 import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, DEFAULT_QUOTE_SECTIONS } from "../appUtils.js"
 
 export function FinalDetailsPage({ project, rooms, pricing, onChange, onNext, onBack }) {
@@ -14,10 +15,8 @@ export function FinalDetailsPage({ project, rooms, pricing, onChange, onNext, on
   const roomsSubtotal = roomTotals.reduce((s, v) => s + v, 0);
   const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0);
   const subtotal   = roomsSubtotal + delivery;
-  const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
-  const taxRate    = Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8.53;
-  const taxAmt     = taxEnabled ? subtotal * (taxRate / 100) : 0;
-  const grandTotal = subtotal + taxAmt;
+  const totals = quoteTotals(project, roomsSubtotal);
+  const { hasTax: taxEnabled, taxRate, tax: taxAmt, grandTotal } = totals;
 
   return (
     <div>
@@ -233,6 +232,7 @@ export function FinalDetailsPage({ project, rooms, pricing, onChange, onNext, on
             ["Rooms Subtotal", roomsSubtotal],
             ["Delivery", delivery],
             ...(taxEnabled && taxAmt > 0 ? [["Tax" + ` (${taxRate}%)`, taxAmt]] : []),
+            ...(totals.discountEnabled && !totals.error ? [['Original Grand Total', totals.originalGrandTotal], [`Discount (${totals.discountPercent.toFixed(2)}%)`, -totals.discountAmount]] : []),
             ["Grand Total", grandTotal],
           ]
 
@@ -240,7 +240,7 @@ export function FinalDetailsPage({ project, rooms, pricing, onChange, onNext, on
             <div
               className="card-body summary-tax-grid"
               style={{
-                gridTemplateColumns: `repeat(${items.length}, 1fr)`,
+                gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
               }}
             >
               {items.map(([lbl, val]) => {

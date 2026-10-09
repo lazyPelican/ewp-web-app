@@ -1,5 +1,6 @@
 // Shared utilities and helpers used across App.jsx and extracted components
 import { DEFAULT_PRICING } from "./pricing.js"
+import { quoteTotals } from '../supabase/functions/_shared/quoteTotals.js'
 import { installationDetails, installationIssue } from "../supabase/functions/_shared/installation.js"
 export { installationDetails, installationFootage, installationIssue } from "../supabase/functions/_shared/installation.js"
 import "./types.js"
@@ -194,18 +195,15 @@ export const blankFinRow = () => ({ type: "", lf: "", adjPct: "", notes: "" });
 
 // Project total calculator
 /** @param {{ project: import("./types.js").QuoteProject, rooms: import("./types.js").QuoteRoom[] }} p @param {import("./types.js").PricingTables} pricing */
-export const calcTotal = (p, pricing = DEFAULT_PRICING) => {
+export const calcQuoteTotals = (p, pricing = DEFAULT_PRICING) => {
   const roomsTotal = p.rooms.reduce((rs, r) => {
     const cab = calcCabinetry(r.cabinetry, pricing);
     return rs + cab + calcUpgrades(r.upgrades, pricing) + calcCountertops(r.countertops, pricing) + calcFinishing(r.finishing, pricing) + calcInstall(r.install, cab, pricing, r);
   }, 0);
-  const delivery = p.project.noDelivery ? 0 : (parseFloat(p.project.deliveryAmount) || 0);
-  const subtotal = roomsTotal + delivery;
-  const taxEnabled = p.project.installationType ? p.project.installationType === "contractor" : p.project.taxEnabled;
-  const taxRate = p.project.installationType ? 8.53 : (parseFloat(p.project.taxRate) || 8);
-  const tax = taxEnabled ? subtotal * (taxRate / 100) : 0;
-  return subtotal + tax;
+  return quoteTotals(p.project, roomsTotal);
 };
+
+export const calcTotal = (p, pricing = DEFAULT_PRICING) => calcQuoteTotals(p, pricing).grandTotal;
 
 // Production lifecycle stages
 export const ACTIVE_STAGES = [

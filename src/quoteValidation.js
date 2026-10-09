@@ -1,4 +1,5 @@
 import { isValidEmail } from "./sanitize.js"
+import { calcQuoteTotals } from './appUtils.js'
 
 const isFiniteNumberString = (value, { min = -Infinity, max = Infinity } = {}) => {
   if (value === "" || value == null) return true
@@ -8,7 +9,7 @@ const isFiniteNumberString = (value, { min = -Infinity, max = Infinity } = {}) =
 
 const asArray = (value) => Array.isArray(value) ? value : []
 
-export function validateQuotePayload(project, rooms) {
+export function validateQuotePayload(project, rooms, pricing) {
   const errors = []
 
   if (!project || typeof project !== "object") errors.push("Project data is missing.")
@@ -41,6 +42,10 @@ export function validateQuotePayload(project, rooms) {
     if (room?.install?.method && !['per_lf', 'hourly', 'none'].includes(room.install.method)) errors.push(`${prefix} installation method is invalid.`)
   })
 
+  if (errors.length === 0 && project?.discount?.enabled) {
+    const totals = calcQuoteTotals({ project, rooms }, pricing)
+    if (totals.error) errors.push(totals.error)
+  }
   return {
     ok: errors.length === 0,
     errors,

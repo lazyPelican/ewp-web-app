@@ -4,6 +4,7 @@
 import React from 'react'
 import { quickBooksSummary } from './quickBooksSummary.js'
 import { installationDetails, installationIssue } from '../supabase/functions/_shared/installation.js'
+import { assertQuoteTotals } from '../supabase/functions/_shared/quoteTotals.js'
 
 const assertInstallationReady = (rooms, pricing) => {
   for (const room of rooms) {
@@ -575,6 +576,7 @@ function splitSummaryRows(rows, firstLimit = SUMMARY_FIRST_PAGE_ROWS, continuati
 }
 
 function SummaryTotalsBlock({ project, roomCount, roomSubtotal, delivery, pdfTaxRate, pdfTaxAmt, grandTotal }) {
+  const totals = assertQuoteTotals(project, roomSubtotal)
   const hasTax = project.installationType ? project.installationType === "contractor" : project.taxEnabled
 
   return (
@@ -592,13 +594,18 @@ function SummaryTotalsBlock({ project, roomCount, roomSubtotal, delivery, pdfTax
       {hasTax && (
         <GrandBar label={`Estimated Tax (${pdfTaxRate}%)`} sub="Applied after delivery" value={pdfTaxAmt} standalone small />
       )}
+      {totals.discountEnabled && <>
+        <SubBar label="Original Grand Total" value={totals.originalGrandTotal} />
+        <SubBar label={`Discount (${totals.discountPercent.toFixed(2)}%)`} value={-totals.discountAmount} />
+      </>}
       <GrandBar
         label="Grand Total"
         sub={[
           `rooms ${fmtN(roomSubtotal)}`,
           delivery > 0 ? `delivery ${fmtN(delivery)}` : '',
           hasTax ? `incl. ${pdfTaxRate}% tax` : '',
-        ].filter(Boolean).join('  Â·  ')}
+          totals.discountEnabled ? `less ${fmtN(totals.discountAmount)} discount` : '',
+        ].filter(Boolean).join('  |  ')}
         value={grandTotal}
         standalone
       />
@@ -660,7 +667,7 @@ function ExecutiveSummaryPage({ project, roomTotals, delivery, pdfTaxRate, pdfTa
   const grandCtp = roomTotals.reduce((s, r) => s + r.ctp, 0)
   const grandFin = roomTotals.reduce((s, r) => s + r.fin, 0)
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
-  const summaryChunks = splitSummaryRows(roomTotals)
+  const summaryChunks = project.discount?.enabled ? splitSummaryRows(roomTotals, 6, 6) : splitSummaryRows(roomTotals)
   const summaryRowStyle = summaryChunks.length > 1 ? { minHeight: 28 } : {}
 
   return (
@@ -896,7 +903,7 @@ function InternalSummaryPage({
     { w: '14%', label: 'Installation', right: true },
     { w: '15%', label: 'Room Total', right: true },
   ]
-  const summaryChunks = splitSummaryRows(roomTotals)
+  const summaryChunks = project.discount?.enabled ? splitSummaryRows(roomTotals, 6, 6) : splitSummaryRows(roomTotals)
   const summaryRowStyle = summaryChunks.length > 1 ? { minHeight: 28 } : {}
 
   return (
@@ -1289,7 +1296,7 @@ function CustomerSummaryPage({
   const grandCtp = roomTotals.reduce((s, r) => s + r.ctp, 0)
   const grandFin = roomTotals.reduce((s, r) => s + r.fin, 0)
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
-  const summaryChunks = splitSummaryRows(roomTotals)
+  const summaryChunks = project.discount?.enabled ? splitSummaryRows(roomTotals, 6, 6) : splitSummaryRows(roomTotals)
   const summaryRowStyle = summaryChunks.length > 1 ? { minHeight: 28 } : {}
 
   const pgStyle = compact
@@ -1694,6 +1701,16 @@ export async function buildQuickBooksPDFBlob(project, rooms, { pricing, prepared
             <Text style={{ fontSize: 11, color: '#606860' }}>Estimated Tax</Text>
             <Text style={{ fontSize: 12 }}>{fmtN(totals.tax)}</Text>
           </View>}
+          {totals.discountEnabled && <>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 10 }}>
+              <Text style={{ fontSize: 11, color: '#606860' }}>Original Grand Total</Text>
+              <Text style={{ fontSize: 12 }}>{fmtN(totals.originalGrandTotal)}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 10 }}>
+              <Text style={{ fontSize: 11, color: '#606860' }}>Discount ({totals.discountPercent.toFixed(2)}%)</Text>
+              <Text style={{ fontSize: 12 }}>{fmtN(-totals.discountAmount)}</Text>
+            </View>
+          </>}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderTopWidth: 2, borderTopColor: '#237A3B' }}>
             <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 13 }}>Grand Total</Text>
             <Text style={{ fontFamily: FONT_SANS_BD, fontSize: 20, color: '#1D6030' }}>{fmtN(totals.grandTotal)}</Text>
@@ -1743,11 +1760,7 @@ export async function exportPDFInternal(project, rooms, { calcCabinetry, calcUpg
     const grandFin  = roomTotals.reduce((s, r) => s + r.fin,  0)
     const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
-    const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
-    const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-    const pdfSubtotal = grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery
-    const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
-    const grandTotal = pdfSubtotal + pdfTaxAmt
+    const { taxRate: pdfTaxRate, tax: pdfTaxAmt, grandTotal } = assertQuoteTotals(project, roomTotals.reduce((sum, room) => sum + room.total, 0))
 
     const blob = await pdf(
       <InternalPDFDoc
@@ -1799,11 +1812,7 @@ export async function exportPDFCustomer(project, rooms, { calcCabinetry, calcUpg
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
-    const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
-    const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-    const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
-    const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
-    const grandTotal = pdfSubtotal + pdfTaxAmt
+    const { taxRate: pdfTaxRate, tax: pdfTaxAmt, grandTotal } = assertQuoteTotals(project, roomTotals.reduce((sum, room) => sum + room.total, 0))
 
     const blob = await pdf(
       <CustomerPDFDoc
@@ -1854,11 +1863,7 @@ export async function buildInternalPDFBlob(project, rooms, { calcCabinetry, calc
   const grandFin  = roomTotals.reduce((s, r) => s + r.fin,  0)
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0)
   const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
-  const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
-  const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-  const pdfSubtotal = grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery
-  const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
-  const grandTotal = pdfSubtotal + pdfTaxAmt
+  const { taxRate: pdfTaxRate, tax: pdfTaxAmt, grandTotal } = assertQuoteTotals(project, roomTotals.reduce((sum, room) => sum + room.total, 0))
 
   return pdf(
     <InternalPDFDoc
@@ -1892,11 +1897,7 @@ export async function buildCustomerPDFBlob(project, rooms, { calcCabinetry, calc
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
-  const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
-  const pdfTaxRate  = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-  const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
-  const pdfTaxAmt   = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
-  const grandTotal  = pdfSubtotal + pdfTaxAmt
+  const { taxRate: pdfTaxRate, tax: pdfTaxAmt, grandTotal } = assertQuoteTotals(project, roomTotals.reduce((sum, room) => sum + room.total, 0))
 
   return pdf(
     <CustomerPDFDoc
@@ -1927,11 +1928,7 @@ export async function exportPDFSummary(project, rooms, { calcCabinetry, calcUpgr
       return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
     })
     const delivery   = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
-    const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
-    const pdfTaxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-    const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
-    const pdfTaxAmt  = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
-    const grandTotal = pdfSubtotal + pdfTaxAmt
+    const { taxRate: pdfTaxRate, tax: pdfTaxAmt, grandTotal } = assertQuoteTotals(project, roomTotals.reduce((sum, room) => sum + room.total, 0))
 
     const blob = await pdf(
       <SummaryPDFDoc
@@ -1975,11 +1972,7 @@ export async function buildSummaryPDFBlob(project, rooms, { calcCabinetry, calcU
     return { name: r.name, cab, upg, ctp, fin, inst, total: cab + upg + ctp + fin + inst }
   })
   const delivery    = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
-  const pdfTaxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled
-  const pdfTaxRate  = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-  const pdfSubtotal = roomTotals.reduce((s, r) => s + r.total, 0) + delivery
-  const pdfTaxAmt   = pdfTaxEnabled ? pdfSubtotal * (pdfTaxRate / 100) : 0
-  const grandTotal  = pdfSubtotal + pdfTaxAmt
+  const { taxRate: pdfTaxRate, tax: pdfTaxAmt, grandTotal } = assertQuoteTotals(project, roomTotals.reduce((sum, room) => sum + room.total, 0))
 
   return pdf(
     <SummaryPDFDoc

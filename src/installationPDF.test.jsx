@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { DEFAULT_PRICING } from './pricing.js'
-import { blankRoom, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from './appUtils.js'
+import { blankRoom, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, calcQuoteTotals, fmt } from './appUtils.js'
 
 const renderedText = vi.hoisted(() => [])
 // Keep the real renderer and capture text without remote logo fetching.
@@ -49,7 +49,7 @@ it('hides installation pricing methods in customer PDFs but preserves internal d
   for (const build of [buildCustomerPDFBlob, buildSummaryPDFBlob, buildQuickBooksPDFBlob]) {
     renderedText.length = 0
     await build(pricedProject, [adjustedRoom], options)
-    const text = renderedText.flat(Infinity).filter(value => typeof value === 'string').join(' ')
+    const text = renderedText.flat(Infinity).filter(value => typeof value === 'string').join('')
     expect(text).not.toMatch(/\/LF|\b100 LF\b|10% adjustment|rounded up to \$5/)
     expect(text).toContain('$11,000')
     if (build === buildCustomerPDFBlob) expect(text).toContain('Professional installation')
@@ -66,3 +66,27 @@ it('still renders an existing percentage-based quote', async () => {
   const blob = await buildInternalPDFBlob(legacyProject, [legacyRoom], options)
   expect(blob.size).toBeGreaterThan(2000)
 })
+
+it('renders discounts and unchanged tax in every PDF and blocks invalid discounts', async () => {
+  const discounted = { ...project, noDelivery: false, deliveryAmount: 1000, installationType: 'contractor', discount: { enabled: true, mode: 'percent', value: '5' } }
+  const expected = calcQuoteTotals({ project: discounted, rooms: [room] }, pricing)
+  for (const [name, build] of [['internal', buildInternalPDFBlob], ['customer', buildCustomerPDFBlob], ['summary', buildSummaryPDFBlob], ['quickbooks', buildQuickBooksPDFBlob]]) {
+    renderedText.length = 0
+    const blob = await build(discounted, [room], options)
+    const text = renderedText.flat(Infinity).filter(value => typeof value === 'string').join('')
+    expect(text).toContain('Original Grand Total')
+    expect(text).toContain('Discount (5.00%)')
+    expect(text).toContain(fmt(expected.grandTotal))
+    expect(text).toContain(fmt(expected.tax))
+    expect(text).toContain(fmt(-expected.discountAmount))
+    expect(text).not.toContain('Target Price')
+    if (process.env.EWP_PDF_QA) {
+      mkdirSync('dist/discount-qa', { recursive: true })
+      writeFileSync(`dist/discount-qa/${name}.pdf`, Buffer.from(await blob.arrayBuffer()))
+    }
+    await expect(build({ ...discounted, discount: { enabled: true, mode: 'percent', value: 101 } }, [room], options)).rejects.toThrow(/100%/)
+  }
+  const longRooms = Array.from({ length: 12 }, (_, index) => ({ ...room, name: `Room ${index + 1}` }))
+  const blob = await buildSummaryPDFBlob(discounted, longRooms, options)
+  if (process.env.EWP_PDF_QA) writeFileSync('dist/discount-qa/long-summary.pdf', Buffer.from(await blob.arrayBuffer()))
+}, 60000)

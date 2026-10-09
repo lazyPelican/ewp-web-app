@@ -1,13 +1,25 @@
 import React, { useState, useRef, useEffect } from "react"
 import { installationDetails } from "../appUtils.js"
+import { quoteTotals } from '../../supabase/functions/_shared/quoteTotals.js'
 import { fmt, fmtDate, fmtId, calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, findByName } from "../appUtils.js"
 
-export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, onEditProject, preparedBy }) {
+export function SummaryPage({ project, rooms, pricing, onChange, onBack, onSave, onNext, onEditProject, preparedBy }) {
   const [saving, setSaving]           = useState(false);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
+  const _initialDiscountRef = useRef(true);
+  useEffect(() => {
+    if (!_initialDiscountRef.current) return;
+    _initialDiscountRef.current = false;
+    const discount = project.discount;
+    if (discount?.enabled && (discount.value == null || String(discount.value).trim() === '')) {
+      onChange?.({ discount: { ...discount, enabled: false } });
+    }
+  }, [project.discount, onChange]);
+
   const handleSave = async () => {
+    if (totals.error) { setSaveError(totals.error); return false; }
     setSaving(true);
     setSaveConfirmed(false);
     setSaveError(null);
@@ -53,11 +65,10 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, o
   const grandFin  = roomTotals.reduce((s, r) => s + r.fin, 0);
   const grandInst = roomTotals.reduce((s, r) => s + r.inst, 0);
   const delivery  = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0);
-  const subtotalBeforeTax = grandCab + grandUpg + grandCtp + grandFin + grandInst + delivery;
-  const taxEnabled = project.installationType ? project.installationType === "contractor" : project.taxEnabled;
-  const taxRate    = Number.isFinite(parseFloat(project.taxRate)) ? parseFloat(project.taxRate) : 8.53;
-  const taxAmt     = taxEnabled ? subtotalBeforeTax * (taxRate / 100) : 0;
-  const grandTotal = subtotalBeforeTax + taxAmt;
+  const totals = quoteTotals(project, grandCab + grandUpg + grandCtp + grandFin + grandInst);
+  const { hasTax: taxEnabled, taxRate, tax: taxAmt, grandTotal } = totals;
+  const discount = project.discount || { enabled: false, mode: 'amount', value: '' };
+  const changeDiscount = update => onChange?.({ discount: { ...discount, ...update } });
 
   return (
     <div>
@@ -138,6 +149,10 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, o
                   <td className="num-cell">{fmt(taxAmt)}</td>
                 </tr>
               )}
+              {totals.discountEnabled && !totals.error && <>
+                <tr className="total-row"><td colSpan={5} className="label-upper">Original Grand Total</td><td className="num-cell">{fmt(totals.originalGrandTotal)}</td></tr>
+                <tr className="total-row"><td colSpan={5} className="label-upper">Discount ({totals.discountPercent.toFixed(2)}%)</td><td className="num-cell">-{fmt(totals.discountAmount)}</td></tr>
+              </>}
               <tr className="total-row" style={{ borderTop: "2px solid var(--gold)" }}>
                 <td colSpan={5} className="serif-total">
                   Grand Total
@@ -248,6 +263,33 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, o
         );
       })}
 
+      {/* Discount */}
+      <section aria-label="Discount" style={{ padding: '20px 0', marginBottom: 20, borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
+          <button type="button" role="switch" aria-label="Enable discount" aria-checked={!!discount.enabled} disabled={!onChange} onClick={() => changeDiscount({ enabled: !discount.enabled })} style={{ width: 38, height: 22, padding: 2, border: '1px solid var(--rule)', borderRadius: 11, background: discount.enabled ? 'var(--gold)' : 'var(--muted)', cursor: 'pointer', flexShrink: 0 }}>
+            <span style={{ display: 'block', width: 16, height: 16, borderRadius: '50%', background: '#fff', transform: discount.enabled ? 'translateX(16px)' : 'translateX(0)', transition: 'transform 150ms ease' }} />
+          </button>
+          <span>Discount</span>
+        </div>
+        {discount.enabled && <>
+          <div role="radiogroup" aria-label="Discount method" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16 }}>
+            {[['amount', '$ Discount'], ['percent', '% Discount'], ['target', 'Target Price']].map(([mode, label]) => (
+              <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input type="radio" name="discount-mode" value={mode} checked={discount.mode === mode} disabled={!onChange} onChange={() => changeDiscount({ mode, value: '' })} style={{ appearance: 'auto', width: 16, height: 16, padding: 0, margin: 0, accentColor: 'var(--gold)', flexShrink: 0 }} />{label}
+              </label>
+            ))}
+          </div>
+          <div className="field" style={{ maxWidth: 320, marginTop: 16 }}>
+            <label className="field-label" htmlFor="quote-discount-value">{discount.mode === 'target' ? 'Target final price ($)' : discount.mode === 'percent' ? 'Discount (%)' : 'Discount amount ($)'}</label>
+            <input id="quote-discount-value" type="number" min="0" max={discount.mode === 'percent' ? 100 : undefined} step="0.01" value={discount.value ?? ''} disabled={!onChange} onChange={e => changeDiscount({ value: e.target.value })} aria-invalid={!!totals.error} aria-describedby={totals.error ? 'quote-discount-error' : undefined} />
+          </div>
+          {totals.error && <div id="quote-discount-error" role="alert" style={{ color: 'var(--red, #C0392B)', marginTop: 12 }}>{totals.error}</div>}
+            <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginTop: 20 }}>
+              {[['Discount Amount', fmt(totals.discountAmount)], ['Discount Percentage', `${totals.discountPercent.toFixed(2)}%`], ['Final Price', fmt(grandTotal)]].map(([label, value]) => <div key={label}><dt className="field-label">{label}</dt><dd style={{ margin: '6px 0 0', fontSize: 20, fontWeight: 600 }}>{value}</dd></div>)}
+            </dl>
+        </>}
+      </section>
+
       {/* Grand Total */}
       <div className="grand-total grand-total-float">
         <div className="grand-total-label">GRAND TOTAL</div>
@@ -256,6 +298,7 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, o
           {grandInst > 0 && <span>+ Installation {fmt(grandInst)}</span>}
           {delivery > 0 && <span>+ Delivery {fmt(delivery)}</span>}
           {taxAmt > 0 && <span>+ Tax ({taxRate}%) {fmt(taxAmt)}</span>}
+          {totals.discountEnabled && !totals.error && <span>- Discount ({totals.discountPercent.toFixed(2)}%) {fmt(totals.discountAmount)}</span>}
         </div>
         <div className="grand-total-value">{fmt(grandTotal)}</div>
       </div>
@@ -292,7 +335,7 @@ export function SummaryPage({ project, rooms, pricing, onBack, onSave, onNext, o
 
       <div className="flex justify-between items-center mt-24">
         <button className="btn btn-outline" onClick={onBack}>Back to Final Details</button>
-        <button className="btn btn-gold btn-lg" onClick={handleSaveAndNext} disabled={saving}>
+        <button className="btn btn-gold btn-lg" onClick={handleSaveAndNext} disabled={saving || !!totals.error}>
           {saving ? "Saving..." : "Save and Continue"}
         </button>
       </div>

@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { installationDetails } from '../_shared/installation.js'
+import { assertQuoteTotals } from '../_shared/quoteTotals.js'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -62,11 +63,7 @@ const calcTotal = (project: any, rooms: any[] = [], pricing: any) => {
       + calcFinishing(room.finishing || [], pricing)
       + installationDetails(room.install || {}, cab, pricing, room).total
   }, 0)
-  const delivery = project.noDelivery ? 0 : (parseFloat(project.deliveryAmount) || 0)
-  const subtotal = roomsTotal + delivery
-  const taxEnabled = project.installationType ? project.installationType === 'contractor' : project.taxEnabled
-  const taxRate = project.installationType ? 8.53 : (parseFloat(project.taxRate) || 8)
-  return subtotal + (taxEnabled ? subtotal * (taxRate / 100) : 0)
+  return assertQuoteTotals(project, roomsTotal).grandTotal
 }
 
 serve(async (req) => {

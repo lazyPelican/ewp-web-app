@@ -1,4 +1,5 @@
-import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, calcTotal } from './appUtils.js'
+import { calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall } from './appUtils.js'
+import { assertQuoteTotals } from '../supabase/functions/_shared/quoteTotals.js'
 
 export function quickBooksSummary(project, rooms, pricing) {
   let wood = 0, finishing = 0, installation = 0
@@ -16,7 +17,6 @@ export function quickBooksSummary(project, rooms, pricing) {
     { name: 'Delivery', description: 'Delivery Costs', amount: delivery },
   ]
   const subtotal = lines.reduce((sum, line) => sum + line.amount, 0)
-  const grandTotal = calcTotal({ project, rooms }, pricing)
-  const hasTax = project.installationType ? project.installationType === 'contractor' : project.taxEnabled
-  return { lines, subtotal, tax: grandTotal - subtotal, grandTotal, hasTax }
+  const totals = assertQuoteTotals(project, wood + finishing + installation)
+  return { ...totals, lines, subtotal }
 }

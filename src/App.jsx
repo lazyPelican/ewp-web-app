@@ -16,7 +16,7 @@ import {
 } from "./pricingSnapshots.js"
 import {
   genId, makeCopyName, fmtId, blankRoom, isRoomComplete, installationIssue,
-  calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, calcTotal,
+  calcCabinetry, calcUpgrades, calcCountertops, calcFinishing, calcInstall, calcTotal, calcQuoteTotals,
   DEFAULT_QUOTE_SECTIONS,
   ACTIVE_STAGES, isActiveStatus, getActiveStage, isClosedStatus,
 } from "./appUtils.js"
@@ -1214,7 +1214,7 @@ const styles = `
     transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
   }
   .step.active .step-num { background: #1F242E; color: #fff; border-color: #1F242E; transform: scale(1.1); }
-  .step.done .step-num { background: var(--green); color: #fff; border-color: var(--green); animation: stepDone 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+  .step.done .step-num, .dark .step.done .step-num { background: var(--green); color: #fff; border-color: var(--green); font-size: 14px; animation: stepDone 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
 
   /* -- SUMMARY CARDS -- */
   .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
@@ -2208,6 +2208,8 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
   const confirmProject = async (i) => {
     if (actionBusy) return;
     const p = projects[i];
+    const discountError = calcQuoteTotals(p, pricingSnapshotToTables(p.pricingSnapshot, latestPricing)).error;
+    if (discountError) { showToast(discountError); return; }
     const installError = p.rooms.map(room => installationIssue(room, pricingSnapshotToTables(p.pricingSnapshot, latestPricing))).find(Boolean);
     if (installError) { showToast(installError); return; }
     if (isGuest) {
@@ -2282,7 +2284,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
       ? pricingSnapshotToTables(activePricingSnapshot, latestPricing)
       : latestPricing;
     const pricingSnapshot = buildPricingSnapshotForRooms(cleanRooms, pricingSource);
-    const localValidation = validateQuotePayload(cleanProject, cleanRooms);
+    const localValidation = validateQuotePayload(cleanProject, cleanRooms, pricingSource);
     if (!localValidation.ok) {
       const error = localValidation.errors[0] || "Please fix quote validation errors before saving";
       showToast(error);
@@ -2404,7 +2406,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
     const cleanRooms = sanitizeRooms(rooms);
     const entry = { project: cleanProject, rooms: cleanRooms, pricingSnapshot: nextSnapshot };
     const nextPricing = pricingSnapshotToTables(nextSnapshot, latestPricing);
-    const localValidation = validateQuotePayload(cleanProject, cleanRooms);
+    const localValidation = validateQuotePayload(cleanProject, cleanRooms, nextPricing);
     if (!localValidation.ok) {
       showToast(localValidation.errors[0] || "Please fix quote validation errors before updating prices");
       return;
@@ -2816,13 +2818,15 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
               </button>
               {stepConfig.map((s, i) => {
                 const canClick = reachable[i] && i !== step;
-                const isDone = done[i] && i !== step;
+                const isDone = done[i] && (i !== step || i === stepConfig.length - 1);
                 return (
                   <div key={i}
                     className={`step ${step === i ? "active" : ""} ${isDone ? "done" : ""}`}
                     style={{ cursor: canClick ? "pointer" : "default", opacity: reachable[i] ? 1 : 0.45 }}
                     onClick={() => canClick && setStep(i)}>
-                    <div className="step-num">{isDone ? "Done" : i + 1}</div>
+                    <div className="step-num" aria-label={isDone ? 'Completed' : `Step ${i + 1}`}>
+                      {isDone ? <span aria-hidden="true">&#10003;</span> : i + 1}
+                    </div>
                     <div className="step-label">{s.label}</div>
                   </div>
                 );
@@ -2953,7 +2957,7 @@ export default function App({ session, isAdmin, onOpenAdmin, isGuest = false, on
             <FinalDetailsPage project={project} rooms={rooms} pricing={activePricing} onChange={d => setProject(p => ({ ...p, ...d }))} onNext={() => { setStep(3); setMaxStep(p => Math.max(p, 3)); }} onBack={() => setStep(1)} />
           )}
           {view === "new" && step === 3 && (
-            <SummaryPage project={project} rooms={rooms} pricing={activePricing} onBack={() => setStep(2)} onSave={saveProject} onEditProject={() => setStep(0)} onNext={() => { setStep(4); setMaxStep(p => Math.max(p, 4)); }} preparedBy={preparedBy} />
+            <SummaryPage project={project} rooms={rooms} pricing={activePricing} onChange={d => setProject(p => ({ ...p, ...d }))} onBack={() => setStep(2)} onSave={saveProject} onEditProject={() => setStep(0)} onNext={() => { setStep(4); setMaxStep(p => Math.max(p, 4)); }} preparedBy={preparedBy} />
           )}
           {view === "new" && step === 4 && (
             <PrintEmailPage

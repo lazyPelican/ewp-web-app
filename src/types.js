@@ -33,6 +33,7 @@
  * @property {boolean=} noDelivery
  * @property {boolean=} taxEnabled
  * @property {string|number=} taxRate
+ * @property {{enabled: boolean, mode: 'amount'|'percent'|'target', value: string|number}=} discount
  */
 
 /**

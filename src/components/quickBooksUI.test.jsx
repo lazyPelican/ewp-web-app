@@ -10,9 +10,10 @@ vi.mock('../pdfExport.js', () => ({
   buildInternalPDFBlob: vi.fn(), buildCustomerPDFBlob: vi.fn(), buildSummaryPDFBlob: vi.fn(),
   exportPDFQuickBooks: vi.fn(), buildQuickBooksPDFBlob: vi.fn().mockResolvedValue(new Blob(['PDF'])),
 }))
-afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals() })
+afterEach(() => { cleanup(); delete HTMLElement.prototype.scrollIntoView; vi.clearAllMocks(); vi.unstubAllGlobals() })
 
 it('provides a fourth PDF item with its own preview and download', async () => {
+  HTMLElement.prototype.scrollIntoView = vi.fn()
   vi.stubGlobal('URL', { createObjectURL: vi.fn().mockReturnValue('blob:quickbooks'), revokeObjectURL: vi.fn() })
   const project = { id: 'Test', name: 'Kitchen', bidDate: '2026-10-05' }
   const pricing = {}
